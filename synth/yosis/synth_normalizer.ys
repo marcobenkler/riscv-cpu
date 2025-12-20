@@ -1,0 +1,16 @@
+read_verilog -sv ../src/normalize.sv ../src/LZD.sv
+hierarchy -top Norm
+
+proc
+opt
+fsm
+opt
+
+techmap
+opt
+
+abc -lut 6
+
+stat
+
+write_verilog normalizer_synth.sv
