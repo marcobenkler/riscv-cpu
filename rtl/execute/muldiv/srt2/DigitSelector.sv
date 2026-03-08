@@ -13,13 +13,13 @@ module digitSelect (
 logic signed [34:0] R8;
 logic signed [34:0] D5;
 
-assign R8 = R <<< 3; //<<< oder << ist hier egal fährt ja nur nach links
-assign D5 = (ND <<< 2) + ND; //+ ist stärler als <<
+assign R8 = R <<< 3;
+assign D5 = (ND <<< 2) + ND;
 
     always_comb begin
 
         if (R8 >= D5)
-            Q = 2'sd1;  //immer mit signed machen nicht nur d
+            Q = 2'sd1;
         else if (R8 <= -D5)
             Q = -2'sd1;
         else

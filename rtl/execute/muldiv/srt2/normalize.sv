@@ -1,4 +1,4 @@
-//Kann sein, dass signed und unsigned probleme macht
+
 
 module Norm (
     input  logic [31:0] D, N,
@@ -6,7 +6,7 @@ module Norm (
     output logic [5:0]  LZD, LZN
 );
 
-    LZD32 lzd_inst_d ( //So baut man Module ein, er schluckt D und spuckt LZ aus, alle outputs von LZD32 sind neue logic
+    LZD32 lzd_inst_d (
         .D(D),
         .LZ(LZD)
     );

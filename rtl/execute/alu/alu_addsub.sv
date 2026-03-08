@@ -8,7 +8,7 @@ module alu_addsub (
     input   logic [31:0] a,     ///< first operand
     input   logic [31:0] b,     ///< second operand
     input   logic sub,          ///< 1 = sub, 0 = add
-    output  logic [31:0] result ///< result
+    output  logic [31:0] result ///< operation result
 );
 
     logic [31:0] b_buf;
