@@ -1,4 +1,4 @@
-/*
+/**
 * @brief ALU add/sub unit
 *
 * Performs integer addition/subtraction.

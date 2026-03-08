@@ -1,4 +1,4 @@
-/*
+/**
 * @brief ALU compare unit
 *
 * Performs comparisons between two operands
