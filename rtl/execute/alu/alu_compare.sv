@@ -14,7 +14,7 @@ module alu_compare(
     always_comb begin
         unique case (cmp_op)
             2'b00: result = {31'b0, (a == b)};
-            2'b01: result = {31'b0, (logic signed [31:0]'(a) < logic signed [31:0]'(b))};
+            2'b01: result = {31'b0, ($signed(a) < $signed(b))};
             2'b10: result = {31'b0, (a < b)};
             2'b11: result = {31'b0, (a != b)};
             default: result = '0;
