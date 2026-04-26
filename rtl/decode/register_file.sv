@@ -6,11 +6,11 @@
 **/
 
 module register_file(
-    input  logic [4:0] rs1, rs2, rd,   ///< rs: source register, rd: target register
+    input  logic [4:0] rs1, rs2, rd,         ///< rs: source register, rd: target register
     input  logic clk, reset_n,               ///< default clock and reset option
-    input  logic reg_write,            ///< enable writing into register
-    input  logic [31:0] result,        ///< result of computation
-    output [31:0] rs1_data, rs2_data   ///< data for compute
+    input  logic reg_write,                  ///< enable writing into register
+    input  logic [31:0] result,              ///< result of computation
+    output logic [31:0] rs1_data, rs2_data   ///< data for compute
 );
 
     logic [31:0] regi [31:0];
