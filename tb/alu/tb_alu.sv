@@ -59,7 +59,7 @@ module tb_alu();
     end
 
     initial begin
-        $dumpfile("/sim/alu/alu.vcd");
+        $dumpfile("sim/alu/alu.vcd");
         $dumpvars(0, tb_alu);
     end
 

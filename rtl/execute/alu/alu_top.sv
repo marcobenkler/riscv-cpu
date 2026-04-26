@@ -6,8 +6,8 @@
 */
 
 module alu_top(
-    input   logic [31:0] a,                     ///< first input
-    input   logic [31:0] b,                     ///< second input
+    input   logic [31:0] a,                     ///< first input (rs1)
+    input   logic [31:0] b,                     ///< second input (rs2, imm)
     input   logic [4:0]  shift,                 ///< optional shift range
     input   logic [3:0]  alu_op,                ///< op_code from decoder
     output  logic [31:0] result                 ///< operation result
