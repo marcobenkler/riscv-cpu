@@ -1,0 +1,224 @@
+
+<style>
+.wrap { padding: 12px 0 24px; font-size: 12px; }
+h2 { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+.sub { color: var(--color-text-secondary); font-size: 11px; margin: 0 0 14px; }
+
+.section-label {
+  font-size: 11px; font-weight: 500; letter-spacing: .04em;
+  color: var(--color-text-secondary); margin: 16px 0 4px;
+  text-transform: uppercase;
+}
+.tbl-wrap { border: 1px solid var(--color-border-tertiary); border-radius: 8px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary); font-weight: 500; font-size: 11px;
+  padding: 6px 10px; text-align: left;
+  border-bottom: 1px solid var(--color-border-tertiary); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--color-border-tertiary); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--color-background-secondary); }
+td { padding: 5px 10px; vertical-align: middle; }
+td.mnem { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+td.name { font-size: 11px; color: var(--color-text-secondary); }
+td.op   { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); }
+td.f3   { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); }
+td.f7   { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary); }
+td.desc { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); }
+td.note { font-size: 10px; color: var(--color-text-tertiary); }
+
+/* type badge */
+.ty { display:inline-block; border-radius:3px; padding:1px 5px; font-size:10px; font-weight:500; font-family:var(--font-mono); }
+.ty-R { background:#EEEDFE; color:#3C3489; }
+.ty-I { background:#E6F1FB; color:#0C447C; }
+.ty-S { background:#EAF3DE; color:#27500A; }
+.ty-B { background:#FAEEDA; color:#633806; }
+.ty-U { background:#FAECE7; color:#712B13; }
+.ty-J { background:#FBEAF0; color:#72243E; }
+@media (prefers-color-scheme: dark) {
+  .ty-R { background:#3C3489; color:#EEEDFE; }
+  .ty-I { background:#0C447C; color:#B5D4F4; }
+  .ty-S { background:#27500A; color:#C0DD97; }
+  .ty-B { background:#633806; color:#FAC775; }
+  .ty-U { background:#712B13; color:#F5C4B3; }
+  .ty-J { background:#72243E; color:#F4C0D1; }
+}
+
+/* group separator */
+.grp-sep td { border-top: 2px solid var(--color-border-secondary) !important; }
+
+/* filter bar */
+.filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
+.filter-row input {
+  flex: 1; min-width:120px; padding:5px 10px; border-radius:6px; font-size:12px;
+  border: 1px solid var(--color-border-secondary); background: var(--color-background-primary);
+  color: var(--color-text-primary);
+}
+.btn-group { display:flex; gap:4px; flex-wrap:wrap; }
+.flt-btn {
+  padding:3px 10px; border-radius:5px; border:1px solid var(--color-border-secondary);
+  background:var(--color-background-primary); color:var(--color-text-secondary);
+  font-size:11px; cursor:pointer; font-family:var(--font-mono); transition:background .12s;
+}
+.flt-btn.active { background:var(--color-background-secondary); color:var(--color-text-primary); font-weight:500; }
+.flt-btn:hover { background:var(--color-background-secondary); }
+</style>
+
+<div class="wrap">
+  <h2>RV32I — vollständige Instruction-Encoding-Tabelle</h2>
+  <p class="sub">Quelle: SFU RISC-V Reference Card · funct7 in hex (0x20 = bit 30 gesetzt = arithm. Shift / SUB)</p>
+
+  <div class="filter-row">
+    <input type="text" id="search" placeholder="Suche (mnemonic, opcode, funct3…)" oninput="applyFilter()">
+    <div class="btn-group" id="type-btns"></div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th>Mnemonic</th>
+          <th>Name</th>
+          <th>Typ</th>
+          <th>Opcode (bin)</th>
+          <th>funct3</th>
+          <th>funct7</th>
+          <th>Operation</th>
+          <th>Anmerkung</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const rows = [
+  // R-type
+  { m:'ADD',   n:'Add',                    t:'R', op:'0110011', f3:'0x0','f7':'0x00', d:'rd = rs1 + rs2',              note:'' },
+  { m:'SUB',   n:'Subtract',               t:'R', op:'0110011', f3:'0x0','f7':'0x20', d:'rd = rs1 - rs2',              note:'funct7 bit30=1' },
+  { m:'XOR',   n:'XOR',                    t:'R', op:'0110011', f3:'0x4','f7':'0x00', d:'rd = rs1 ^ rs2',              note:'' },
+  { m:'OR',    n:'OR',                     t:'R', op:'0110011', f3:'0x6','f7':'0x00', d:'rd = rs1 | rs2',              note:'' },
+  { m:'AND',   n:'AND',                    t:'R', op:'0110011', f3:'0x7','f7':'0x00', d:'rd = rs1 & rs2',              note:'' },
+  { m:'SLL',   n:'Shift Left Logical',     t:'R', op:'0110011', f3:'0x1','f7':'0x00', d:'rd = rs1 << rs2[4:0]',       note:'' },
+  { m:'SRL',   n:'Shift Right Logical',    t:'R', op:'0110011', f3:'0x5','f7':'0x00', d:'rd = rs1 >> rs2[4:0]',       note:'zero-fill' },
+  { m:'SRA',   n:'Shift Right Arith',      t:'R', op:'0110011', f3:'0x5','f7':'0x20', d:'rd = rs1 >> rs2[4:0]',       note:'msb-extend, funct7 bit30=1' },
+  { m:'SLT',   n:'Set Less Than',          t:'R', op:'0110011', f3:'0x2','f7':'0x00', d:'rd = (rs1 < rs2) ? 1 : 0',  note:'signed' },
+  { m:'SLTU',  n:'Set Less Than (U)',      t:'R', op:'0110011', f3:'0x3','f7':'0x00', d:'rd = (rs1 < rs2) ? 1 : 0',  note:'unsigned' },
+  // I-type ALU
+  { m:'ADDI',  n:'Add Immediate',          t:'I', op:'0010011', f3:'0x0','f7':'—',    d:'rd = rs1 + imm',             note:'' },
+  { m:'XORI',  n:'XOR Immediate',          t:'I', op:'0010011', f3:'0x4','f7':'—',    d:'rd = rs1 ^ imm',             note:'' },
+  { m:'ORI',   n:'OR Immediate',           t:'I', op:'0010011', f3:'0x6','f7':'—',    d:'rd = rs1 | imm',             note:'' },
+  { m:'ANDI',  n:'AND Immediate',          t:'I', op:'0010011', f3:'0x7','f7':'—',    d:'rd = rs1 & imm',             note:'' },
+  { m:'SLLI',  n:'Shift Left Logical Imm', t:'I', op:'0010011', f3:'0x1','f7':'0x00', d:'rd = rs1 << imm[4:0]',      note:'imm[11:5]=0x00' },
+  { m:'SRLI',  n:'Shift Right Logical Imm',t:'I', op:'0010011', f3:'0x5','f7':'0x00', d:'rd = rs1 >> imm[4:0]',      note:'imm[11:5]=0x00' },
+  { m:'SRAI',  n:'Shift Right Arith Imm',  t:'I', op:'0010011', f3:'0x5','f7':'0x20', d:'rd = rs1 >> imm[4:0]',      note:'msb-extend, imm[11:5]=0x20' },
+  { m:'SLTI',  n:'Set Less Than Imm',      t:'I', op:'0010011', f3:'0x2','f7':'—',    d:'rd = (rs1 < imm) ? 1 : 0', note:'signed' },
+  { m:'SLTIU', n:'Set Less Than Imm (U)',  t:'I', op:'0010011', f3:'0x3','f7':'—',    d:'rd = (rs1 < imm) ? 1 : 0', note:'unsigned' },
+  // I-type Loads
+  { m:'LB',    n:'Load Byte',              t:'I', op:'0000011', f3:'0x0','f7':'—',    d:'rd = M[rs1+imm][7:0]',      note:'sign-extend' },
+  { m:'LH',    n:'Load Half',              t:'I', op:'0000011', f3:'0x1','f7':'—',    d:'rd = M[rs1+imm][15:0]',     note:'sign-extend' },
+  { m:'LW',    n:'Load Word',              t:'I', op:'0000011', f3:'0x2','f7':'—',    d:'rd = M[rs1+imm][31:0]',     note:'' },
+  { m:'LBU',   n:'Load Byte (U)',          t:'I', op:'0000011', f3:'0x4','f7':'—',    d:'rd = M[rs1+imm][7:0]',      note:'zero-extend' },
+  { m:'LHU',   n:'Load Half (U)',          t:'I', op:'0000011', f3:'0x5','f7':'—',    d:'rd = M[rs1+imm][15:0]',     note:'zero-extend' },
+  // I-type jumps/system
+  { m:'JALR',  n:'Jump And Link Reg',      t:'I', op:'1100111', f3:'0x0','f7':'—',    d:'rd = PC+4; PC = rs1+imm',   note:'' },
+  { m:'ECALL', n:'Environment Call',       t:'I', op:'1110011', f3:'0x0','f7':'—',    d:'trap → OS',                 note:'imm=0x0' },
+  { m:'EBREAK',n:'Environment Break',      t:'I', op:'1110011', f3:'0x0','f7':'—',    d:'trap → debugger',           note:'imm=0x1' },
+  // S-type
+  { m:'SB',    n:'Store Byte',             t:'S', op:'0100011', f3:'0x0','f7':'—',    d:'M[rs1+imm][7:0] = rs2',     note:'' },
+  { m:'SH',    n:'Store Half',             t:'S', op:'0100011', f3:'0x1','f7':'—',    d:'M[rs1+imm][15:0] = rs2',    note:'' },
+  { m:'SW',    n:'Store Word',             t:'S', op:'0100011', f3:'0x2','f7':'—',    d:'M[rs1+imm][31:0] = rs2',    note:'' },
+  // B-type
+  { m:'BEQ',   n:'Branch ==',              t:'B', op:'1100011', f3:'0x0','f7':'—',    d:'if rs1==rs2: PC += imm',    note:'' },
+  { m:'BNE',   n:'Branch !=',              t:'B', op:'1100011', f3:'0x1','f7':'—',    d:'if rs1!=rs2: PC += imm',    note:'' },
+  { m:'BLT',   n:'Branch <',              t:'B', op:'1100011', f3:'0x4','f7':'—',    d:'if rs1<rs2: PC += imm',     note:'signed' },
+  { m:'BGE',   n:'Branch ≥',              t:'B', op:'1100011', f3:'0x5','f7':'—',    d:'if rs1>=rs2: PC += imm',    note:'signed' },
+  { m:'BLTU',  n:'Branch < (U)',           t:'B', op:'1100011', f3:'0x6','f7':'—',    d:'if rs1<rs2: PC += imm',     note:'unsigned' },
+  { m:'BGEU',  n:'Branch ≥ (U)',           t:'B', op:'1100011', f3:'0x7','f7':'—',    d:'if rs1>=rs2: PC += imm',    note:'unsigned' },
+  // U-type
+  { m:'LUI',   n:'Load Upper Imm',         t:'U', op:'0110111', f3:'—',  'f7':'—',    d:'rd = imm << 12',            note:'' },
+  { m:'AUIPC', n:'Add Upper Imm to PC',    t:'U', op:'0010111', f3:'—',  'f7':'—',    d:'rd = PC + (imm << 12)',     note:'' },
+  // J-type
+  { m:'JAL',   n:'Jump And Link',          t:'J', op:'1101111', f3:'—',  'f7':'—',    d:'rd = PC+4; PC += imm',      note:'±1 MiB' },
+];
+
+let activeType = 'all';
+
+function applyFilter() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const tbody = document.getElementById('tbody');
+  let prevGroup = null;
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const type = tr.dataset.type;
+    const text = tr.dataset.search;
+    const typeOk = activeType === 'all' || type === activeType;
+    const textOk = !q || text.includes(q);
+    tr.style.display = typeOk && textOk ? '' : 'none';
+    // group separator logic
+    if (typeOk && textOk) {
+      const grp = tr.dataset.group;
+      if (grp !== prevGroup) {
+        tr.classList.add('grp-sep');
+        prevGroup = grp;
+      } else {
+        tr.classList.remove('grp-sep');
+      }
+    }
+  });
+}
+
+// Build type filter buttons
+const types = ['all','R','I','S','B','U','J'];
+const btnGroup = document.getElementById('type-btns');
+types.forEach(t => {
+  const btn = document.createElement('button');
+  btn.className = 'flt-btn' + (t === 'all' ? ' active' : '');
+  btn.textContent = t === 'all' ? 'Alle' : t + '-type';
+  btn.onclick = () => {
+    activeType = t;
+    btnGroup.querySelectorAll('.flt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter();
+  };
+  btnGroup.appendChild(btn);
+});
+
+// group mapping
+const groupOf = { R:'alu-r', I_ALU:'alu-i', I_LOAD:'load', I_JMP:'jmp-sys', S:'store', B:'branch', U:'upper', J:'jump' };
+function getGroup(r) {
+  if (r.t==='R') return 'alu-r';
+  if (r.t==='S') return 'store';
+  if (r.t==='B') return 'branch';
+  if (r.t==='U') return 'upper';
+  if (r.t==='J') return 'jump';
+  if (r.t==='I' && r.op==='0010011') return 'alu-i';
+  if (r.t==='I' && r.op==='0000011') return 'load';
+  return 'jmp-sys';
+}
+
+const tbody = document.getElementById('tbody');
+rows.forEach(r => {
+  const tr = document.createElement('tr');
+  const grp = getGroup(r);
+  tr.dataset.type = r.t;
+  tr.dataset.group = grp;
+  tr.dataset.search = [r.m, r.n, r.t, r.op, r.f3, r['f7'], r.d, r.note].join(' ').toLowerCase();
+
+  tr.innerHTML = `
+    <td class="mnem">${r.m}</td>
+    <td class="name">${r.n}</td>
+    <td><span class="ty ty-${r.t}">${r.t}</span></td>
+    <td class="op">${r.op}</td>
+    <td class="f3">${r.f3}</td>
+    <td class="f7">${r['f7']}</td>
+    <td class="desc">${r.d}</td>
+    <td class="note">${r.note}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+applyFilter();
+</script>
