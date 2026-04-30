@@ -12,11 +12,13 @@ module data_memory (
     output logic [31:0] read_data ///< data that's read from memory into register
 );
 
-    logic [7:0] regi [255:0];
+    localparam MEM_DEPTH = 255;
+
+    logic [7:0] mem [MEM_DEPTH:0];
 
     always_comb begin
         for (int i = 0; i < 4; i++)begin
-            read_data[8*i +: 8] = regi[address + i];
+            read_data[8*i +: 8] = mem[address + i];
         end
         case (mem_s_type)
             3'b000: read_data = {{24{read_data[7]}}, read_data[7:0]};
@@ -27,19 +29,19 @@ module data_memory (
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            for (int i = 0; i < $size(regi); i++) begin
-                regi[i] <= 0;
+            for (int i = 0; i < $size(mem); i++) begin
+                mem[i] <= 0;
             end
         end else if (mem_write) begin 
             case (mem_s_type)
-                3'b000: regi[address] <= write_data[7:0];
+                3'b000: mem[address] <= write_data[7:0];
                 3'b001: begin
-                    regi[address] <= write_data[7:0];
-                    regi[address + 1] <= write_data[15:8];
+                    mem[address] <= write_data[7:0];
+                    mem[address + 1] <= write_data[15:8];
                 end
                 3'b010: begin
                     for (int i = 0; i < 4; i++) begin
-                        regi[address + i] <= write_data[8*i +: 8];
+                        mem[address + i] <= write_data[8*i +: 8];
                     end
                 end
             endcase
