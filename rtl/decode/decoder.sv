@@ -151,6 +151,13 @@ module decoder(
                 pc_src = 2'b01;
                 res_src = 2'b11;
             end
+            5'b11001: begin //JALR
+                reg_write = 1'b1;
+                alu_src_b = 1'b1;
+                pc_src = 2'b10;
+                res_src = 2'b11;
+                alu_op = ALU_ADD;
+            end
             default: ;
         endcase        
     end

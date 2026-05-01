@@ -24,7 +24,7 @@ module register_file(
             for (int i = 0; i < 32; i++) begin
                 regi[i] <= 0;
             end
-        end else if(reg_write) begin
+        end else if(reg_write && rd != '0) begin
             regi[rd] <= result;
         end
     end

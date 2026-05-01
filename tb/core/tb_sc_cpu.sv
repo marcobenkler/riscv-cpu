@@ -29,8 +29,8 @@ module tb_sc_cpu();
 
     always @(posedge clk) begin
         if (mem_write && mem_addr == 32'h10000000) begin
-            $write("%c", mem_wdata[7:0]);
-            if (prev_char == "O" && mem_wdata[7:0] == "K") begin
+            $write("%c\n", mem_wdata[7:0]);
+            if (prev_char == "O" && mem_wdata[7:0] == "K") begin //Display all register that are not 0
                 $display("");
                 $finish;
             end
@@ -42,9 +42,19 @@ module tb_sc_cpu();
         reset_n = 0;
         repeat(2) @(posedge clk);
         reset_n = 1;
-        repeat(10000) @(posedge clk);
+        $readmemh("tb/core/program.hex", sc_cpu.data_memory.mem);
+        repeat(1000) @(posedge clk);
         $display("TIMEOUT");
         $finish;
     end
+
+
+    always @(posedge clk) begin
+        if (reset_n)
+            $display("PC=%0h  INSTR=%0h  mw=%b  addr=%0h  wdata=%0h x28=%0d", //register 28 holds current test
+                sc_cpu.pc_current, sc_cpu.instruction,
+                mem_write, mem_addr, mem_wdata, sc_cpu.register_file.regi[28]);
+    end
+
 
 endmodule
