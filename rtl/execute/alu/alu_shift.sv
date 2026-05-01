@@ -5,11 +5,14 @@
 */
 
 module alu_shift(
-    input   logic [31:0] a,             ///< first operand
-    input   logic [4:0]  shift_range,   ///< range of shift
+    input   logic [31:0] a, b,            ///< first operand
     input   logic [1:0]  shift_op,      ///< 00 = sll, 01 = srl, 10 = sra
     output  logic [31:0] result
 );
+
+    logic [4:0] shift_range;
+
+    assign shift_range = b[4:0];
 
     always_comb begin
         unique case (shift_op)
