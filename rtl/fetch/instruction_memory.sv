@@ -8,7 +8,7 @@ module instruction_memory(
     output logic [31:0] instruction ///< instruction vector
 );
 
-    logic [7:0] memo [255:0];
+    logic [7:0] memo [8191:0];
     always_comb begin
         for(int i = 0; i < 4; i++) begin
             instruction[8*i +: 8] = memo[pc + i];

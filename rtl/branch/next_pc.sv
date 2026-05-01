@@ -6,7 +6,7 @@ module next_pc(
     input  logic [31:0] alu_res, imm_res, ///< Possible next pc's
     input  logic [31:0]pc_current, ///< Current PC
     input  logic [1:0] pc_src, ///< Control which possible one
-    output logic [31:0] pc_next ///< Next PC
+    output logic [31:0] pc_next, ///< Next PC
     output logic [31:0] pc_default /// For JAL(R)
 );
 

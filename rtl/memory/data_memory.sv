@@ -12,7 +12,7 @@ module data_memory (
     output logic [31:0] read_data ///< data that's read from memory into register
 );
 
-    localparam MEM_DEPTH = 255;
+    localparam MEM_DEPTH = 8191;
 
     logic [7:0] mem [MEM_DEPTH:0];
 
@@ -44,6 +44,7 @@ module data_memory (
                         mem[address + i] <= write_data[8*i +: 8];
                     end
                 end
+                default: ;
             endcase
         end
     end
