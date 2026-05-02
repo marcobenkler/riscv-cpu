@@ -23,6 +23,8 @@ module data_memory (
         case (mem_s_type)
             3'b000: read_data = {{24{read_data[7]}}, read_data[7:0]};
             3'b001: read_data = {{16{read_data[15]}}, read_data[15:0]};
+            3'b100: read_data = {24'b0, read_data[7:0]};
+            3'b101: read_data = {16'b0, read_data[15:0]};
             default: ;
         endcase
     end

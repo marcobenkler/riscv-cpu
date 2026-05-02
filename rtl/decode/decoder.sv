@@ -35,13 +35,12 @@ module decoder(
 
     always_comb begin
         alu_op = 'x;
-        alu_src_a = 1'b0;
         pc_src = 2'b00;
         mem_write = 1'b0;
         mem_s_type = 'x;
         res_src = 'x;
         reg_write = 'x;
-        alu_src_a = 'x;
+        alu_src_a = 1'b0;
         alu_src_b = 'x;
         case (op_code)
             5'b01100: begin // R-Type
@@ -93,6 +92,7 @@ module decoder(
                 alu_src_b = 1'b1;
                 res_src = 2'b01;
                 alu_op = ALU_ADD;
+                mem_s_type = funct3;
             end
             5'b11000: begin //B-Type
                 reg_write = 1'b0;

@@ -16,6 +16,7 @@ module imm_gen(
         imm = 'x;
         case (op_code)
             5'b00100: imm = {{20{instruction[31]}}, instruction[31:20]}; /// I-Type
+            5'b00000: imm = {{20{instruction[31]}}, instruction[31:20]}; /// I-Type
             5'b11001: imm = {{20{instruction[31]}}, instruction[31:20]}; /// I-Type
             5'b01000: imm = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]}; /// S-Type
             5'b01101: imm = {instruction[31:12], 12'b0}; /// U-Type
