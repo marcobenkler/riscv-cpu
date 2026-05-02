@@ -8,11 +8,13 @@ module decoder(
     input  logic zero, lt,  ///< zero flag from ALU for B-Type
     output logic reg_write, alu_src_a, alu_src_b, mem_write,///< single bit controls
     output logic [1:0] pc_src, ///< 00 = default +4, 01 = pc = imm, 10 = rs1 + imm
-    output logic [2:0] res_src, ///< 00 = alu, 01 = mem, 10 = imm, 11 = pc + 4
+    output logic [2:0] res_src, ///< 000 = alu, 001 = mem, 010 = imm, 011 = pc + 4, 100 = csr
     output logic [3:0] alu_op, ///< alu controller
     output logic [2:0] mem_s_type, ///< tell data_memory which S-Type is used
+    //CSR
     output logic [2:0] csr_op, ///< op code for csr module
-    output logic csr_en ///< enable entire csr block
+    output logic [3:0] exc_cause,
+    output logic csr_write
 );
     typedef enum logic [3:0] {
         ALU_ADD,
@@ -44,9 +46,11 @@ module decoder(
         pc_src = 2'b00;
         mem_write = 1'b0;
         alu_src_a = 1'b0;
-        csr_op = funct3;
         mem_s_type = funct3;
-        csr_en = 0;
+        //CSR
+        csr_op = funct3;
+        csr_write = '0;
+        exc_cause = 'x;
         case (op_code)
             5'b01100: begin // R-Type
                 reg_write = 1'b1; // Single bit controlls are Type specific
@@ -161,11 +165,24 @@ module decoder(
                 res_src = 3'b011;
                 alu_op = ALU_ADD;
             end
-            5'b11100: begin CSR
-                csr_en = 1'b1;
-                res_src = 3'b100;
+            5'b11100: begin // CSR
+                case (funct3) 
+                    3'b000: begin
+                        case (instruction[20])
+                            1'b0: exc_cause = 4'hB; ///< ECALL
+                            1'b1: exc_cause = 4'h3; ///< EBREAK
+                        endcase
+                    end
+                    default: begin
+                        csr_write = 1'b1;
+                        reg_write = 1'b1;
+                        res_src = 3'b100;
+                    end
+                endcase
             end
-            default: ;
+            default: begin
+                exc_cause = 4'h2; ///< Illegal instruction
+            end
         endcase        
     end
 

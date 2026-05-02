@@ -6,7 +6,7 @@ module csr_regfile(
     input  logic clk, reset_n,
     input  logic [31:0] instruction, // entire instruction vector
     input  logic [31:0] pc_current, // current pc to remember where to jump back after trap
-    input  logic [31:0] rs1_data_a, // data from register[rs1]
+    input  logic [31:0] rs1_data, // data from register[rs1]
     input  logic [3:0] exc_cause, // decoder tells exception was recognized
     input  logic [2:0] csr_op, // which operation, declared by decoder
     input  logic csr_write, // enable writing in csr, declared by decoder
@@ -20,18 +20,33 @@ module csr_regfile(
     assign csr_addr = instruction[31:20];
 
     logic [31:0] csr_data;
-    assign csr_data = csr_op[2] ? {27'b0, instruction[19:15]} : rs1_data_a;
+    assign csr_data = csr_op[2] ? {27'b0, instruction[19:15]} : rs1_data;
 
     logic mret_detected;
     assign mret_detected = (instruction == 32'h30200073);
 
     // Workaround to prevent 4000+ unused registers
+    // Must have register
     logic [31:0] mstatus;
     logic [31:0] mie;
     logic [31:0] mtvec;
     logic [31:0] mepc;
     logic [31:0] mcause;
     logic [31:0] mip;
+
+    // Nice to have register
+    logic [31:0] mscratch;
+    logic [31:0] misa;
+    logic [31:0] mhartid;
+    logic [31:0] mvendorid;
+    logic [31:0] marchid;
+    logic [31:0] mimpid;
+
+    assign misa = 32'h40001100;
+    assign mhartid = '0;
+    assign mvendorid = '0;
+    assign marchid = '0;
+    assign mimpid = '0;
 
     logic [31:0] csr_write_val;
 
@@ -48,6 +63,12 @@ module csr_regfile(
             12'h341: csr_res = mepc;
             12'h342: csr_res = mcause;
             12'h344: csr_res = mip;
+            12'hF11: csr_res = mvendorid;
+            12'hF12: csr_res = marchid;
+            12'hF13: csr_res = mimpid;
+            12'hF14: csr_res = mhartid;
+            12'h301: csr_res = misa;
+            12'h340: csr_res = mscratch;
             default: ;
         endcase
         case (csr_op[1:0]) 
@@ -102,7 +123,13 @@ module csr_regfile(
                 12'h305: mtvec <= csr_write_val;
                 12'h341: mepc <= csr_write_val;
                 12'h342: mcause <= csr_write_val;
+                12'h340: mscratch <= csr_write_val;
                 12'h344: ; // mip read-only, driven by CLINT
+                12'hF11: ; // mvendorid read-only
+                12'hF12: ; // marchid read-only
+                12'hF13: ; // mimpid read-only
+                12'hF14: ; // mhartid read-only
+                12'h301: ; // misa read-only
                 default: $error("CSR write to unknown address: 0x%h", csr_addr);
             endcase
         end

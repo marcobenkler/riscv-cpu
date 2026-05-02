@@ -23,8 +23,11 @@ module sc_cpu(
 
     // memory access
     logic [31:0] read_data;
-    // writeback
-
+    // csr
+    logic [31:0] csr_res, csr_pc;
+    logic [3:0] exc_cause;
+    logic [2:0] csr_op;
+    logic trap_taken, csr_write, time_itr;
     // ---instances---
     // fetch
     update_pc update_pc(
@@ -39,8 +42,10 @@ module sc_cpu(
     next_pc next_pc(
         .alu_res(alu_res),
         .imm_res(imm_res),
+        .csr_pc(csr_pc),
         .pc_current(pc_current),
         .pc_src(pc_src),
+        .trap_taken(trap_taken),
         .pc_next(pc_next), //output
         .pc_default(pc_default) //output
     );
@@ -79,7 +84,10 @@ module sc_cpu(
         .pc_src(pc_src), //output
         .res_src(res_src), //output
         .alu_op(alu_op), //output
-        .mem_s_type(mem_s_type) //output
+        .mem_s_type(mem_s_type), //output
+        .csr_op(csr_op), //output
+        .exc_cause(exc_cause), //output
+        .csr_write(csr_write) //output
     );
 
     //execute
@@ -114,14 +122,31 @@ module sc_cpu(
         .read_data(read_data) //output
     );
 
-    //writeback=
+    //writeback
     result_select result_select(
         .alu_res(alu_res),
         .imm_res(imm),
         .mem_res(read_data),
         .pc_res(pc_default),
+        .csr_res(csr_res),
         .res_src(res_src),
         .result(result)
+    );
+
+    //csr
+    csr_regfile csr_regfile(
+        .clk(clk),
+        .reset_n(reset_n),
+        .instruction(instruction),
+        .pc_current(pc_current),
+        .rs1_data(rs1_data),
+        .exc_cause(exc_cause),
+        .csr_op(csr_op),
+        .csr_write(csr_write),
+        .time_itr(time_itr),
+        .trap_taken(trap_taken),
+        .csr_res(csr_res), //output
+        .csr_pc(csr_pc) //output
     );
 
 endmodule
