@@ -8,9 +8,11 @@ module decoder(
     input  logic zero, lt,  ///< zero flag from ALU for B-Type
     output logic reg_write, alu_src_a, alu_src_b, mem_write,///< single bit controls
     output logic [1:0] pc_src, ///< 00 = default +4, 01 = pc = imm, 10 = rs1 + imm
-    output logic [1:0] res_src, ///< 00 = alu, 01 = mem, 10 = imm, 11 = pc + 4
+    output logic [2:0] res_src, ///< 00 = alu, 01 = mem, 10 = imm, 11 = pc + 4
     output logic [3:0] alu_op, ///< alu controller
-    output logic [2:0] mem_s_type ///< tell data_memory which S-Type is used
+    output logic [2:0] mem_s_type, ///< tell data_memory which S-Type is used
+    output logic [2:0] csr_op, ///< op code for csr module
+    output logic csr_en ///< enable entire csr block
 );
     typedef enum logic [3:0] {
         ALU_ADD,
@@ -35,18 +37,21 @@ module decoder(
 
     always_comb begin
         alu_op = 'x;
-        pc_src = 2'b00;
-        mem_write = 1'b0;
         mem_s_type = 'x;
         res_src = 'x;
         reg_write = 'x;
-        alu_src_a = 1'b0;
         alu_src_b = 'x;
+        pc_src = 2'b00;
+        mem_write = 1'b0;
+        alu_src_a = 1'b0;
+        csr_op = funct3;
+        mem_s_type = funct3;
+        csr_en = 0;
         case (op_code)
             5'b01100: begin // R-Type
                 reg_write = 1'b1; // Single bit controlls are Type specific
                 alu_src_b = 1'b0;
-                res_src = 2'b00;
+                res_src = 3'b000;
                 case (funct3) 
                     3'b000: case (funct7)
                         7'b0000000: alu_op = ALU_ADD;
@@ -70,7 +75,7 @@ module decoder(
             5'b00100: begin // I-Type
                 reg_write = 1'b1;
                 alu_src_b = 1'b1;
-                res_src = 2'b00;
+                res_src = 3'b000;
                 case (funct3)
                     3'b000: alu_op = ALU_ADD;
                     3'b001: alu_op = ALU_SLL;
@@ -90,9 +95,8 @@ module decoder(
             5'b00000: begin // I-Type
                 reg_write = 1'b1;
                 alu_src_b = 1'b1;
-                res_src = 2'b01;
+                res_src = 3'b001;
                 alu_op = ALU_ADD;
-                mem_s_type = funct3;
             end
             5'b11000: begin //B-Type
                 reg_write = 1'b0;
@@ -129,14 +133,14 @@ module decoder(
             5'b01101: begin //U-Type
                 reg_write = 1'b1;
                 alu_src_b = 'x;
-                res_src = 2'b10;
+                res_src = 3'b010;
             end
             5'b00101: begin //U-Type
                 reg_write = 1'b1;
                 alu_src_a = 1'b1; // Take PC instead of rs1
                 alu_src_b = 1'b1;
                 alu_op = ALU_ADD;
-                res_src = 2'b00;
+                res_src = 3'b000;
             end
             5'b01000: begin //S-Type Decide in memory block which S-Type specifically
                 reg_write = 1'b0;
@@ -144,19 +148,22 @@ module decoder(
                 mem_write = 1'b1;
                 res_src = 'x;
                 alu_op = ALU_ADD;
-                mem_s_type = funct3;
             end
             5'b11011: begin //J-Type
                 reg_write = 1'b1;
                 pc_src = 2'b01;
-                res_src = 2'b11;
+                res_src = 3'b011;
             end
             5'b11001: begin //JALR
                 reg_write = 1'b1;
                 alu_src_b = 1'b1;
                 pc_src = 2'b10;
-                res_src = 2'b11;
+                res_src = 3'b011;
                 alu_op = ALU_ADD;
+            end
+            5'b11100: begin CSR
+                csr_en = 1'b1;
+                res_src = 3'b100;
             end
             default: ;
         endcase        

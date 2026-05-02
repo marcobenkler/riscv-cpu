@@ -14,7 +14,7 @@ module sc_cpu(
     // decode
     logic        reg_write, zero, lt, alu_src_a, alu_src_b, mem_write;
     logic [31:0] result, rs1_data, rs2_data, instruction, imm;
-    logic [1:0]  res_src;
+    logic [2:0]  res_src;
     logic [2:0]  mem_s_type;
     logic [3:0]  alu_op;
     
