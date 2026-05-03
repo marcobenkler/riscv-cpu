@@ -5,7 +5,9 @@
 *
 */
 
-module alu_top(
+module alu_top
+    import alu_pkg::alu_op_e;
+(
     input   logic [31:0] a,                     ///< first input (rs1)
     input   logic [31:0] b,                     ///< second input (rs2, imm)
     input   logic [3:0]  alu_op,                ///< op_code from decoder
@@ -17,19 +19,6 @@ module alu_top(
     logic [31:0] compare_result;
     logic [31:0] shift_result;
     logic [31:0] logic_result;
-
-    typedef enum logic [3:0] {
-        ALU_ADD,
-        ALU_SUB,
-        ALU_AND,
-        ALU_OR,
-        ALU_XOR,
-        ALU_SLL,
-        ALU_SRL,
-        ALU_SRA,
-        ALU_SLT,
-        ALU_SLTU
-    } alu_op_e;
 
     logic        sub;
     logic [1:0]  cmp_op;
