@@ -4,15 +4,15 @@
 * Handle data from memory and decide which S-Type ius correct
 **/
 
-module data_memory (
+module data_memory #(
+    parameter MEM_DEPTH = 8191
+)(
     input  logic mem_write, clk, reset_n, ///< enable writing, clock, reset
     input  logic [2:0] mem_s_type, ///< which funct3 of S-Type was used
     input  logic [31:0] address, 
     input  logic [31:0] write_data, ///< data that's written in memory from register
     output logic [31:0] read_data ///< data that's read from memory into register
 );
-
-    localparam MEM_DEPTH = 8191;
 
     logic [7:0] mem [MEM_DEPTH:0];
 

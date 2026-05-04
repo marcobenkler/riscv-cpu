@@ -3,7 +3,9 @@
 *
 **/
 
-module decoder(
+module decoder
+    import alu_pkg::alu_op_e;
+(
     input  logic [31:0] instruction, ///< entire instruction vector
     input  logic zero, lt,  ///< zero flag from ALU for B-Type
     output logic reg_write, alu_src_a, alu_src_b, mem_write,///< single bit controls
@@ -16,18 +18,6 @@ module decoder(
     output logic [3:0] exc_cause,
     output logic csr_write
 );
-    typedef enum logic [3:0] {
-        ALU_ADD,
-        ALU_SUB,
-        ALU_AND,
-        ALU_OR,
-        ALU_XOR,
-        ALU_SLL,
-        ALU_SRL,
-        ALU_SRA,
-        ALU_SLT,
-        ALU_SLTU
-    } alu_op_e;
 
     logic [4:0] op_code;
     logic [2:0] funct3;
