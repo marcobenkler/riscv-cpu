@@ -12,7 +12,7 @@ module alu_top
     input   logic [31:0] b,                     ///< second input (rs2, imm)
     input   logic [3:0]  alu_op,                ///< op_code from decoder
     output  logic [31:0] result,                ///< operation result
-    output  logic zero, lt                          ///< zero flag for BEQ          
+    output  logic zero, lt                      ///< zero flag for BEQ          
 );
 
     logic [31:0] addsub_result;
@@ -49,7 +49,7 @@ module alu_top
     
     alu_addsub  addsub_module(.a(a), .b(b), .result(addsub_result), .sub(sub));                          //sub / add
     alu_compare compare_module(.a(a), .b(b), .result(compare_result), .cmp_op(cmp_op));                  //eq / lt / ltu/ ne
-    alu_shift   shift_module(.a(a), .b(b), .result(shift_result), .shift_op(shift_op));    //sl / srl / sra      
+    alu_shift   shift_module(.a(a), .b(b), .result(shift_result), .shift_op(shift_op));                  //sl / srl / sra      
     alu_logic   logic_module(.a(a), .b(b), .result(logic_result), .logic_op(logic_op));                  //and / or / xor
 
     always_comb begin
