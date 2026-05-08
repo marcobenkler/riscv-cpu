@@ -4,7 +4,7 @@
 **/
 
 module decoder
-    import alu_pkg::alu_op_e;
+    import alu_pkg::*;
 (
     input  logic [31:0] instruction, ///< entire instruction vector
     input  logic zero, lt,  ///< zero flag from ALU for B-Type

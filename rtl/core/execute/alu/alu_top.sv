@@ -6,7 +6,7 @@
 */
 
 module alu_top
-    import alu_pkg::alu_op_e;
+    import alu_pkg::*;
 (
     input   logic [31:0] a,                     ///< first input (rs1)
     input   logic [31:0] b,                     ///< second input (rs2, imm)
