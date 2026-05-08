@@ -36,7 +36,9 @@ read_verilog -sv [list \
 ]
 
 # --- Synthesize ---
-synth_design -top ${top_module} -part ${part} -flatten_hierarchy rebuilt
+synth_design -top ${top_module} -part ${part} -flatten_hierarchy rebuilt \
+    #Override variable
+    -generic MEM_DEPTH=15
 
 # --- Reports ---
 report_utilization -file ${output_dir}/utilization.rpt
