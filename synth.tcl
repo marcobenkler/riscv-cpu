@@ -40,7 +40,7 @@ synth_design -top ${top_module} -part ${part} -flatten_hierarchy rebuilt
 
 # --- Reports ---
 report_utilization -file ${output_dir}/utilization.rpt
-report_timing_summary -file ${output_dir}/timing_summary.rpt
+#report_timing_summary -file ${output_dir}/timing_summary.rpt consumes too much RAM
 report_hierarchy -file ${output_dir}/hierarchy.rpt
 
 puts "============================================"
