@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head -60 /Users/marcobenkler/Dev/Verilog/riscv_test/picorv32/tests/mul.S)",
+      "Read(//Users/marcobenkler/Dev/Verilog/riscv_test/picorv32/tests/**)"
+    ]
+  }
+}

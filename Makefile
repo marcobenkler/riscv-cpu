@@ -30,7 +30,7 @@ $(BUILD)/$(TEST).bin: $(BUILD)/$(TEST).elf
 	$(TOOLCHAIN)-objcopy -O binary $< $@
 
 $(BUILD)/$(TEST).elf: $(TESTS_DIR)/$(TEST).S $(SCRIPTS)/start.S $(SCRIPTS)/link.ld | $(BUILD)
-	$(TOOLCHAIN)-gcc -march=rv32i -mabi=ilp32 -nostdlib -nostartfiles \
+	$(TOOLCHAIN)-gcc -march=rv32im -mabi=ilp32 -nostdlib -nostartfiles \
 	    -I$(TESTS_DIR) \
 	    -DTEST_FUNC_NAME=$(TEST) \
 	    '-DTEST_FUNC_TXT="$(TEST)"' \
@@ -49,12 +49,15 @@ test-all:
 	    $(RTL_FILES) $(TB_FILES)
 	@pass=0; fail=0; \
 	for test in $(ALL_TESTS); do \
-		$(MAKE) --no-print-directory compile TEST=$$test > /dev/null 2>&1; \
-		result=$$(./obj_dir/Vtb_sc_cpu 2>/dev/null); \
-		if echo "$$result" | grep -q "TIMEOUT"; then \
-			printf "FAIL  $$test\n"; fail=$$((fail+1)); \
+		if ! $(MAKE) -B --no-print-directory compile TEST=$$test > /dev/null 2>&1; then \
+			printf "FAIL  $$test  (compile error)\n"; fail=$$((fail+1)); \
 		else \
-			printf "PASS  $$test\n"; pass=$$((pass+1)); \
+			result=$$(./obj_dir/Vtb_sc_cpu 2>&1); \
+			if echo "$$result" | grep -q "TIMEOUT"; then \
+				printf "FAIL  $$test\n"; fail=$$((fail+1)); \
+			else \
+				printf "PASS  $$test\n"; pass=$$((pass+1)); \
+			fi; \
 		fi; \
 	done; \
 	echo ""; echo "$$pass passed, $$fail failed out of $$((pass+fail)) tests"
