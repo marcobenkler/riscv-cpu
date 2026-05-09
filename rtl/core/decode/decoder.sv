@@ -12,7 +12,9 @@ module decoder
     output logic [1:0] pc_src, ///< 00 = default +4, 01 = pc = imm, 10 = rs1 + imm
     output logic [2:0] res_src, ///< 000 = alu, 001 = mem, 010 = imm, 011 = pc + 4, 100 = csr
     output logic [3:0] alu_op, ///< alu controller
+    output logic [1:0] mul_op, ///< mul controller
     output logic [2:0] mem_s_type, ///< tell data_memory which S-Type is used
+    output logic [1:0] ex_src, ///< alu, mul or div result
     //CSR
     output logic [2:0] csr_op, ///< op code for csr module
     output logic [3:0] exc_cause,
@@ -37,6 +39,8 @@ module decoder
         mem_write = 1'b0;
         alu_src_a = 1'b0;
         mem_s_type = funct3;
+        mul_op = 'x;
+        ex_src = 2'b00;
         //CSR
         csr_op = funct3;
         csr_write = '0;
@@ -50,11 +54,36 @@ module decoder
                     3'b000: case (funct7)
                         7'b0000000: alu_op = ALU_ADD;
                         7'b0100000: alu_op = ALU_SUB;
+                        7'b0000001: begin
+                            mul_op = MUL;
+                            ex_src = 2'b01;
+                        end
                         default: ;
                     endcase
-                    3'b001: alu_op = ALU_SLL;
-                    3'b010: alu_op = ALU_SLT;
-                    3'b011: alu_op = ALU_SLTU;
+                    3'b001: case (funct7)
+                        7'b0000000: alu_op = ALU_SLL;
+                        7'b0000001: begin
+                            mul_op = MULH;
+                            ex_src = 2'b01;
+                        end
+                        default: ;
+                    endcase
+                    3'b010: case(funct7)
+                        7'b0000000: alu_op = ALU_SLT;
+                        7'b0000001: begin
+                            mul_op = MULHSU;
+                            ex_src = 2'b01; 
+                        end
+                        default: ;
+                    endcase
+                    3'b011: case(funct7)
+                        7'b0000000: alu_op = ALU_SLTU;
+                        7'b0000001: begin
+                            mul_op = MULHU;
+                            ex_src = 2'b01;
+                        end
+                        default: ;
+                    endcase
                     3'b100: alu_op = ALU_XOR;
                     3'b101: case (funct7)
                         7'b0000000: alu_op = ALU_SRL;

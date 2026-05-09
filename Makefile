@@ -3,7 +3,7 @@ TESTS_DIR := ../riscv_test/picorv32/tests
 SCRIPTS   := scripts
 BUILD     := build
 
-RTL_FILES := $(shell find rtl -name "*.sv" -not -path "*/muldiv/*")
+RTL_FILES := $(shell find rtl -name "*.sv" -not -path "*/srt2/*")
 TB_FILES  := tb/core/tb_sc_cpu.sv
 
 TEST ?= add
@@ -50,13 +50,13 @@ test-all:
 	@pass=0; fail=0; \
 	for test in $(ALL_TESTS); do \
 		if ! $(MAKE) -B --no-print-directory compile TEST=$$test > /dev/null 2>&1; then \
-			printf "FAIL  $$test  (compile error)\n"; fail=$$((fail+1)); \
+			printf "\033[1;31mFAIL\033[0m  $$test  (compile error)\n"; fail=$$((fail+1)); \
 		else \
 			result=$$(./obj_dir/Vtb_sc_cpu 2>&1); \
 			if echo "$$result" | grep -q "TIMEOUT"; then \
-				printf "FAIL  $$test\n"; fail=$$((fail+1)); \
+				printf "\033[1;31mFAIL\033[0m  $$test\n"; fail=$$((fail+1)); \
 			else \
-				printf "PASS  $$test\n"; pass=$$((pass+1)); \
+				printf "\033[1;32mPASS\033[0m  $$test\n"; pass=$$((pass+1)); \
 			fi; \
 		fi; \
 	done; \

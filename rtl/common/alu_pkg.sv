@@ -16,5 +16,12 @@ package alu_pkg;
         IDLE,
         RUNNING,
         DONE
-    }
+    } div_state_e;
+
+    typedef enum logic [1:0] {
+        MUL,
+        MULH,
+        MULHSU,
+        MULHU
+    } mul_op_e;
 endpackage

@@ -17,9 +17,12 @@ module sc_cpu(
     logic [2:0]  res_src;
     logic [2:0]  mem_s_type;
     logic [3:0]  alu_op;
+    logic [1:0]  mul_op;
+    logic [1:0]  ex_src;
     
     // execute
     logic [31:0] a, b;
+    logic [31:0] mul_res;
 
     // memory access
     logic [31:0] mem_read_data;
@@ -96,7 +99,9 @@ module sc_cpu(
         .pc_src(pc_src), //output
         .res_src(res_src), //output
         .alu_op(alu_op), //output
+        .mul_op(mul_op),
         .mem_s_type(mem_s_type), //output
+        .ex_src(ex_src), //output
         .csr_op(csr_op), //output
         .exc_cause(exc_cause), //output
         .csr_write(csr_write) //output
@@ -123,6 +128,13 @@ module sc_cpu(
         .lt(lt) //output
     );
 
+    multiply multiply(
+        .rs1_data(rs1_data),
+        .rs2_data(rs2_data),
+        .mul_op(mul_op),
+        .mul_res(mul_res) //output
+    );
+
     //memory access
     data_memory data_memory(
         .clk(clk),
@@ -147,11 +159,13 @@ module sc_cpu(
     //writeback
     result_select result_select(
         .alu_res(alu_res),
+        .mul_res(mul_res),
         .imm_res(imm),
         .mem_res(rdata),
         .pc_res(pc_default),
         .csr_res(csr_res),
         .res_src(res_src),
+        .ex_src(ex_src),
         .result(result)
     );
 
