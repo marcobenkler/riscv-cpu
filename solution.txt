@@ -1,0 +1,104 @@
+# Vivado Synthese — Problembericht & Lösungen
+
+**Projekt:** RISC-V Single-Cycle CPU (RV32I)  
+**Target:** Zynq-7010 (xc7z010clg400-1)  
+**Datum:** 09.05.2026  
+**Ergebnis:** ~1000 LUTs nach allen Fixes
+
+---
+
+## Zusammenfassung
+
+Die Synthese des RISC-V Cores mit Vivado 2025.2 auf dem netcup Server schlug wiederholt fehl oder lieferte 0 LUTs. Die Ursachen waren drei voneinander unabhängige Probleme, die zusammen dafür sorgten, dass Vivado den gesamten Core wegoptimierte oder sich in der Technology-Mapping-Phase aufhängte.
+
+---
+
+## Problem 1: Package-Enums nicht sichtbar
+
+**Symptom:** `ALU_ADD is not declared` in `decoder.sv`
+
+**Ursache:** Vivado behandelt jede Datei als eigene Compilation Unit. Ein `import alu_pkg::alu_op_e;` importiert nur den Typ, nicht die Enum-Werte (`ALU_ADD`, `ALU_SUB`, etc.).
+
+**Fix:** `import alu_pkg::*;` statt `import alu_pkg::alu_op_e;` in allen betroffenen Files.
+
+---
+
+## Problem 2: Vivado hängt bei Technology Mapping (>2 Stunden)
+
+**Symptom:** Synthese bleibt nach "Finished Loading Part and Timing Information" stehen, 100% CPU, kein Fortschritt im Log.
+
+**Ursache:** Zwei Faktoren:
+
+1. **`data_memory.sv`** — Der synchrone Reset iterierte über alle Einträge:
+   ```sv
+   if (!reset_n) begin
+       for (int i = 0; i < $size(mem); i++)
+           mem[i] <= 0;
+   end
+   ```
+   Bei `MEM_DEPTH = 8191` erzeugt das 65.536 Reset-Register. Vivado versuchte diese in LUTs zu mappen → RAM/CPU-Explosion.
+
+2. **Byte-Writes in `data_memory.sv`** — Verschiedene `case`-Zweige schreiben an verschiedene Array-Indizes im selben `always_ff`. Vivado erkennt das als "multiple writes via different ports" → kann kein BRAM inferieren → löst alles in Register auf.
+
+**Fix:**
+- Reset-Loop entfernt (BRAMs unterstützen keinen expliziten Reset)
+- Memory auf word-addressed (32-bit) umgestellt → ein Write-Port → saubere BRAM-Inferenz
+- `(* ram_style = "block" *)` Attribut hinzugefügt
+
+---
+
+## Problem 3: Vivado optimiert gesamten Core weg (0 LUTs)
+
+**Symptom:** Synthese erfolgreich, aber `utilization.rpt` zeigt 0 LUTs, 0 Register, 0 BRAMs.
+
+**Ursache:** Drei zusammenwirkende Faktoren:
+
+1. **`sc_cpu` hat keine Outputs.** Nur `clk` und `reset_n` als Inputs. Vivado sieht kein Signal das nach außen geht → alles ist "dead logic" → wird komplett entfernt.
+
+2. **`instruction_memory` war kombinatorisch.** Der `always_comb`-Read-Port verhindert BRAM-Inferenz. In Kombination mit `$readmemh` sind die Daten zur Synthese-Zeit bekannt → Vivado propagiert Konstanten durch den gesamten Core → alles wird wegoptimiert.
+
+3. **`time_itr` hatte keinen Treiber.** Das Signal war deklariert aber nie zugewiesen (CLINT noch nicht implementiert). Vivado propagiert `x` durch den CSR-Pfad.
+
+**Fix:**
+- `debug_out` Port an `sc_cpu` hinzugefügt (`assign debug_out = result;`)
+- `time_itr` direkt auf `1'b0` verdrahtet (CLINT-Placeholder)
+- `instruction_memory` auf synchronen Read umgestellt (`always_ff`) → BRAM-Inferenz
+- `-mode out_of_context` in `synth_design` → verhindert I/O-Buffer-Insertion und aggressive Constant-Propagation
+
+---
+
+## Finale Konfiguration
+
+### synth.tcl
+```tcl
+synth_design -top sc_cpu -part xc7z010clg400-1 -mode out_of_context
+```
+
+### instruction_memory.sv (geändert)
+- `always_comb` → `always_ff @(posedge clk)` (synchroner Read)
+- Word-addressed: `mem[pc[31:2]]` statt byte-indexed
+- `(* ram_style = "block" *)` für BRAM-Inferenz
+- `$readmemh` für Programm-Inhalt
+
+### data_memory.sv (geändert)
+- Reset-Loop komplett entfernt
+- Word-addressed: `mem[address[31:2]]` statt byte-indexed
+- `(* ram_style = "block" *)` für BRAM-Inferenz
+- `reset_n` Port entfernt
+
+### sc_cpu.sv (geändert)
+- `output logic [31:0] debug_out` hinzugefügt
+- `assign debug_out = result;`
+- `time_itr` → `1'b0` (CLINT-Placeholder)
+- `.clk(clk)` an `instruction_memory` durchgereicht
+- `.reset_n(reset_n)` von `data_memory` entfernt
+
+---
+
+## Offene Punkte für später
+
+1. **Byte/Halfword-Access** — `data_memory` ist jetzt word-only. Für echte S-Type/L-Type Byte-Zugriffe braucht es eine Wrapper-Logik um das BRAM herum.
+2. **CLINT** — `time_itr` ist hardcoded auf `1'b0`. Muss an CLINT angeschlossen werden.
+3. **XDC Constraints** — Für Place & Route und Bitstream-Generierung nötig. Digilent stellt ein Master-XDC für den Zybo Z7 bereit.
+4. **Timing-Analyse** — `report_timing_summary` wurde entfernt (RAM-Verbrauch). Erst mit XDC sinnvoll.
+5. **1-Cycle Read-Latenz** — `instruction_memory` hat jetzt 1 Takt Latenz durch synchronen Read. Muss im CPU-Timing berücksichtigt werden.

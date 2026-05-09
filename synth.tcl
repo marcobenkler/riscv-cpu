@@ -32,7 +32,7 @@ read_verilog -sv [list \
     ${project_dir}/rtl/core/sc_cpu.sv \
 ]
 
-synth_design -top ${top_module} -part ${part} -flatten_hierarchy rebuilt -generic MEM_DEPTH=15
+synth_design -top ${top_module} -part ${part} -mode out_of_context 
 
 report_utilization -file ${output_dir}/utilization.rpt
 

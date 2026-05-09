@@ -1,20 +1,20 @@
 /**
-* @brief Create the instruction vector out of the pc
-*
-* By using the pc combine 4 byte into 1 instruction vector via comb
+* @brief Instruction memory — synchronous read for BRAM inference
+* NOTE: Adds 1 cycle read latency vs original combinational design
 **/
 module instruction_memory #(
-    parameter MEM_DEPTH = 8191
+    parameter MEM_DEPTH = 255
 )(
-    input logic [31:0] pc,          ///< which instruction to take
-    output logic [31:0] instruction ///< instruction vector
+    input  logic        clk,
+    input  logic [31:0] pc,
+    output logic [31:0] instruction
 );
+    (* ram_style = "block" *)
+    logic [31:0] mem [0:MEM_DEPTH/4];
 
-    logic [7:0] memo [MEM_DEPTH:0];
-    always_comb begin
-        for(int i = 0; i < 4; i++) begin
-            instruction[8*i +: 8] = memo[pc + i];
-        end
-    end
+    initial $readmemh("/opt/projects/riscv-cpu/rtl/core/fetch/program.hex", mem);
+
+    always_ff @(posedge clk)
+        instruction <= mem[pc[31:2]];
 
 endmodule

@@ -3,7 +3,8 @@
 **/
 
 module sc_cpu(
-    input logic clk, reset_n 
+    input logic clk, reset_n,
+    output logic [31:0] debug_out 
 );
     
     // ---signals---
@@ -27,7 +28,7 @@ module sc_cpu(
     logic [31:0] csr_res, csr_pc;
     logic [3:0] exc_cause;
     logic [2:0] csr_op;
-    logic trap_taken, csr_write, time_itr;
+    logic trap_taken, csr_write;
     // ---instances---
     // fetch
     update_pc update_pc(
@@ -51,6 +52,7 @@ module sc_cpu(
     );
 
     instruction_memory instruction_memory(
+        .clk(clk),
         .pc(pc_current),
         .instruction(instruction)
     );
@@ -114,7 +116,6 @@ module sc_cpu(
     //memory access
     data_memory data_memory(
         .clk(clk),
-        .reset_n(reset_n),
         .mem_write(mem_write),
         .mem_s_type(mem_s_type),
         .address(alu_res),
@@ -143,10 +144,12 @@ module sc_cpu(
         .exc_cause(exc_cause),
         .csr_op(csr_op),
         .csr_write(csr_write),
-        .time_itr(time_itr),
+        .time_itr(1'b0),
         .trap_taken(trap_taken),
         .csr_res(csr_res), //output
         .csr_pc(csr_pc) //output
     );
 
+    // TODO: time_itr — connect to CLINT once implemented
+    assign debug_out = result;
 endmodule
