@@ -11,4 +11,10 @@ package alu_pkg;
         ALU_SLT,
         ALU_SLTU
     } alu_op_e;
+
+    typedef enum logic [1:0] {
+        IDLE,
+        RUNNING,
+        DONE
+    }
 endpackage

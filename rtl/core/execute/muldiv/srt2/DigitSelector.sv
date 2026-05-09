@@ -9,7 +9,6 @@ module digitSelect (
     output logic signed [1:0] Q
 );
 
-//Adjust inputs no overflow garanteed, 32 bits thats few million
 logic signed [34:0] R8;
 logic signed [34:0] D5;
 
