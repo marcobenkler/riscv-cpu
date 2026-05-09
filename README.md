@@ -95,6 +95,11 @@ The project focuses on architectural correctness and clear RTL structure rather 
 ```bash
 # macOS (Homebrew)
 brew install verilator riscv-gnu-toolchain
+
+# Linux
+sudo apt install verilatorgcc-risc64-unknown-elf
+
+# 64-bit toolchain supports RV32 via `-march=rv32i -mabi=ilp32`
 ```
 
 ### Simulate the full CPU
@@ -107,6 +112,8 @@ make sim
 make sim TEST=lui
 make sim TEST=jalr
 make sim TEST=sw
+
+# Run all tests at once make test-all
 ```
 
 This compiles the assembly test with `riscv64-unknown-elf-gcc`, converts the binary to a hex file, then builds and runs the Verilator simulation. A waveform is written to `sim/cpu.vcd`.
@@ -147,7 +154,7 @@ Full-CPU tests use the [PicoRV32 compliance test suite](https://github.com/Yosys
 | Trap/exception handling (M-mode) | ✅ |
 | CLINT (`mtime` / `mtimecmp`) | ✅ |
 | Memory-mapped I/O bus | ✅ |
-| Timer interrupts | ⬜ |
+| Timer interrupts | ✅ |
 | Pipelining | ⬜ |
 | FreeRTOS bring-up | ⬜ |
 

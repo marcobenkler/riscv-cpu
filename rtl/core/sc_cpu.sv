@@ -33,6 +33,7 @@ module sc_cpu(
     // bus interconnect
     logic        clint_sel;
     logic [31:0] rdata;
+    logic        mem_write_en;
     
     // clint
     logic        clint_write_en;

@@ -8,7 +8,11 @@ TB_FILES  := tb/core/tb_sc_cpu.sv
 
 TEST ?= add
 
-.PHONY: sim compile clean
+ALL_TESTS := add addi and andi auipc beq bge bgeu blt bltu bne div divu j jal jalr \
+             lb lbu lh lhu lui lw mul mulh mulhsu mulhu or ori rem remu sb sh simple \
+             sll slli slt slti sra srai srl srli sub sw xor xori
+
+.PHONY: sim compile clean test-all
 
 sim: tb/core/program.hex
 	verilator --binary --trace -sv --top-module tb_sc_cpu \
@@ -37,6 +41,23 @@ $(BUILD)/$(TEST).elf: $(TESTS_DIR)/$(TEST).S $(SCRIPTS)/start.S $(SCRIPTS)/link.
 
 $(BUILD):
 	mkdir -p $(BUILD)
+
+test-all:
+	verilator --binary --trace -sv --top-module tb_sc_cpu \
+	    -Wno-TIMESCALEMOD \
+	    -Mdir obj_dir \
+	    $(RTL_FILES) $(TB_FILES)
+	@pass=0; fail=0; \
+	for test in $(ALL_TESTS); do \
+		$(MAKE) --no-print-directory compile TEST=$$test > /dev/null 2>&1; \
+		result=$$(./obj_dir/Vtb_sc_cpu 2>/dev/null); \
+		if echo "$$result" | grep -q "TIMEOUT"; then \
+			printf "FAIL  $$test\n"; fail=$$((fail+1)); \
+		else \
+			printf "PASS  $$test\n"; pass=$$((pass+1)); \
+		fi; \
+	done; \
+	echo ""; echo "$$pass passed, $$fail failed out of $$((pass+fail)) tests"
 
 clean:
 	rm -rf $(BUILD) obj_dir tb/core/program.hex sim/cpu.vcd
