@@ -26,3 +26,9 @@ Correctness, clarity, and extensibility take priority over microarchitectural op
 ## Status
 
 The core is under active development and serves as a foundation for future extensions such as pipelining, interrupts, and additional ISA features.
+
+---
+
+## Architecture
+
+![CPU Architecture](architecture.png)

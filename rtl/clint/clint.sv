@@ -7,11 +7,11 @@ module clint
 (
     input  logic        clk,
     input  logic        reset_n,
-    input  logic        write_en, ///< enable override of mtimecmp and msip register
+    input  logic        clint_write_en, ///< enable override of mtimecmp and msip register
     input  logic [31:0] address, ///< address if lower or upper mtimecmp is written to
-    input  logic [31:0] wdata, ///< set new mtimecmp value via software
+    input  logic [31:0] clint_write_data, ///< set new mtimecmp value via software
     output logic        mtip, ///< interrupt flag
-    output logic [31:0] rdata ///< read data from mtime and mtimecmp
+    output logic [31:0] clint_read_data ///< read data from mtime and mtimecmp
 );
 
 logic [31:0] mtimecmp_lo;
@@ -22,12 +22,12 @@ logic [31:0] msip;
 
 always_comb begin
     case (address)
-         CLINT_MSIP: rdata = msip;
-         CLINT_MTIMECMP_LO: rdata = mtimecmp_lo;
-         CLINT_MTIMECMP_HI: rdata = mtimecmp_hi;
-         CLINT_MTIME_LO: rdata = mtime_lo;
-         CLINT_MTIME_HI: rdata = mtime_hi;
-         default: rdata = '0;
+        CLINT_MSIP: clint_read_data = msip;
+        CLINT_MTIMECMP_LO: clint_read_data = mtimecmp_lo;
+        CLINT_MTIMECMP_HI: clint_read_data = mtimecmp_hi;
+        CLINT_MTIME_LO: clint_read_data = mtime_lo;
+        CLINT_MTIME_HI: clint_read_data = mtime_hi;
+        default: clint_read_data = '0;
     endcase
 end
 
@@ -39,13 +39,13 @@ always_ff @(posedge clk or negedge reset_n) begin
         mtime_lo <= '0;
         mtime_hi <= '0;
     end 
-    else if (write_en) begin
+    else if (clint_write_en) begin
         case (address)
-            CLINT_MSIP: msip <= wdata;
-            CLINT_MTIMECMP_LO: mtimecmp_lo <= wdata;
-            CLINT_MTIMECMP_HI: mtimecmp_hi <= wdata;
-            CLINT_MTIME_LO: mtime_lo <= wdata;
-            CLINT_MTIME_HI: mtime_hi <= wdata;
+            CLINT_MSIP: msip <= clint_write_data;
+            CLINT_MTIMECMP_LO: mtimecmp_lo <= clint_write_data;
+            CLINT_MTIMECMP_HI: mtimecmp_hi <= clint_write_data;
+            CLINT_MTIME_LO: mtime_lo <= clint_write_data;
+            CLINT_MTIME_HI: mtime_hi <= clint_write_data;
             default: ;
         endcase
     end

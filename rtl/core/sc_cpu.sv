@@ -22,12 +22,23 @@ module sc_cpu(
     logic [31:0] a, b;
 
     // memory access
-    logic [31:0] read_data;
+    logic [31:0] mem_read_data;
+    
     // csr
     logic [31:0] csr_res, csr_pc;
-    logic [3:0] exc_cause;
-    logic [2:0] csr_op;
-    logic trap_taken, csr_write, time_itr;
+    logic [3:0]  exc_cause;
+    logic [2:0]  csr_op;
+    logic        trap_taken, csr_write;
+
+    // bus interconnect
+    logic        clint_sel;
+    logic [31:0] rdata;
+    
+    // clint
+    logic        clint_write_en;
+    logic [31:0] clint_read_data;
+    logic        mtip;
+
     // ---instances---
     // fetch
     update_pc update_pc(
@@ -77,10 +88,10 @@ module sc_cpu(
         .instruction(instruction),
         .zero(zero),
         .lt(lt),
-        .reg_write(reg_write),
-        .alu_src_a(alu_src_a),
-        .alu_src_b(alu_src_b),
-        .mem_write(mem_write),
+        .reg_write(reg_write), //output
+        .alu_src_a(alu_src_a), //output
+        .alu_src_b(alu_src_b), //output
+        .mem_write(mem_write), //output
         .pc_src(pc_src), //output
         .res_src(res_src), //output
         .alu_op(alu_op), //output
@@ -115,18 +126,28 @@ module sc_cpu(
     data_memory data_memory(
         .clk(clk),
         .reset_n(reset_n),
-        .mem_write(mem_write),
+        .mem_write_en(mem_write_en),
         .mem_s_type(mem_s_type),
         .address(alu_res),
-        .write_data(rs2_data),
-        .read_data(read_data) //output
+        .mem_write_data(rs2_data),
+        .mem_read_data(mem_read_data) //output
+    );
+
+    bus_interconnect bus_interconnect(
+        .address(alu_res),
+        .clint_read_data(clint_read_data),
+        .mem_data(mem_read_data),
+        .mem_write(mem_write),
+        .rdata(rdata), //output
+        .clint_write_en(clint_write_en), //output
+        .mem_write_en(mem_write_en) //output
     );
 
     //writeback
     result_select result_select(
         .alu_res(alu_res),
         .imm_res(imm),
-        .mem_res(read_data),
+        .mem_res(rdata),
         .pc_res(pc_default),
         .csr_res(csr_res),
         .res_src(res_src),
@@ -143,10 +164,21 @@ module sc_cpu(
         .exc_cause(exc_cause),
         .csr_op(csr_op),
         .csr_write(csr_write),
-        .time_itr(time_itr),
+        .time_itr(mtip),
         .trap_taken(trap_taken),
         .csr_res(csr_res), //output
         .csr_pc(csr_pc) //output
+    );
+
+    //clint
+    clint clint(
+        .clk(clk),
+        .reset_n(reset_n),
+        .clint_write_en(clint_write_en),
+        .address(alu_res),
+        .clint_write_data(rs2_data),
+        .mtip(mtip), //output
+        .clint_read_data(clint_read_data) //output
     );
 
 endmodule
