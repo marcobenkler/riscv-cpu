@@ -121,7 +121,7 @@ This compiles the assembly test with `riscv64-unknown-elf-gcc`, converts the bin
 ### View waveforms
 
 ```bash
-gtkwave sim/cpu.vcd
+surfer sim/cpu.vcd
 ```
 
 ---
@@ -157,6 +157,7 @@ Full-CPU tests use the [PicoRV32 compliance test suite](https://github.com/Yosys
 | Timer interrupts | ✅ |
 | Pipelining | ⬜ |
 | FreeRTOS bring-up | ⬜ |
+| FreeTROS on FPGA | ⬜ |
 
 ---
 
