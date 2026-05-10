@@ -6,12 +6,14 @@ module LZD32 (
    output logic[5:0]  LZ
 );
     //Debugging
-    initial $display("LZD32 loaded");
+    //initial $display("LZD32 loaded");
 
+    /*
     initial begin //monitor gibts nur einmal, der im 32 überschreibt einfach alles
     $monitor("32: t=%0t D=%h | upper=%h lower=%h | lz_up=%0d lz_lo=%0d | LZ=%0d",
              $time, D, upper, lower, lz_upper, lz_lower, LZ);
     end
+    */
 
     logic [15:0] upper;
     logic [15:0] lower;

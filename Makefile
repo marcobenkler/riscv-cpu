@@ -16,7 +16,8 @@ ALL_TESTS := add addi and andi auipc beq bge bgeu blt bltu bne div divu j jal ja
 
 .PHONY: sim compile clean test-all
 
-sim: tb/core/program.hex
+sim:
+	$(MAKE) -B compile TEST=$(TEST)
 	verilator --binary --trace -sv --top-module tb_sc_cpu \
 	    -Wno-TIMESCALEMOD \
 	    -Mdir obj_dir \

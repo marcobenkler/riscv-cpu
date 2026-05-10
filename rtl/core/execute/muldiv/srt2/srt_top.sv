@@ -19,13 +19,13 @@ module srt2
     logic [5:0] lzd_reg;
     logic [5:0] lzn_reg;
 
-    logic signed [31:0] divisor;
-    logic signed [31:0] rest;
+    logic signed [32:0] divisor;
+    logic signed [32:0] rest;
+    logic signed [32:0] temp_rest;
     logic [31:0] quotient_pos;
     logic [31:0] quotient_neg;
 
     logic signed [1:0] q;
-    logic signed [31:0] temp_rest;
     logic [4:0] cycle_count;
 
     logic signed [31:0] ND;
@@ -69,8 +69,8 @@ module srt2
                 else
                     div_res = (quotient_pos - quotient_neg) >> (lzn_reg - lzd_reg);
                 end
-            REM: div_res = $signed(rest) >>> lzn_reg;
-            REMU: div_res = rest >> lzn_reg;
+            REM: div_res = $signed(rest[31:0]) >>> lzn_reg;
+            REMU: div_res = rest[31:0] >> lzn_reg;
         endcase
         srt_done = (state == DONE);
     end
@@ -88,11 +88,12 @@ module srt2
         end else begin
             // FSM
             if (state == IDLE && srt_en) begin
-                rest <= NN;
+                rest <= {1'b0, NN};
                 state <= RUNNING;
-                divisor <= ND;
+                divisor <= {1'b0, ND};
                 lzd_reg <= LZD;
                 lzn_reg <= LZN;
+                cycle_count <= '0;
             end
             else if (state == RUNNING) begin
                 cycle_count <= cycle_count + 1;
@@ -113,7 +114,7 @@ module srt2
                 endcase
                 rest <= temp_rest;
                 // Trick to avoid extra if case
-                if (cycle_count + 1 == '0) state <= DONE;
+                if (cycle_count + 1'b1 == '0) state <= DONE;
             end
             else if(state == DONE) begin
                 state <= IDLE;

@@ -1,7 +1,7 @@
 module remainder (
-    input  logic signed [31:0] R, ND,
+    input  logic signed [32:0] R, ND,
     input  logic signed [1:0]  Q,
-    output logic signed [31:0] RNEW
+    output logic signed [32:0] RNEW
 );
 
     always_comb begin
