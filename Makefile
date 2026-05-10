@@ -3,7 +3,9 @@ TESTS_DIR := ../riscv_test/picorv32/tests
 SCRIPTS   := scripts
 BUILD     := build
 
-RTL_FILES := $(shell find rtl -name "*.sv" -not -path "*/srt2/*")
+RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
+RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv")
+RTL_FILES       := $(RTL_PKG_FILES) $(RTL_OTHER_FILES)
 TB_FILES  := tb/core/tb_sc_cpu.sv
 
 TEST ?= add

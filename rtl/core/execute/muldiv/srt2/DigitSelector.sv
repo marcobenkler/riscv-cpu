@@ -12,8 +12,8 @@ module digitSelect (
 logic signed [34:0] R8;
 logic signed [34:0] D5;
 
-assign R8 = R <<< 3;
-assign D5 = (ND <<< 2) + ND;
+assign R8 = {3'b0, R} <<< 3;
+assign D5 = ({3'b0, ND} <<< 2) + {3'b0, ND};
 
     always_comb begin
 

@@ -117,6 +117,7 @@ module decoder
                             div_op = REMU;
                             ex_src = 2'b10;
                         end
+                        default: ;
                     endcase
                     default: ;
                 endcase

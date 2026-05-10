@@ -13,23 +13,17 @@ module LZD32 (
              $time, D, upper, lower, lz_upper, lz_lower, LZ);
     end
 
-
-    //Halbieren und schauen wo die 1 ist
-    //==Falsch==// das sind einmalige initialisierungen keine drahtverbindungen
-    //logic [15:0] upper; D[31:16];
-    //logic [15:0] lower; D[15:0];
-    //==Falsch==//
-
     logic [15:0] upper;
     logic [15:0] lower;
 
+    logic isupper, islower;
+
     assign upper = D[31:16];
     assign lower = D[15:0];
-    //Prüfen, ob oben oder unten 0 kanns nie sein, ist ja teiler bei Division später
-    assign isupper = |upper; //generell mit assign arbeiten und nicht direkten Initialisierungen sonst blockierts
+
+    assign isupper = |upper;
     assign islower = |lower;
 
-    //Jetzt lokale LZ bestimmen
     logic [4:0] lz_upper;
     logic [4:0] lz_lower;
 
@@ -37,7 +31,7 @@ module LZD32 (
     LZD16 u_lzd_lower (.D(lower), .LZ(lz_lower));
 
     assign LZ = (D == 0)    ? 32 :
-                isupper     ? lz_upper : 
+                isupper     ? {1'b0, lz_upper} : 
                               (16 + lz_lower);
 
 endmodule
@@ -47,25 +41,24 @@ module LZD16 (
    output logic[4:0] LZ
 );
 
-    //Halbieren und schauen wo die 1 ist
     logic [7:0] upper;
     logic [7:0] lower;
+
+    logic isupper, islower;
 
     assign upper = D[15:8];
     assign lower = D[7:0];
     
-    //Prüfen, ob oben oder unten 0 kanns nie sein, ist ja teiler bei Division später
     assign isupper = |upper;
     assign islower = |lower;
 
-    //Jetzt lokale LZ bestimmen
     logic [3:0] lz_upper;
     logic [3:0] lz_lower;
 
     LZD8 u_lzd_upper (.D(upper), .LZ(lz_upper));
     LZD8 u_lzd_lower (.D(lower), .LZ(lz_lower));
 
-    assign LZ = isupper ? lz_upper : (8 + lz_lower);
+    assign LZ = isupper ? {1'b0, lz_upper} : (8 + lz_lower);
 
 endmodule
 
@@ -77,6 +70,8 @@ module LZD8 (
     //Halbieren und schauen wo die 1 ist
     logic [3:0] upper;
     logic [3:0] lower;
+
+    logic isupper, islower;
 
     assign upper = D[7:4];
     assign lower = D[3:0];
@@ -92,7 +87,7 @@ module LZD8 (
     LZD4 u_lzd_upper (.D(upper), .LZ(lz_upper));
     LZD4 u_lzd_lower (.D(lower), .LZ(lz_lower));
 
-    assign LZ = isupper ? lz_upper : (4 + lz_lower);
+    assign LZ = isupper ? {1'b0, lz_upper} : (4 + lz_lower);
 
 endmodule
 
@@ -104,6 +99,8 @@ module LZD4 (
     //Halbieren und schauen wo die 1 ist
     logic [1:0] upper;
     logic [1:0] lower;
+
+    logic isupper, islower;
 
     assign upper = D[3:2];
     assign lower = D[1:0];
@@ -120,7 +117,7 @@ module LZD4 (
     LZD2 u_lzd_upper (.D(upper), .LZ(lz_upper));
     LZD2 u_lzd_lower (.D(lower), .LZ(lz_lower));
 
-    assign LZ = isupper ? lz_upper : (2 + lz_lower);
+    assign LZ = isupper ? {1'b0, lz_upper} : (2 + lz_lower);
 
 endmodule
 

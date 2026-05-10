@@ -10,6 +10,7 @@ module register_file(
     input  logic clk, reset_n,               ///< default clock and reset option
     input  logic reg_write,                  ///< enable writing into register
     input  logic [31:0] result,              ///< result of computation
+    input  logic stall,                      ///< stall to stop writing, if div is working
     output logic [31:0] rs1_data, rs2_data   ///< data for compute
 );
 
@@ -24,7 +25,7 @@ module register_file(
             for (int i = 0; i < 32; i++) begin
                 regi[i] <= 0;
             end
-        end else if(reg_write && rd != '0) begin
+        end else if(reg_write && rd != '0 && !stall) begin
             regi[rd] <= result;
         end
     end

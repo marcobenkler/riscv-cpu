@@ -28,6 +28,9 @@ module sc_cpu(
     logic        div_execute;
     logic        srt_en;
     logic        srt_done;
+    logic        stall;
+    logic        div_activate;
+    logic        is_div;
 
     // memory access
     logic [31:0] mem_read_data;
@@ -66,6 +69,7 @@ module sc_cpu(
         .pc_current(pc_current),
         .pc_src(pc_src),
         .trap_taken(trap_taken),
+        .stall(stall),
         .pc_next(pc_next), //output
         .pc_default(pc_default) //output
     );
@@ -84,6 +88,7 @@ module sc_cpu(
         .rd(instruction[11:7]),
         .reg_write(reg_write),
         .result(result),
+        .stall(stall),
         .rs1_data(rs1_data), //output
         .rs2_data(rs2_data) //output
     );
@@ -143,13 +148,14 @@ module sc_cpu(
         );
     
     // Div handling
+    assign is_div = ex_src == 2'b10;
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) div_activate <= '0;
         else if (srt_done) div_activate <= '0;
         else if (is_div) div_activate <= '1;
     end
 
-    assign srt_en = is_dev && !div_activate;
+    assign srt_en = is_div && !div_activate;
     assign stall = is_div && !srt_done;
                 
     srt2 srt2(
@@ -161,7 +167,7 @@ module sc_cpu(
         .srt_en(srt_en),
         .div_res(div_res), //output
         .srt_done(srt_done)
-    )
+    );
 
     //memory access
     data_memory data_memory(

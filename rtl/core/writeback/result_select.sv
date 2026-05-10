@@ -14,7 +14,7 @@ module result_select (
         case (ex_src)
             2'b00: ex_res = alu_res;
             2'b01: ex_res = mul_res;
-            2'b01: ex_res = div_res;
+            2'b10: ex_res = div_res;
             default: ;
         endcase
     end

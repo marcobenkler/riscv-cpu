@@ -39,7 +39,7 @@ module srt2
         .ND(ND),
         .NN(NN),
         .LZD(LZD),
-        .LZN(LZN),
+        .LZN(LZN)
     );
 
     digitSelect digitSelect(

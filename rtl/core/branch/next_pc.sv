@@ -7,6 +7,7 @@ module next_pc(
     input  logic [31:0]pc_current, ///< Current PC
     input  logic [1:0] pc_src, ///< Control which possible one
     input  logic trap_taken,
+    input  logic stall,
     output logic [31:0] pc_next, ///< Next PC
     output logic [31:0] pc_default /// For JAL(R)
 );
@@ -14,6 +15,7 @@ module next_pc(
     always_comb begin 
         pc_default = pc_current + 4;
         if (trap_taken) pc_next = csr_pc;
+        else if (stall) pc_next = pc_current;
         else begin
             case (pc_src) 
             2'b00: pc_next = pc_default; // Default update

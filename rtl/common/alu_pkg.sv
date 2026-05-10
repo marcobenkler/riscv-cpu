@@ -23,7 +23,7 @@ package alu_pkg;
         DIVU,
         REM,
         REMU
-    }
+    } div_op_e;
 
     typedef enum logic [1:0] {
         MUL,
