@@ -84,12 +84,12 @@ module srt2
             q_mag         = (quotient_pos - quotient_neg) >> (32 - lzd_reg + lzn_reg);
             if (q_norm_ge_1 && lzd_reg >= lzn_reg)
                 q_mag = q_mag + (32'b1 << (lzd_reg - lzn_reg));
-            restu_shifted = rest >> lzd_reg;
+            restu_shifted = $unsigned(rest) >> lzd_reg;
             case (div_op)
                 DIV:  div_res = sign_div_reg ? (~q_mag + 1)               : q_mag;
                 DIVU: div_res = q_mag;
                 REM:  div_res = sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
-                REMU: div_res = restu_shifted[31:0];
+                REMU: div_res = rs1_data - q_mag * rs2_data;
             endcase
         end
         srt_done = (state == DONE);

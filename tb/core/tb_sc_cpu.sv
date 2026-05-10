@@ -52,7 +52,8 @@ module tb_sc_cpu();
     always @(posedge clk) begin
         if (reset_n)
             $display("PC=%0h gp_reg=%0b rest=%0b lzn_reg=%0b lzd_reg=%0b", //register 28 holds current test
-                sc_cpu.pc_current, sc_cpu.register_file.regi[3], sc_cpu.srt2.rest, sc_cpu.srt2.lzn_reg, sc_cpu.srt2.lzd_reg);
+                sc_cpu.pc_current, sc_cpu.register_file.regi[3], sc_cpu.srt2.rest, sc_cpu.srt2.lzn_reg,
+                sc_cpu.srt2.lzd_reg);
     end
 
 
