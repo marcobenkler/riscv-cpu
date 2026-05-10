@@ -19,6 +19,13 @@ package alu_pkg;
     } div_state_e;
 
     typedef enum logic [1:0] {
+        DIV,
+        DIVU,
+        REM,
+        REMU
+    }
+
+    typedef enum logic [1:0] {
         MUL,
         MULH,
         MULHSU,

@@ -13,6 +13,7 @@ module decoder
     output logic [2:0] res_src, ///< 000 = alu, 001 = mem, 010 = imm, 011 = pc + 4, 100 = csr
     output logic [3:0] alu_op, ///< alu controller
     output logic [1:0] mul_op, ///< mul controller
+    output logic [1:0] div_op, ///< div controller
     output logic [2:0] mem_s_type, ///< tell data_memory which S-Type is used
     output logic [1:0] ex_src, ///< alu, mul or div result
     //CSR
@@ -40,6 +41,7 @@ module decoder
         alu_src_a = 1'b0;
         mem_s_type = funct3;
         mul_op = 'x;
+        div_op = 'x;
         ex_src = 2'b00;
         //CSR
         csr_op = funct3;
@@ -84,14 +86,38 @@ module decoder
                         end
                         default: ;
                     endcase
-                    3'b100: alu_op = ALU_XOR;
+                    3'b100: case (funct7)
+                        7'b0000000: alu_op = ALU_XOR;
+                        7'b0000001: begin
+                            div_op = DIV;
+                            ex_src = 2'b10;
+                        end
+                        default: ;
+                    endcase
                     3'b101: case (funct7)
                         7'b0000000: alu_op = ALU_SRL;
                         7'b0100000: alu_op = ALU_SRA;
+                        7'b0000001: begin
+                            div_op = DIVU;
+                            ex_src = 2'b10;
+                        end
                         default: ;
                     endcase
-                    3'b110: alu_op = ALU_OR;
-                    3'b111: alu_op = ALU_AND;
+                    3'b110: case (funct7)
+                        7'b0000000: alu_op = ALU_OR;
+                        7'b0000001: begin
+                            div_op = REM;
+                            ex_src = 2'b10;
+                        end 
+                        default: ;
+                    endcase
+                    3'b111: case(funct7)
+                        7'b0000000: alu_op = ALU_AND;
+                        7'b0000001: begin
+                            div_op = REMU;
+                            ex_src = 2'b10;
+                        end
+                    endcase
                     default: ;
                 endcase
             end

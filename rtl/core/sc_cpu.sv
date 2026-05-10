@@ -18,11 +18,16 @@ module sc_cpu(
     logic [2:0]  mem_s_type;
     logic [3:0]  alu_op;
     logic [1:0]  mul_op;
+    logic [1:0]  div_op;
     logic [1:0]  ex_src;
     
     // execute
     logic [31:0] a, b;
     logic [31:0] mul_res;
+    logic [31:0] div_res;
+    logic        div_execute;
+    logic        srt_en;
+    logic        srt_done;
 
     // memory access
     logic [31:0] mem_read_data;
@@ -99,7 +104,8 @@ module sc_cpu(
         .pc_src(pc_src), //output
         .res_src(res_src), //output
         .alu_op(alu_op), //output
-        .mul_op(mul_op),
+        .mul_op(mul_op), //output
+        .div_op(div_op), //output
         .mem_s_type(mem_s_type), //output
         .ex_src(ex_src), //output
         .csr_op(csr_op), //output
@@ -107,6 +113,7 @@ module sc_cpu(
         .csr_write(csr_write) //output
     );
 
+    
     //execute
     operand_select operand_select(
         .rs1_data(rs1_data),
@@ -117,8 +124,8 @@ module sc_cpu(
         .alu_src_b(alu_src_b),
         .a(a), //output
         .b(b) //output
-    );
-
+        );
+        
     alu_top alu_top(
         .a(a),
         .b(b),
@@ -126,14 +133,35 @@ module sc_cpu(
         .result(alu_res), //output
         .zero(zero), //output
         .lt(lt) //output
-    );
-
+        );
+        
     multiply multiply(
         .rs1_data(rs1_data),
         .rs2_data(rs2_data),
         .mul_op(mul_op),
         .mul_res(mul_res) //output
-    );
+        );
+    
+    // Div handling
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) div_activate <= '0;
+        else if (srt_done) div_activate <= '0;
+        else if (is_div) div_activate <= '1;
+    end
+
+    assign srt_en = is_dev && !div_activate;
+    assign stall = is_div && !srt_done;
+                
+    srt2 srt2(
+        .clk(clk),
+        .reset_n(reset_n),
+        .rs1_data(rs1_data),
+        .rs2_data(rs2_data),
+        .div_op(div_op),
+        .srt_en(srt_en),
+        .div_res(div_res), //output
+        .srt_done(srt_done)
+    )
 
     //memory access
     data_memory data_memory(
@@ -160,6 +188,7 @@ module sc_cpu(
     result_select result_select(
         .alu_res(alu_res),
         .mul_res(mul_res),
+        .div_res(div_res),
         .imm_res(imm),
         .mem_res(rdata),
         .pc_res(pc_default),
