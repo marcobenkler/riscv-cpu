@@ -2,7 +2,7 @@
 * @brief Divider that reduces the longest critical path significantly
 **/
 
-module srt2 
+module srt2
     import alu_pkg::*;
 (
     input  logic        clk,
@@ -22,20 +22,33 @@ module srt2
     logic signed [32:0] divisor;
     logic signed [32:0] rest;
     logic signed [32:0] temp_rest;
+    logic        [32:0] restu_shifted;
     logic [31:0] quotient_pos;
     logic [31:0] quotient_neg;
+    logic [31:0] q_mag;
 
     logic signed [1:0] q;
     logic [4:0] cycle_count;
+    logic        q_norm_ge_1;  // Q_norm >= 1.0: NN >= ND after normalization
 
     logic signed [31:0] ND;
     logic signed [31:0] NN;
     logic [5:0] LZD;
     logic [5:0] LZN;
 
+    // Sign handling: negate inputs for signed ops, restore sign at output
+    logic        sign_n, sign_d;
+    logic        sign_div_reg, sign_rem_reg;
+    logic [32:0] abs_n, abs_d;
+
+    assign sign_n = (div_op == DIV || div_op == REM) ? rs1_data[31] : 1'b0;
+    assign sign_d = (div_op == DIV || div_op == REM) ? rs2_data[31] : 1'b0;
+    assign abs_n  = sign_n ? (~{rs1_data[31], rs1_data} + 1) : {1'b0, rs1_data};
+    assign abs_d  = sign_d ? (~{rs2_data[31], rs2_data} + 1) : {1'b0, rs2_data};
+
     Norm norm(
-        .D(rs2_data),
-        .N(rs1_data),
+        .D(abs_d[31:0]),
+        .N(abs_n[31:0]),
         .ND(ND),
         .NN(NN),
         .LZD(LZD),
@@ -56,53 +69,69 @@ module srt2
     );
 
     always_comb begin
-        case (div_op)
-            DIV: begin 
-                if (lzd_reg >= lzn_reg)
-                    div_res = $signed(quotient_pos - quotient_neg) << (lzd_reg - lzn_reg);
-                else 
-                    div_res = $signed(quotient_pos - quotient_neg) >> (lzn_reg - lzd_reg);
-            end
-            DIVU: begin
-                if (lzd_reg >= lzn_reg)
-                    div_res = (quotient_pos - quotient_neg) << (lzd_reg - lzn_reg);
-                else
-                    div_res = (quotient_pos - quotient_neg) >> (lzn_reg - lzd_reg);
-                end
-            REM: div_res = $signed(rest[31:0]) >>> lzn_reg;
-            REMU: div_res = rest[31:0] >> lzn_reg;
-        endcase
+        // When Q_norm >= 1.0, add the integer part 2^(LZD-LZN) to the SRT2
+        q_mag = 'x;
+        restu_shifted = 'x;
+        if (rs2_data == '0) begin
+            case (div_op) 
+                DIV: div_res = 32'hFFFFFFFF;
+                DIVU: div_res = 32'hFFFFFFFF;
+                REM: div_res = rs1_data;
+                REMU: div_res = rs1_data;
+            endcase
+        end
+        else begin
+            q_mag         = (quotient_pos - quotient_neg) >> (32 - lzd_reg + lzn_reg);
+            if (q_norm_ge_1 && lzd_reg >= lzn_reg)
+                q_mag = q_mag + (32'b1 << (lzd_reg - lzn_reg));
+            restu_shifted = rest >> lzd_reg;
+            case (div_op)
+                DIV:  div_res = sign_div_reg ? (~q_mag + 1)               : q_mag;
+                DIVU: div_res = q_mag;
+                REM:  div_res = sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
+                REMU: div_res = restu_shifted[31:0];
+            endcase
+        end
         srt_done = (state == DONE);
     end
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            lzd_reg <= '0;
-            lzn_reg <= '0;
-            divisor <= '0;
+            lzd_reg      <= '0;
+            lzn_reg      <= '0;
+            divisor      <= '0;
             quotient_pos <= '0;
             quotient_neg <= '0;
-            rest <= '0;
-            cycle_count <= '0;
-            state <= IDLE;
+            rest         <= '0;
+            cycle_count  <= '0;
+            sign_div_reg <= '0;
+            sign_rem_reg <= '0;
+            q_norm_ge_1  <= '0;
+            state        <= IDLE;
         end else begin
-            // FSM
             if (state == IDLE && srt_en) begin
-                rest <= {1'b0, NN};
-                state <= RUNNING;
-                divisor <= {1'b0, ND};
-                lzd_reg <= LZD;
-                lzn_reg <= LZN;
-                cycle_count <= '0;
+                if (rs2_data == '0) state <= DONE;
+                else begin
+                    // If NN >= ND: Q_norm >= 1.0, SRT2 runs on the fractional remainder
+                    q_norm_ge_1  <= ({1'b0, NN} >= {1'b0, ND});
+                    rest         <= ({1'b0, NN} >= {1'b0, ND}) ? {1'b0, NN - ND} : {1'b0, NN};
+                    divisor      <= {1'b0, ND};
+                    lzd_reg      <= LZD;
+                    lzn_reg      <= LZN;
+                    cycle_count  <= '0;
+                    sign_div_reg <= sign_n ^ sign_d;
+                    sign_rem_reg <= sign_n;
+                    state        <= RUNNING;
+                end
             end
             else if (state == RUNNING) begin
                 cycle_count <= cycle_count + 1;
                 case (q)
-                    2'sd1: begin
+                    2'sd1:  begin
                         quotient_pos[31 - cycle_count] <= 1'b1;
                         quotient_neg[31 - cycle_count] <= 1'b0;
                     end
-                    2'sd0: begin
+                    2'sd0:  begin
                         quotient_pos[31 - cycle_count] <= 1'b0;
                         quotient_neg[31 - cycle_count] <= 1'b0;
                     end
@@ -113,14 +142,14 @@ module srt2
                     default: ;
                 endcase
                 rest <= temp_rest;
-                // Trick to avoid extra if case
                 if (cycle_count + 1'b1 == '0) state <= DONE;
             end
-            else if(state == DONE) begin
-                state <= IDLE;
+            else if (state == DONE) begin
+                state        <= IDLE;
+                quotient_pos <= '0;
+                quotient_neg <= '0;
             end
         end
     end
-
 
 endmodule

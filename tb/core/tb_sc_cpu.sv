@@ -43,7 +43,7 @@ module tb_sc_cpu();
         repeat(2) @(posedge clk);
         reset_n = 1;
         $readmemh("tb/core/program.hex", sc_cpu.data_memory.mem);
-        repeat(10000) @(posedge clk);
+        repeat(1000) @(posedge clk);
         $display("TIMEOUT");
         $finish;
     end
@@ -51,9 +51,8 @@ module tb_sc_cpu();
 
     always @(posedge clk) begin
         if (reset_n)
-            $display("PC=%0h  INSTR=%0h  mw=%b  addr=%0h  wdata=%0h x28=%0d", //register 28 holds current test
-                sc_cpu.pc_current, sc_cpu.instruction,
-                mem_write, mem_addr, mem_wdata, sc_cpu.register_file.regi[28]);
+            $display("PC=%0h gp_reg=%0b rest=%0b lzn_reg=%0b lzd_reg=%0b", //register 28 holds current test
+                sc_cpu.pc_current, sc_cpu.register_file.regi[3], sc_cpu.srt2.rest, sc_cpu.srt2.lzn_reg, sc_cpu.srt2.lzd_reg);
     end
 
 
