@@ -180,6 +180,22 @@ module sc_cpu(
         .mem_read_data(mem_read_data) //output
     );
 
+    //csr
+    csr_regfile csr_regfile(
+        .clk(clk),
+        .reset_n(reset_n),
+        .instruction(instruction),
+        .pc_current(pc_current),
+        .rs1_data(rs1_data),
+        .exc_cause(exc_cause),
+        .csr_op(csr_op),
+        .csr_write(csr_write),
+        .time_itr(mtip),
+        .trap_taken(trap_taken), //output
+        .csr_res(csr_res), //output
+        .csr_pc(csr_pc) //output
+    );
+
     bus_interconnect bus_interconnect(
         .address(alu_res),
         .clint_read_data(clint_read_data),
@@ -202,22 +218,6 @@ module sc_cpu(
         .res_src(res_src),
         .ex_src(ex_src),
         .result(result) //output
-    );
-
-    //csr
-    csr_regfile csr_regfile(
-        .clk(clk),
-        .reset_n(reset_n),
-        .instruction(instruction),
-        .pc_current(pc_current),
-        .rs1_data(rs1_data),
-        .exc_cause(exc_cause),
-        .csr_op(csr_op),
-        .csr_write(csr_write),
-        .time_itr(mtip),
-        .trap_taken(trap_taken), //output
-        .csr_res(csr_res), //output
-        .csr_pc(csr_pc) //output
     );
 
     //clint

@@ -70,4 +70,24 @@ package pipeline_pkg;
         logic [2:0]  csr_op;
         logic [3:0]  exc_cause;
     } ex_mem_t;
+
+    typedef struct packed {
+        // Data
+        logic [31:0] csr_res;
+        logic [31:0] alu_res;
+        logic [31:0] mul_res;
+        logic [31:0] div_res;
+        logic [31:0] rdata;
+        logic [31:0] imm;
+        logic [31:0] pc_default;
+        // logic [31:0] csr_pc;  directly in pc
+
+        // Register control
+        logic        reg_write;
+        logic [4:0]  rd;
+
+        // Alu control
+        logic [1:0]  ex_src;
+        logic [2:0]  res_src;
+    } mem_wb_t;
 endpackage
