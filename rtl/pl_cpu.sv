@@ -58,7 +58,7 @@ module pl_cpu
         .reset_n(reset_n),
         .rs1(if_id_out.instruction[19:15]),
         .rs2(if_id_out.instruction[24:20]),
-        .rd(mem_wb_out.instruction[11:7]),
+        .rd(mem_wb_out.instruction[11:7]), // Dumm
         .reg_write(mem_wb_out.reg_write),
         .result(mem_wb_out.result),
         .stall(stall),
@@ -101,6 +101,76 @@ module pl_cpu
         .reset_n(reset_n),
         .in(id_ex_in),
         .out(id_ex_out)
+    );
+
+    operand_select operand_select(
+        .rs1_data(id_ex_out.rs1_data),
+        .rs2_data(id_ex_out.rs2_data),
+        .imm(id_ex_out.imm),
+        .pc_current(id_ex_out.pc_current),
+        .alu_src_a(id_ex_out.alu_src_a),
+        .alu_src_b(id_ex_out.alu_src_b),
+        .a(a), //output
+        .b(b) //output
+        );
+        
+    alu_top alu_top(
+        .a(a),
+        .b(b),
+        .alu_op(id_ex_out.alu_op),
+        .result(ex_mem_in.alu_res), //output
+        .zero(zero), //output
+        .lt(lt) //output
+        );
+        
+    multiply multiply(
+        .rs1_data(id_ex_out.rs1_data),
+        .rs2_data(id_ex_out.rs2_data),
+        .mul_op(id_ex_out.mul_op),
+        .mul_res(ex_mem_in.mul_res) //output
+        );
+    
+    // Div handling
+    assign is_div = ex_src == 2'b10;
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) div_activate <= '0;
+        else if (is_div) div_activate <= '1;
+    end
+
+    assign srt_en = is_div && !div_activate; // might be error, additional !srt_done required
+    assign stall = is_div && !srt_done;
+                
+    srt2 srt2(
+        .clk(clk),
+        .reset_n(reset_n),
+        .rs1_data(id_ex_out.rs1_data),
+        .rs2_data(id_ex_out.rs2_data),
+        .div_op(id_ex_out.div_op),
+        .srt_en(srt_en),
+        .div_res(ex_mem_in.div_res), //output
+        .srt_done(srt_done) //output
+    );
+
+    // Straigt transmission between register
+    assign ex_mem_in.instruction = id_ex_out.instruction;
+    assign ex_mem_in.pc_current = id_ex_out.pc_current;
+    assign ex_mem_in.pc_defualt = id_ex_out.pc_default;
+    assign ex_mem_in.rs1_data = id_ex_out.rs1_data;
+    assign ex_mem_in.rs2_data = id_ex_out.rs2_data;
+    assign ex_mem_in.imm = id_ex_out.imm;
+    assign ex_mem_in.reg_write = id_ex_out.reg_write;
+    assign ex_mem_in.mem_write = id_ex_out.mem_write;
+    assign ex_mem_in.mem_s_type = id_ex_out.mem_s_type;
+    assign ex_mem_in.res_src = id_ex_out.res_src;
+    assign ex_mem_in.csr_write = id_ex_out.csr_write;
+    assign ex_mem_in.csr_op = id_ex_out.csr_op;
+    assign ex_mem_in.exc_cause = id_ex_out.exc_cause;
+
+    pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
+        .clk(clk),
+        .reset_n(reset_n),
+        .in(ex_mem_in),
+        .out(ex_mem_out)
     );
 
 endmodule
