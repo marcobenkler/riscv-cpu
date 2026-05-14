@@ -17,6 +17,35 @@ module pl_cpu
     mem_wb_t mem_wb_in;
     mem_wb_t mem_wb_out;
 
+    logic        stall;
+
+    // IF Stage
+    logic [31:0] pc_next;
+    logic [31:0] csr_pc;
+    logic [31:0] imm_res;
+
+    // EX Stage
+    logic        div_activate;
+    logic [31:0] a;
+    logic [31:0] b;
+    logic        zero;
+    logic        lt;
+    logic        is_div;
+    logic        srt_en;
+    logic        srt_done;
+    logic        mtip;
+
+    // MEM Stage
+    logic [31:0] mem_read_data;
+    logic        trap_taken;
+    logic        mem_write_en;
+
+    // WB Stage
+    logic [31:0] result;
+
+    // EXTERNAL
+    logic        clint_write_en;
+    logic [31:0] clint_read_data;
 
     // IF Stage
     update_pc update_pc(
@@ -26,14 +55,12 @@ module pl_cpu
         .pc_current(if_id_in.pc_current) //output
     );
 
-    assign imm_res = pc_current + imm;
-
     next_pc next_pc(
         .alu_res(mem_wb_out.alu_res),
         .imm_res(imm_res),
         .csr_pc(csr_pc),
         .pc_current(if_id_in.pc_current),
-        .pc_src(pc_src),
+        .pc_src(id_ex_out.pc_src),
         .trap_taken(trap_taken),
         .stall(stall),
         .pc_next(pc_next), //output
@@ -41,7 +68,7 @@ module pl_cpu
     );
 
     instruction_memory instruction_memory(
-        .pc(pc_current),
+        .pc(if_id_in.pc_current),
         .instruction(if_id_in.instruction)
     );
 
@@ -58,9 +85,9 @@ module pl_cpu
         .reset_n(reset_n),
         .rs1(if_id_out.instruction[19:15]),
         .rs2(if_id_out.instruction[24:20]),
-        .rd(mem_wb_out.instruction[11:7]), // Dumm
+        .rd(mem_wb_out.rd),
         .reg_write(mem_wb_out.reg_write),
-        .result(mem_wb_out.result),
+        .result(result),
         .stall(stall),
         .rs1_data(id_ex_in.rs1_data), //output
         .rs2_data(id_ex_in.rs2_data) //output
@@ -103,6 +130,8 @@ module pl_cpu
         .out(id_ex_out)
     );
 
+    assign imm_res = id_ex_out.pc_current + id_ex_out.imm;
+
     operand_select operand_select(
         .rs1_data(id_ex_out.rs1_data),
         .rs2_data(id_ex_out.rs2_data),
@@ -119,8 +148,8 @@ module pl_cpu
         .b(b),
         .alu_op(id_ex_out.alu_op),
         .result(ex_mem_in.alu_res), //output
-        .zero(zero), //output
-        .lt(lt) //output
+        .zero(zero), //output - directly in alu
+        .lt(lt) //output - directly in alu
         );
         
     multiply multiply(
@@ -131,9 +160,10 @@ module pl_cpu
         );
     
     // Div handling
-    assign is_div = ex_src == 2'b10;
+    assign is_div = id_ex_out.ex_src == 2'b10;
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) div_activate <= '0;
+        else if (srt_done) div_activate <= '0;
         else if (is_div) div_activate <= '1;
     end
 
@@ -154,7 +184,7 @@ module pl_cpu
     // Straigt transmission between register
     assign ex_mem_in.instruction = id_ex_out.instruction;
     assign ex_mem_in.pc_current = id_ex_out.pc_current;
-    assign ex_mem_in.pc_defualt = id_ex_out.pc_default;
+    assign ex_mem_in.pc_default = id_ex_out.pc_default;
     assign ex_mem_in.rs1_data = id_ex_out.rs1_data;
     assign ex_mem_in.rs2_data = id_ex_out.rs2_data;
     assign ex_mem_in.imm = id_ex_out.imm;
@@ -165,6 +195,7 @@ module pl_cpu
     assign ex_mem_in.csr_write = id_ex_out.csr_write;
     assign ex_mem_in.csr_op = id_ex_out.csr_op;
     assign ex_mem_in.exc_cause = id_ex_out.exc_cause;
+    assign ex_mem_in.ex_src = id_ex_out.ex_src;
 
     pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
         .clk(clk),
@@ -172,5 +203,85 @@ module pl_cpu
         .in(ex_mem_in),
         .out(ex_mem_out)
     );
+
+    // MEM Stage
+    data_memory data_memory(
+        .clk(clk),
+        .reset_n(reset_n),
+        .mem_write_en(mem_write_en),
+        .mem_s_type(ex_mem_out.mem_s_type),
+        .address(ex_mem_out.alu_res),
+        .mem_write_data(ex_mem_out.rs2_data),
+        .mem_read_data(mem_read_data) //output
+    );
+
+    //csr
+    csr_regfile csr_regfile(
+        .clk(clk),
+        .reset_n(reset_n),
+        .instruction(ex_mem_out.instruction),
+        .pc_current(ex_mem_out.pc_current),
+        .rs1_data(ex_mem_out.rs1_data),
+        .exc_cause(ex_mem_out.exc_cause),
+        .csr_op(ex_mem_out.csr_op),
+        .csr_write(ex_mem_out.csr_write),
+        .time_itr(mtip),
+        .trap_taken(trap_taken), //output
+        .csr_res(mem_wb_in.csr_res), //output
+        .csr_pc(csr_pc) //output
+    );
+
+    bus_interconnect bus_interconnect(
+        .address(ex_mem_out.alu_res),
+        .clint_read_data(clint_read_data),
+        .mem_data(mem_read_data),
+        .mem_write(ex_mem_out.mem_write),
+        .rdata(mem_wb_in.rdata), //output
+        .clint_write_en(clint_write_en), //output
+        .mem_write_en(mem_write_en) //output
+    );
+
+    assign mem_wb_in.reg_write = ex_mem_out.reg_write;
+    assign mem_wb_in.alu_res = ex_mem_out.alu_res;
+    assign mem_wb_in.mul_res = ex_mem_out.mul_res;
+    assign mem_wb_in.div_res = ex_mem_out.div_res;
+    assign mem_wb_in.imm = ex_mem_out.imm;
+    assign mem_wb_in.pc_default = ex_mem_out.pc_default;
+    assign mem_wb_in.rd = ex_mem_out.instruction[11:7];
+    assign mem_wb_in.res_src = ex_mem_out.res_src;
+    assign mem_wb_in.ex_src = ex_mem_out.ex_src;
+
+    pipeline_reg #(.T(mem_wb_t)) mem_wb_reg (
+        .clk(clk),
+        .reset_n(reset_n),
+        .in(mem_wb_in),
+        .out(mem_wb_out)
+    );
+
+    // WB Stage
+    result_select result_select(
+        .alu_res(mem_wb_out.alu_res),
+        .mul_res(mem_wb_out.mul_res),
+        .div_res(mem_wb_out.div_res),
+        .imm_res(mem_wb_out.imm),
+        .mem_res(mem_wb_out.rdata),
+        .pc_res(mem_wb_out.pc_default),
+        .csr_res(mem_wb_out.csr_res),
+        .res_src(mem_wb_out.res_src),
+        .ex_src(mem_wb_out.ex_src),
+        .result(result) //output
+    );
+
+    // EXTERNAL
+    clint clint(
+        .clk(clk),
+        .reset_n(reset_n),
+        .clint_write_en(clint_write_en),
+        .address(ex_mem_out.alu_res), // Whicht alu_res which stage
+        .clint_write_data(ex_mem_out.rs2_data), //same here
+        .mtip(mtip), //output
+        .clint_read_data(clint_read_data) //output
+    );
+
 
 endmodule

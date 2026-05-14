@@ -17,7 +17,6 @@ package pipeline_pkg;
 
         // Register control
         logic        reg_write;
-        logic [4:0]  rd;
 
         // Memory control
         logic        mem_write;
@@ -55,7 +54,6 @@ package pipeline_pkg;
 
         // Register control
         logic        reg_write;
-        logic [4:0]  rd;
 
         // Memory control
         logic        mem_write;
