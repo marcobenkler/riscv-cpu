@@ -155,7 +155,7 @@ module sc_cpu(
         else if (is_div) div_activate <= '1;
     end
 
-    assign srt_en = is_div && !div_activate;
+    assign srt_en = is_div && !div_activate; // might be error, additional !srt_done required
     assign stall = is_div && !srt_done;
                 
     srt2 srt2(
@@ -166,7 +166,7 @@ module sc_cpu(
         .div_op(div_op),
         .srt_en(srt_en),
         .div_res(div_res), //output
-        .srt_done(srt_done)
+        .srt_done(srt_done) //output
     );
 
     //memory access
@@ -201,7 +201,7 @@ module sc_cpu(
         .csr_res(csr_res),
         .res_src(res_src),
         .ex_src(ex_src),
-        .result(result)
+        .result(result) //output
     );
 
     //csr
@@ -215,7 +215,7 @@ module sc_cpu(
         .csr_op(csr_op),
         .csr_write(csr_write),
         .time_itr(mtip),
-        .trap_taken(trap_taken),
+        .trap_taken(trap_taken), //output
         .csr_res(csr_res), //output
         .csr_pc(csr_pc) //output
     );

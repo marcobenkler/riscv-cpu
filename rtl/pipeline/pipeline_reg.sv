@@ -2,15 +2,15 @@
 * @brief store all important values for IF/ID re
 **/
 
-module if_id_reg
-    import pipeline_pkg::*;
-(
+module pipeline_reg#(
+    parameter type T = logic
+)(
     input  logic   clk,
     input  logic   reset_n,
     input  logic   flush,
     input  logic   stall,
-    input  if_id_t in,
-    output if_id_t out
+    input  T       in,
+    output var T   out
 );
 
     always_ff @(posedge clk or negedge reset_n) begin
