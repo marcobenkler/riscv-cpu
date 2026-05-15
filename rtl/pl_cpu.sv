@@ -177,8 +177,8 @@ module pl_cpu
         );
         
     multiply multiply(
-        .rs1_data(id_ex_out.rs1_data),
-        .rs2_data(id_ex_out.rs2_data),
+        .rs1_data(a),
+        .rs2_data(b),
         .mul_op(id_ex_out.mul_op),
         .mul_res(mul_res) //output
         );
@@ -196,8 +196,8 @@ module pl_cpu
     srt2 srt2(
         .clk(clk),
         .reset_n(reset_n),
-        .rs1_data(id_ex_out.rs1_data),
-        .rs2_data(id_ex_out.rs2_data),
+        .rs1_data(a),
+        .rs2_data(b),
         .div_op(id_ex_out.div_op),
         .srt_en(srt_en),
         .div_res(div_res), //output
