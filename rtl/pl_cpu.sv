@@ -48,12 +48,17 @@ module pl_cpu
     logic [31:0] clint_read_data;
     logic [1:0]  forward_a;
     logic [1:0]  forward_b;
+    logic        pc_stall;
+    logic        if_id_stall;
+    logic        id_ex_stall;
+    logic        ex_mem_stall;
 
     // IF Stage
     update_pc update_pc(
         .clk(clk),
         .reset_n(reset_n), 
         .pc_next(pc_next), 
+        .pc_stall(pc_stall),
         .pc_current(if_id_in.pc_current) //output
     );
 
@@ -81,7 +86,7 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .flush('0),
-        .stall(stall),
+        .stall(if_id_stall),
         .in(if_id_in),
         .out(if_id_out)
     );
@@ -134,7 +139,7 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .flush('0),
-        .stall(stall),
+        .stall(id_ex_stall),
         .in(id_ex_in),
         .out(id_ex_out)
     );
@@ -151,6 +156,7 @@ module pl_cpu
         // forwarding
         .forward_a(forward_a),
         .forward_a(forward_b),
+        .
         // parameter from forwarding
         .a(a), //output
         .b(b) //output
@@ -181,7 +187,6 @@ module pl_cpu
     end
 
     assign srt_en = is_div && !div_activate; // might be error, additional !srt_done required
-    assign stall = is_div && !srt_done;
                 
     srt2 srt2(
         .clk(clk),
@@ -215,7 +220,7 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .flush('0),
-        .stall(stall),
+        .stall(ex_mem_stall),
         .in(ex_mem_in),
         .out(ex_mem_out)
     );
@@ -271,7 +276,7 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .flush('0),
-        .stall(stall),
+        .stall(1'b0),
         .in(mem_wb_in),
         .out(mem_wb_out)
     );
@@ -311,6 +316,19 @@ module pl_cpu
         .reg_write_mem_wb(mem_wb_out.reg_write),
         .forward_a(forward_a) //output
         .forward_b(forward_b) //output
+    );
+
+    hazard_unit hazard_unit(
+        .rs1_id_ex(id_ex_out.rs1),
+        .rs2_id_ex(id_ex_out.rs2),
+
+        .is_div(is_div),
+        .srt_done(srt_done),
+
+        .pc_stall(pc_stall),
+        .if_id_stall(if_id_stall),
+        .id_ex_stall(id_ex_stall),
+        .ex_mem_stall(ex_mem_stall),
     );
 
 endmodule
