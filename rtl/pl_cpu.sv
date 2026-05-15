@@ -36,6 +36,7 @@ module pl_cpu
     logic        srt_en;
     logic        srt_done;
     logic        mtip;
+    logic [31:0] ex_mem_forward_data;
 
     // MEM Stage
     logic [31:0] mem_read_data;
@@ -146,6 +147,7 @@ module pl_cpu
         .out(id_ex_out)
     );
 
+
     assign imm_res = id_ex_out.pc_current + id_ex_out.imm;
 
     operand_select operand_select(
@@ -159,7 +161,7 @@ module pl_cpu
         .forward_a(forward_a),
         .forward_b(forward_b),
         // parameter from forwarding
-        .ex_mem_data(ex_mem_out.ex_res),
+        .ex_mem_data(ex_mem_forward_data),
         .mem_wb_data(result),
         .a(a), //output
         .b(b) //output
@@ -208,7 +210,7 @@ module pl_cpu
         .funct3(id_ex_out.instruction[14:12]),
         .zero(zero),
         .lt(lt),
-        .pc_src_ex(pc_src_ex)
+        .pc_src_ex(pc_src_ex) //output
     );
 
     always_comb begin
@@ -245,6 +247,16 @@ module pl_cpu
         .in(ex_mem_in),
         .out(ex_mem_out)
     );
+
+    //MUX for solving forwarding problem, where only alu_res could be forwarded
+    always_comb begin
+        case (ex_mem_out.res_src)
+            3'b000: ex_mem_forward_data = ex_mem_out.ex_res;
+            3'b010: ex_mem_forward_data = ex_mem_out.imm;
+            3'b011: ex_mem_forward_data = ex_mem_out.pc_default;
+            default: ex_mem_forward_data = '0;
+        endcase
+    end
 
     // MEM Stage
     data_memory data_memory(

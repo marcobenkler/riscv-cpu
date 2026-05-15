@@ -15,8 +15,9 @@ module register_file(
 
     logic [31:0] regi [31:0];
     always_comb begin
-        rs1_data = regi[rs1];
-        rs2_data = regi[rs2];
+        // Forwarding register file - from Harris & Harris
+        rs1_data = (reg_write && rd != 5'b0 && rd == rs1) ? result : regi[rs1];
+        rs2_data = (reg_write && rd != 5'b0 && rd == rs2) ? result : regi[rs2];
     end
     
     always_ff @(posedge clk or negedge reset_n) begin

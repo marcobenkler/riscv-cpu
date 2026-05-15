@@ -43,7 +43,7 @@ module tb_pl_cpu();
         repeat(2) @(posedge clk);
         reset_n = 1;
         $readmemh("tb/core/program.hex", pl_cpu.data_memory.mem);
-        repeat(100) @(posedge clk);
+        repeat(1000) @(posedge clk);
         $display("TIMEOUT");
         $finish;
     end
@@ -51,9 +51,8 @@ module tb_pl_cpu();
 
     always @(posedge clk) begin
         if (reset_n)
-            $display("PC=%0h gp_reg=%0b rest=%0b lzn_reg=%0b lzd_reg=%0b", //register 28 holds current test
-                pl_cpu.if_id_in.pc_current, pl_cpu.register_file.regi[3], pl_cpu.srt2.rest, pl_cpu.srt2.lzn_reg,
-                pl_cpu.srt2.lzd_reg);
+            $display("PC=%0h ra_reg=%0h sp_reg=%0h gp_reg=%0h t4_reg=%0h", //register 28 holds current test
+                pl_cpu.if_id_in.pc_current, pl_cpu.register_file.regi[1], pl_cpu.register_file.regi[2], pl_cpu.register_file.regi[3], pl_cpu.register_file.regi[29]);
     end
 
 
