@@ -10,6 +10,8 @@ module result_select (
 );
     logic [31:0] ex_res;
 
+    // Muss vor ex mem register sonst hab ich 3 signale
+    // beim forwarding geht ja aber nur 1
     always_comb begin
         case (ex_src)
             2'b00: ex_res = alu_res;

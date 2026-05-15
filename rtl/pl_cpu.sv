@@ -46,6 +46,8 @@ module pl_cpu
     // EXTERNAL
     logic        clint_write_en;
     logic [31:0] clint_read_data;
+    logic [1:0]  forward_a;
+    logic [1:0]  forward_b;
 
     // IF Stage
     update_pc update_pc(
@@ -71,10 +73,15 @@ module pl_cpu
         .pc(if_id_in.pc_current),
         .instruction(if_id_in.instruction)
     );
+    
+    assign if_id_in.rs1 = if_id_in.instruction[19:15];
+    assign if_id_in.rs2 = if_id_in.instruction[24:20];
 
     pipeline_reg #(.T(if_id_t)) if_id_reg (
         .clk(clk),
         .reset_n(reset_n),
+        .flush('0),
+        .stall(stall),
         .in(if_id_in),
         .out(if_id_out)
     );
@@ -83,8 +90,8 @@ module pl_cpu
     register_file register_file(
         .clk(clk),
         .reset_n(reset_n),
-        .rs1(if_id_out.instruction[19:15]),
-        .rs2(if_id_out.instruction[24:20]),
+        .rs1(if_id_out.rs1),
+        .rs2(if_id_out.rs2),
         .rd(mem_wb_out.rd),
         .reg_write(mem_wb_out.reg_write),
         .result(result),
@@ -126,6 +133,8 @@ module pl_cpu
     pipeline_reg #(.T(id_ex_t)) id_ex_reg (
         .clk(clk),
         .reset_n(reset_n),
+        .flush('0),
+        .stall(stall),
         .in(id_ex_in),
         .out(id_ex_out)
     );
@@ -139,6 +148,10 @@ module pl_cpu
         .pc_current(id_ex_out.pc_current),
         .alu_src_a(id_ex_out.alu_src_a),
         .alu_src_b(id_ex_out.alu_src_b),
+        // forwarding
+        .forward_a(forward_a),
+        .forward_a(forward_b),
+        // parameter from forwarding
         .a(a), //output
         .b(b) //output
         );
@@ -196,10 +209,13 @@ module pl_cpu
     assign ex_mem_in.csr_op = id_ex_out.csr_op;
     assign ex_mem_in.exc_cause = id_ex_out.exc_cause;
     assign ex_mem_in.ex_src = id_ex_out.ex_src;
+    assign ex_mem_in.rd = id_ex_out.instruction[11:7];
 
     pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
         .clk(clk),
         .reset_n(reset_n),
+        .flush('0),
+        .stall(stall),
         .in(ex_mem_in),
         .out(ex_mem_out)
     );
@@ -247,13 +263,15 @@ module pl_cpu
     assign mem_wb_in.div_res = ex_mem_out.div_res;
     assign mem_wb_in.imm = ex_mem_out.imm;
     assign mem_wb_in.pc_default = ex_mem_out.pc_default;
-    assign mem_wb_in.rd = ex_mem_out.instruction[11:7];
+    assign mem_wb_in.rd = ex_mem_out.rd;
     assign mem_wb_in.res_src = ex_mem_out.res_src;
     assign mem_wb_in.ex_src = ex_mem_out.ex_src;
 
     pipeline_reg #(.T(mem_wb_t)) mem_wb_reg (
         .clk(clk),
         .reset_n(reset_n),
+        .flush('0),
+        .stall(stall),
         .in(mem_wb_in),
         .out(mem_wb_out)
     );
@@ -277,11 +295,22 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .clint_write_en(clint_write_en),
-        .address(ex_mem_out.alu_res), // Whicht alu_res which stage
-        .clint_write_data(ex_mem_out.rs2_data), //same here
+        .address(ex_mem_out.alu_res),
+        .clint_write_data(ex_mem_out.rs2_data),
         .mtip(mtip), //output
         .clint_read_data(clint_read_data) //output
     );
 
+    // Hazard handling
+    forwarding_unit forwarding_unit(
+        .rs1_id_ex(id_ex_out.rs1),
+        .rs2_id_ex(id_ex_out.rs2),
+        .rd_ex_mem(ex_mem_out.rd),
+        .reg_write_ex_mem(ex_mem_out.reg_write),
+        .rd_mem_wb(mem_wb_out.rd),
+        .reg_write_mem_wb(mem_wb_out.reg_write),
+        .forward_a(forward_a) //output
+        .forward_b(forward_b) //output
+    );
 
 endmodule
