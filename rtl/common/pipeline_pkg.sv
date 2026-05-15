@@ -4,6 +4,8 @@ package pipeline_pkg;
         logic [31:0] pc_current;
         logic [31:0] pc_default;
         logic [31:0] instruction;
+        logic [4:0] rs1;
+        logic [4:0] rs2;
     } if_id_t;
     
     typedef struct packed {
@@ -47,7 +49,7 @@ package pipeline_pkg;
         logic [31:0] instruction;
         logic [31:0] pc_current;
         logic [31:0] pc_default;
-        logic [31:0] ex_res
+        logic [31:0] ex_res;
         logic [31:0] rs1_data;
         logic [31:0] rs2_data;
         logic [31:0] imm;
@@ -56,7 +58,9 @@ package pipeline_pkg;
         logic        reg_write;
         logic [4:0]  rd;
 
-        // Memory control
+        logic [1:0] pc_src;
+
+        // Memory control   
         logic        mem_write;
         logic [2:0]  mem_s_type;
 

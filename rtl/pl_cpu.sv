@@ -17,8 +17,6 @@ module pl_cpu
     mem_wb_t mem_wb_in;
     mem_wb_t mem_wb_out;
 
-    logic        stall;
-
     // IF Stage
     logic [31:0] pc_next;
     logic [31:0] csr_pc;
@@ -33,6 +31,7 @@ module pl_cpu
     logic [31:0] div_res;
     logic        zero;
     logic        lt;
+    logic [1:0]  pc_src_ex;
     logic        is_div;
     logic        srt_en;
     logic        srt_done;
@@ -53,7 +52,9 @@ module pl_cpu
     logic [1:0]  forward_b;
     logic        pc_stall;
     logic        if_id_stall;
+    logic        if_id_flush;
     logic        id_ex_stall;
+    logic        id_ex_flush;
     logic        ex_mem_stall;
 
     // IF Stage
@@ -66,13 +67,12 @@ module pl_cpu
     );
 
     next_pc next_pc(
-        .alu_res(mem_wb_out.alu_res),
+        .alu_res(alu_res),
         .imm_res(imm_res),
         .csr_pc(csr_pc),
         .pc_current(if_id_in.pc_current),
-        .pc_src(id_ex_out.pc_src),
+        .pc_src(pc_src_ex),
         .trap_taken(trap_taken),
-        .stall(stall),
         .pc_next(pc_next), //output
         .pc_default(if_id_in.pc_default) //output
     );
@@ -88,7 +88,7 @@ module pl_cpu
     pipeline_reg #(.T(if_id_t)) if_id_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush('0),
+        .flush(if_id_flush),
         .stall(if_id_stall),
         .in(if_id_in),
         .out(if_id_out)
@@ -103,7 +103,6 @@ module pl_cpu
         .rd(mem_wb_out.rd),
         .reg_write(mem_wb_out.reg_write),
         .result(result),
-        .stall(stall),
         .rs1_data(id_ex_in.rs1_data), //output
         .rs2_data(id_ex_in.rs2_data) //output
     );
@@ -115,8 +114,6 @@ module pl_cpu
 
     decoder decoder(
         .instruction(if_id_out.instruction),
-        .zero(zero),
-        .lt(lt),
         .reg_write(id_ex_in.reg_write), //output
         .alu_src_a(id_ex_in.alu_src_a), //output
         .alu_src_b(id_ex_in.alu_src_b), //output
@@ -137,11 +134,13 @@ module pl_cpu
     assign id_ex_in.pc_current = if_id_out.pc_current;
     assign id_ex_in.pc_default = if_id_out.pc_default;
     assign id_ex_in.instruction = if_id_out.instruction;
+    assign id_ex_in.rs1 = if_id_out.rs1;
+    assign id_ex_in.rs2 = if_id_out.rs2;
 
     pipeline_reg #(.T(id_ex_t)) id_ex_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush('0),
+        .flush(id_ex_flush),
         .stall(id_ex_stall),
         .in(id_ex_in),
         .out(id_ex_out)
@@ -158,10 +157,10 @@ module pl_cpu
         .alu_src_b(id_ex_out.alu_src_b),
         // forwarding
         .forward_a(forward_a),
-        .forward_a(forward_b),
+        .forward_b(forward_b),
         // parameter from forwarding
         .ex_mem_data(ex_mem_out.ex_res),
-        .mem_wb_data(mem_wb_out.ex_res),
+        .mem_wb_data(result),
         .a(a), //output
         .b(b) //output
         );
@@ -171,8 +170,8 @@ module pl_cpu
         .b(b),
         .alu_op(id_ex_out.alu_op),
         .result(alu_res), //output
-        .zero(zero), //output - directly in alu
-        .lt(lt) //output - directly in alu
+        .zero(zero), //output
+        .lt(lt) //output
         );
         
     multiply multiply(
@@ -203,6 +202,15 @@ module pl_cpu
         .srt_done(srt_done) //output
     );
 
+    branch_unit branch_unit(
+        .pc_src(id_ex_out.pc_src),
+        .op_code(id_ex_out.instruction[6:0]),
+        .funct3(id_ex_out.instruction[14:12]),
+        .zero(zero),
+        .lt(lt),
+        .pc_src_ex(pc_src_ex)
+    );
+
     always_comb begin
         case (id_ex_out.ex_src)
             2'b00: ex_mem_in.ex_res = alu_res;
@@ -216,6 +224,7 @@ module pl_cpu
     assign ex_mem_in.instruction = id_ex_out.instruction;
     assign ex_mem_in.pc_current = id_ex_out.pc_current;
     assign ex_mem_in.pc_default = id_ex_out.pc_default;
+    assign ex_mem_in.pc_src = id_ex_out.pc_src;
     assign ex_mem_in.rs1_data = id_ex_out.rs1_data;
     assign ex_mem_in.rs2_data = id_ex_out.rs2_data;
     assign ex_mem_in.imm = id_ex_out.imm;
@@ -243,7 +252,7 @@ module pl_cpu
         .reset_n(reset_n),
         .mem_write_en(mem_write_en),
         .mem_s_type(ex_mem_out.mem_s_type),
-        .address(ex_mem_out.alu_res),
+        .address(ex_mem_out.ex_res),
         .mem_write_data(ex_mem_out.rs2_data),
         .mem_read_data(mem_read_data) //output
     );
@@ -265,7 +274,7 @@ module pl_cpu
     );
 
     bus_interconnect bus_interconnect(
-        .address(ex_mem_out.alu_res),
+        .address(ex_mem_out.ex_res),
         .clint_read_data(clint_read_data),
         .mem_data(mem_read_data),
         .mem_write(ex_mem_out.mem_write),
@@ -306,7 +315,7 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .clint_write_en(clint_write_en),
-        .address(ex_mem_out.alu_res),
+        .address(ex_mem_out.ex_res),
         .clint_write_data(ex_mem_out.rs2_data),
         .mtip(mtip), //output
         .clint_read_data(clint_read_data) //output
@@ -320,21 +329,25 @@ module pl_cpu
         .reg_write_ex_mem(ex_mem_out.reg_write),
         .rd_mem_wb(mem_wb_out.rd),
         .reg_write_mem_wb(mem_wb_out.reg_write),
-        .forward_a(forward_a) //output
+        .forward_a(forward_a), //output
         .forward_b(forward_b) //output
     );
 
     hazard_unit hazard_unit(
-        .rs1_id_ex(id_ex_out.rs1),
-        .rs2_id_ex(id_ex_out.rs2),
-
+        .if_id_rs1(if_id_out.rs1),
+        .if_id_rs2(if_id_out.rs2),
+        .id_ex_rd(id_ex_out.instruction[11:7]),
+        .res_src(id_ex_out.res_src),
+        .pc_src(pc_src_ex),
         .is_div(is_div),
         .srt_done(srt_done),
-
-        .pc_stall(pc_stall),
-        .if_id_stall(if_id_stall),
-        .id_ex_stall(id_ex_stall),
-        .ex_mem_stall(ex_mem_stall),
+        .reg_write(id_ex_out.reg_write),
+        .pc_stall(pc_stall), //output
+        .if_id_stall(if_id_stall), //output
+        .id_ex_stall(id_ex_stall), //output
+        .ex_mem_stall(ex_mem_stall), //output
+        .id_ex_flush(id_ex_flush), //output
+        .if_id_flush(if_id_flush) //output
     );
 
 endmodule

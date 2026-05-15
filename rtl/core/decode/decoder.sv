@@ -7,7 +7,6 @@ module decoder
     import alu_pkg::*;
 (
     input  logic [31:0] instruction, ///< entire instruction vector
-    input  logic zero, lt,  ///< zero flag from ALU for B-Type
     output logic reg_write, alu_src_a, alu_src_b, mem_write,///< single bit controls
     output logic [1:0] pc_src, ///< 00 = default +4, 01 = pc = imm, 10 = rs1 + imm
     output logic [2:0] res_src, ///< 000 = alu, 001 = mem, 010 = imm, 011 = pc + 4, 100 = csr
@@ -151,34 +150,17 @@ module decoder
             5'b11000: begin //B-Type
                 reg_write = 1'b0;
                 alu_src_b = 1'b0;
+                pc_src = 2'b01;
                 res_src = 'x;
-                case (funct3) 
-                    3'b000: begin 
-                        pc_src = {1'b0, zero};
-                        alu_op = ALU_SUB;
-                    end
-                    3'b001: begin
-                        pc_src = {1'b0, !zero};
-                        alu_op = ALU_SUB;
-                    end
-                    3'b100: begin
-                        pc_src = {1'b0, lt};
-                        alu_op = ALU_SLT;
-                    end
-                    3'b101: begin
-                        pc_src = {1'b0, !lt};
-                        alu_op = ALU_SLT;
-                    end
-                    3'b110: begin
-                        pc_src = {1'b0, lt};
-                        alu_op = ALU_SLTU;
-                    end
-                    3'b111: begin
-                        pc_src = {1'b0, !lt};
-                        alu_op = ALU_SLTU;
-                    end
+                case (funct3)
+                    3'b000: alu_op = ALU_SUB;
+                    3'b001: alu_op = ALU_SUB;
+                    3'b100: alu_op = ALU_SLT;
+                    3'b101: alu_op = ALU_SLT;
+                    3'b110: alu_op = ALU_SLTU;
+                    3'b111: alu_op = ALU_SLTU;
                     default: ;
-                endcase 
+                endcase
             end
             5'b01101: begin //U-Type
                 reg_write = 1'b1;

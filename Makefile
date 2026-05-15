@@ -4,9 +4,9 @@ SCRIPTS   := scripts
 BUILD     := build
 
 RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
-RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv")
+RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv" ! -name "sc_cpu.sv")
 RTL_FILES       := $(RTL_PKG_FILES) $(RTL_OTHER_FILES)
-TB_FILES  := tb/core/tb_sc_cpu.sv
+TB_FILES  := tb/pipeline/tb_pl_cpu.sv
 
 TEST ?= add
 
@@ -18,11 +18,11 @@ ALL_TESTS := add addi and andi auipc beq bge bgeu blt bltu bne div divu j jal ja
 
 sim:
 	$(MAKE) -B compile TEST=$(TEST)
-	verilator --binary --trace -sv --top-module tb_sc_cpu \
+	verilator --binary --trace -sv --top-module tb_pl_cpu \
 	    -Wno-TIMESCALEMOD \
 	    -Mdir obj_dir \
 	    $(RTL_FILES) $(TB_FILES)
-	./obj_dir/Vtb_sc_cpu
+	./obj_dir/Vtb_pl_cpu
 
 compile: tb/core/program.hex
 
@@ -46,7 +46,7 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 test-all:
-	verilator --binary --trace -sv --top-module tb_sc_cpu \
+	verilator --binary --trace -sv --top-module tb_pl_cpu \
 	    -Wno-TIMESCALEMOD \
 	    -Mdir obj_dir \
 	    $(RTL_FILES) $(TB_FILES)
@@ -55,8 +55,9 @@ test-all:
 		if ! $(MAKE) -B --no-print-directory compile TEST=$$test > /dev/null 2>&1; then \
 			printf "\033[1;31mFAIL\033[0m  $$test  (compile error)\n"; fail=$$((fail+1)); \
 		else \
-			result=$$(./obj_dir/Vtb_sc_cpu 2>&1); \
-			if echo "$$result" | grep -q "TIMEOUT"; then \
+			result=$$(./obj_dir/Vtb_pl_cpu 2>&1); \
+			exit_code=$$?; \
+			if [ $$exit_code -ne 0 ] || echo "$$result" | grep -q "TIMEOUT"; then \
 				printf "\033[1;31mFAIL\033[0m  $$test\n"; fail=$$((fail+1)); \
 			else \
 				printf "\033[1;32mPASS\033[0m  $$test\n"; pass=$$((pass+1)); \

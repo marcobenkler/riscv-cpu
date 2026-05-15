@@ -19,18 +19,18 @@ module forwarding_unit(
 );
 
     always_comb begin
-        if (reg_write_ex_mem && rd != 5'b0 && rs1_id_ex == rd_ex_mem)
+        if (reg_write_ex_mem && rd_ex_mem != 5'b0 && rs1_id_ex == rd_ex_mem)
             forward_a = 2'b10;
-        else if (reg_write_mem_wb && rd != 5'b0 && rs1_id_ex == rd_mem_wb)
+        else if (reg_write_mem_wb && rd_mem_wb != 5'b0 && rs1_id_ex == rd_mem_wb)
             forward_a = 2'b01;
         else
             forward_a = 2'b00; 
     end
 
     always_comb begin
-        if (reg_write_ex_mem && rd != 5'b0 && rs2_id_ex == rd_ex_mem)
+        if (reg_write_ex_mem && rd_ex_mem != 5'b0 && rs2_id_ex == rd_ex_mem)
             forward_b = 2'b10;
-        else if (reg_write_mem_wb && rd != 5'b0 && rs2_id_ex == rd_mem_wb)
+        else if (reg_write_mem_wb && rd_mem_wb != 5'b0 && rs2_id_ex == rd_mem_wb)
             forward_b = 2'b01;
         else
             forward_b = 2'b00; 
