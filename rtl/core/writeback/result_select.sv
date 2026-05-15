@@ -3,23 +3,14 @@
 **/
 
 module result_select (
-    input  logic [31:0] alu_res, mul_res, div_res, imm_res, mem_res, pc_res, csr_res,
+    input  logic [31:0] ex_res,
+    input  logic [31:0] imm_res,
+    input  logic [31:0] mem_res,
+    input  logic [31:0] pc_res,
+    input  logic [31:0] csr_res,
     input  logic [2:0]  res_src,
-    input  logic [1:0]  ex_src,
     output logic [31:0] result
 );
-    logic [31:0] ex_res;
-
-    // Muss vor ex mem register sonst hab ich 3 signale
-    // beim forwarding geht ja aber nur 1
-    always_comb begin
-        case (ex_src)
-            2'b00: ex_res = alu_res;
-            2'b01: ex_res = mul_res;
-            2'b10: ex_res = div_res;
-            default: ;
-        endcase
-    end
 
     always_comb begin
         case (res_src) 

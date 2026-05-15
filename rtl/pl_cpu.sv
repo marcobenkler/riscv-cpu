@@ -28,6 +28,9 @@ module pl_cpu
     logic        div_activate;
     logic [31:0] a;
     logic [31:0] b;
+    logic [31:0] alu_res;
+    logic [31:0] mul_res;
+    logic [31:0] div_res;
     logic        zero;
     logic        lt;
     logic        is_div;
@@ -156,8 +159,9 @@ module pl_cpu
         // forwarding
         .forward_a(forward_a),
         .forward_a(forward_b),
-        .
         // parameter from forwarding
+        .ex_mem_data(ex_mem_out.ex_res),
+        .mem_wb_data(mem_wb_out.ex_res),
         .a(a), //output
         .b(b) //output
         );
@@ -166,7 +170,7 @@ module pl_cpu
         .a(a),
         .b(b),
         .alu_op(id_ex_out.alu_op),
-        .result(ex_mem_in.alu_res), //output
+        .result(alu_res), //output
         .zero(zero), //output - directly in alu
         .lt(lt) //output - directly in alu
         );
@@ -175,7 +179,7 @@ module pl_cpu
         .rs1_data(id_ex_out.rs1_data),
         .rs2_data(id_ex_out.rs2_data),
         .mul_op(id_ex_out.mul_op),
-        .mul_res(ex_mem_in.mul_res) //output
+        .mul_res(mul_res) //output
         );
     
     // Div handling
@@ -195,9 +199,18 @@ module pl_cpu
         .rs2_data(id_ex_out.rs2_data),
         .div_op(id_ex_out.div_op),
         .srt_en(srt_en),
-        .div_res(ex_mem_in.div_res), //output
+        .div_res(div_res), //output
         .srt_done(srt_done) //output
     );
+
+    always_comb begin
+        case (id_ex_out.ex_src)
+            2'b00: ex_mem_in.ex_res = alu_res;
+            2'b01: ex_mem_in.ex_res = mul_res;
+            2'b10: ex_mem_in.ex_res = div_res;
+            default: ;
+        endcase
+    end
 
     // Straigt transmission between register
     assign ex_mem_in.instruction = id_ex_out.instruction;
@@ -213,7 +226,6 @@ module pl_cpu
     assign ex_mem_in.csr_write = id_ex_out.csr_write;
     assign ex_mem_in.csr_op = id_ex_out.csr_op;
     assign ex_mem_in.exc_cause = id_ex_out.exc_cause;
-    assign ex_mem_in.ex_src = id_ex_out.ex_src;
     assign ex_mem_in.rd = id_ex_out.instruction[11:7];
 
     pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
@@ -263,14 +275,11 @@ module pl_cpu
     );
 
     assign mem_wb_in.reg_write = ex_mem_out.reg_write;
-    assign mem_wb_in.alu_res = ex_mem_out.alu_res;
-    assign mem_wb_in.mul_res = ex_mem_out.mul_res;
-    assign mem_wb_in.div_res = ex_mem_out.div_res;
+    assign mem_wb_in.ex_res = ex_mem_out.ex_res;
     assign mem_wb_in.imm = ex_mem_out.imm;
     assign mem_wb_in.pc_default = ex_mem_out.pc_default;
     assign mem_wb_in.rd = ex_mem_out.rd;
     assign mem_wb_in.res_src = ex_mem_out.res_src;
-    assign mem_wb_in.ex_src = ex_mem_out.ex_src;
 
     pipeline_reg #(.T(mem_wb_t)) mem_wb_reg (
         .clk(clk),
@@ -283,15 +292,12 @@ module pl_cpu
 
     // WB Stage
     result_select result_select(
-        .alu_res(mem_wb_out.alu_res),
-        .mul_res(mem_wb_out.mul_res),
-        .div_res(mem_wb_out.div_res),
+        .ex_res(mem_wb_out.ex_res),
         .imm_res(mem_wb_out.imm),
         .mem_res(mem_wb_out.rdata),
         .pc_res(mem_wb_out.pc_default),
         .csr_res(mem_wb_out.csr_res),
         .res_src(mem_wb_out.res_src),
-        .ex_src(mem_wb_out.ex_src),
         .result(result) //output
     );
 

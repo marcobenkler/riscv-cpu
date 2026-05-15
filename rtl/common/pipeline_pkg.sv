@@ -47,9 +47,7 @@ package pipeline_pkg;
         logic [31:0] instruction;
         logic [31:0] pc_current;
         logic [31:0] pc_default;
-        logic [31:0] alu_res;
-        logic [31:0] mul_res;
-        logic [31:0] div_res;
+        logic [31:0] ex_res
         logic [31:0] rs1_data;
         logic [31:0] rs2_data;
         logic [31:0] imm;
@@ -63,7 +61,6 @@ package pipeline_pkg;
         logic [2:0]  mem_s_type;
 
         // Alu control
-        logic [1:0]  ex_src;
         logic [2:0]  res_src;
 
         // CSR / Exceptions
@@ -75,9 +72,7 @@ package pipeline_pkg;
     typedef struct packed {
         // Data
         logic [31:0] csr_res;
-        logic [31:0] alu_res;
-        logic [31:0] mul_res;
-        logic [31:0] div_res;
+        logic [31:0] ex_res;
         logic [31:0] rdata;
         logic [31:0] imm;
         logic [31:0] pc_default;
