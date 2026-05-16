@@ -31,6 +31,9 @@ module srt2
     logic [4:0] cycle_count;
     logic        q_norm_ge_1;  // Q_norm >= 1.0: NN >= ND after normalization
 
+    // rs1_data is one tick ahead so latch it and use one tick late 
+    logic [31:0] rs1_latch;
+
     logic signed [31:0] ND;
     logic signed [31:0] NN;
     logic [5:0] LZD;
@@ -76,8 +79,8 @@ module srt2
             case (div_op) 
                 DIV: div_res = 32'hFFFFFFFF;
                 DIVU: div_res = 32'hFFFFFFFF;
-                REM: div_res = rs1_data;
-                REMU: div_res = rs1_data;
+                REM: div_res = rs1_latch;
+                REMU: div_res = rs1_latch;
             endcase
         end
         else begin
@@ -107,10 +110,14 @@ module srt2
             sign_div_reg <= '0;
             sign_rem_reg <= '0;
             q_norm_ge_1  <= '0;
+            rs1_latch    <= '0;
             state        <= IDLE;
         end else begin
             if (state == IDLE && srt_en) begin
-                if (rs2_data == '0) state <= DONE;
+                if (rs2_data == '0) begin
+                    state <= DONE;
+                    rs1_latch <= rs1_data;
+                end
                 else begin
                     // If NN >= ND: Q_norm >= 1.0, SRT2 runs on the fractional remainder
                     q_norm_ge_1  <= ({1'b0, NN} >= {1'b0, ND});

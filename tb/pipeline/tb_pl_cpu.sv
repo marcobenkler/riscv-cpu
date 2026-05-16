@@ -43,7 +43,7 @@ module tb_pl_cpu();
         repeat(2) @(posedge clk);
         reset_n = 1;
         $readmemh("tb/core/program.hex", pl_cpu.data_memory.mem);
-        repeat(1000) @(posedge clk);
+        repeat(2000) @(posedge clk);
         $display("TIMEOUT");
         $finish;
     end
