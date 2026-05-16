@@ -15,8 +15,16 @@ module tb_pl_cpu();
     always #5 clk = ~clk;
 
     initial begin
-        $dumpfile("sim/pip_cpu.vcd");
+        $dumpfile("sim/pip_cpu.fst");
         $dumpvars(0, tb_pl_cpu);
+    end
+
+    logic [7:0] dbg_mem_0, dbg_mem_1, dbg_mem_2, dbg_mem_3;
+    always_comb begin
+        dbg_mem_0 = tb_pl_cpu.pl_cpu.data_memory.mem[0];
+        dbg_mem_1 = tb_pl_cpu.pl_cpu.data_memory.mem[1];
+        dbg_mem_2 = tb_pl_cpu.pl_cpu.data_memory.mem[2];
+        dbg_mem_3 = tb_pl_cpu.pl_cpu.data_memory.mem[3];
     end
 
     // Tap memory bus at MEM stage (ex_mem_out holds stable values at posedge)
@@ -51,8 +59,10 @@ module tb_pl_cpu();
 
     always @(posedge clk) begin
         if (reset_n)
-            $display("PC=%0h ra_reg=%0h sp_reg=%0h gp_reg=%0h t4_reg=%0h", //register 28 holds current test
-                pl_cpu.if_id_in.pc_current, pl_cpu.register_file.regi[1], pl_cpu.register_file.regi[2], pl_cpu.register_file.regi[3], pl_cpu.register_file.regi[29]);
+            $display("PC=%0h ra_reg=%0h sp_reg=%0h gp_reg=%0h t4_reg=%0h mem_reg_1=%0h",
+                pl_cpu.if_id_in.pc_current, pl_cpu.register_file.regi[1], 
+                pl_cpu.register_file.regi[2], pl_cpu.register_file.regi[3], 
+                pl_cpu.register_file.regi[29], pl_cpu.data_memory.mem[1]);
     end
 
 

@@ -28,11 +28,11 @@ module srt2
     logic [31:0] q_mag;
 
     logic signed [1:0] q;
-    logic [4:0] cycle_count;
+    logic [4:0]  cycle_count;
     logic        q_norm_ge_1;  // Q_norm >= 1.0: NN >= ND after normalization
 
-    // rs1_data is one tick ahead so latch it and use one tick late 
     logic [31:0] rs1_latch;
+    logic [31:0] rs2_latch;
 
     logic signed [31:0] ND;
     logic signed [31:0] NN;
@@ -79,6 +79,7 @@ module srt2
             case (div_op) 
                 DIV: div_res = 32'hFFFFFFFF;
                 DIVU: div_res = 32'hFFFFFFFF;
+                //Store rs1_data in rest to save latch and have it stable
                 REM: div_res = rs1_latch;
                 REMU: div_res = rs1_latch;
             endcase
@@ -92,7 +93,7 @@ module srt2
                 DIV:  div_res = sign_div_reg ? (~q_mag + 1)               : q_mag;
                 DIVU: div_res = q_mag;
                 REM:  div_res = sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
-                REMU: div_res = rs1_data - q_mag * rs2_data;
+                REMU: div_res = rs1_latch - q_mag * rs2_latch;
             endcase
         end
         srt_done = (state == DONE);
@@ -110,7 +111,6 @@ module srt2
             sign_div_reg <= '0;
             sign_rem_reg <= '0;
             q_norm_ge_1  <= '0;
-            rs1_latch    <= '0;
             state        <= IDLE;
         end else begin
             if (state == IDLE && srt_en) begin
@@ -128,6 +128,8 @@ module srt2
                     cycle_count  <= '0;
                     sign_div_reg <= sign_n ^ sign_d;
                     sign_rem_reg <= sign_n;
+                    rs1_latch    <= rs1_data;
+                    rs2_latch    <= rs2_data;
                     state        <= RUNNING;
                 end
             end

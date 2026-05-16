@@ -5,7 +5,7 @@
 **/
 
 module data_memory #(
-    parameter MEM_DEPTH = 8191
+    parameter MEM_DEPTH = 8192
 )(
     input  logic mem_write_en, clk, reset_n, ///< enable writing, clock, reset
     input  logic [2:0] mem_s_type, ///< which funct3 of S-Type was used
@@ -14,7 +14,7 @@ module data_memory #(
     output logic [31:0] mem_read_data ///< data that's read from memory into register
 );
 
-    logic [7:0] mem [MEM_DEPTH:0];
+    logic [7:0] mem [MEM_DEPTH-1:0];
 
     always_comb begin
         for (int i = 0; i < 4; i++)begin

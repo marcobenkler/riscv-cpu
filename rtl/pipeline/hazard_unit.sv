@@ -31,7 +31,7 @@ module hazard_unit(
         pc_stall = div_stall || load_use_hazard;
         if_id_stall = div_stall || load_use_hazard;
         id_ex_stall = div_stall;
-        ex_mem_stall = 1'b0;
+        ex_mem_stall = div_stall;
     end
     
     assign id_ex_flush = (load_use_hazard && !div_stall) || pc_src != 2'b00;
