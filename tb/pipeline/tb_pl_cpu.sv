@@ -59,10 +59,11 @@ module tb_pl_cpu();
 
     always @(posedge clk) begin
         if (reset_n)
-            $display("PC=%0h ra_reg=%0h sp_reg=%0h gp_reg=%0h t4_reg=%0h mem_reg_1=%0h",
+            $display("PC=%0h ra_reg=%0h sp_reg=%0h gp_reg=%0h t4_reg=%0h mem_reg_1044=%0h mem_reg_1045=%0h mem_read=%0h addr=%0d mem_write=%0b write_data=%0b",
                 pl_cpu.if_id_in.pc_current, pl_cpu.register_file.regi[1], 
                 pl_cpu.register_file.regi[2], pl_cpu.register_file.regi[3], 
-                pl_cpu.register_file.regi[29], pl_cpu.data_memory.mem[1]);
+                pl_cpu.register_file.regi[29], pl_cpu.data_memory.mem[1044], pl_cpu.data_memory.mem[1045],
+                pl_cpu.data_memory.mem_read_data, pl_cpu.data_memory.address, pl_cpu.ex_mem_out.mem_write, pl_cpu.ex_mem_out.rs2_data);
     end
 
 

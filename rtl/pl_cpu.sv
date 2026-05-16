@@ -221,6 +221,15 @@ module pl_cpu
             default: ;
         endcase
     end
+    
+    always_comb begin
+        case (forward_b)
+            2'b00: ex_mem_in.rs2_data = id_ex_out.rs2_data;
+            2'b01: ex_mem_in.rs2_data = result;
+            2'b10: ex_mem_in.rs2_data = ex_mem_forward_data;
+            default: ex_mem_in.rs2_data = 'x;
+        endcase
+    end
 
     // Straigt transmission between register
     assign ex_mem_in.instruction = id_ex_out.instruction;
@@ -228,7 +237,6 @@ module pl_cpu
     assign ex_mem_in.pc_default = id_ex_out.pc_default;
     assign ex_mem_in.pc_src = id_ex_out.pc_src;
     assign ex_mem_in.rs1_data = id_ex_out.rs1_data;
-    assign ex_mem_in.rs2_data = id_ex_out.rs2_data;
     assign ex_mem_in.imm = id_ex_out.imm;
     assign ex_mem_in.reg_write = id_ex_out.reg_write;
     assign ex_mem_in.mem_write = id_ex_out.mem_write;
