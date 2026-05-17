@@ -42,6 +42,10 @@ package pipeline_pkg;
         logic        csr_write;
         logic [2:0]  csr_op;
         logic [3:0]  exc_cause;
+        logic        id_ecall;
+        logic        id_ebreak;
+        logic        id_mret;
+        logic        id_illegal_instr;
     } id_ex_t;
 
     typedef struct packed {
@@ -71,6 +75,12 @@ package pipeline_pkg;
         logic        csr_write;
         logic [2:0]  csr_op;
         logic [3:0]  exc_cause;
+        logic        id_ecall;
+        logic        id_ebreak;
+        logic        id_mret;
+        logic        id_illegal_instr;
+        logic        misaligned_load;
+        logic        misaligned_store;
     } ex_mem_t;
 
     typedef struct packed {

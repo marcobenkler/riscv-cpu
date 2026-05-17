@@ -6,12 +6,26 @@ module csr_regfile(
     input  logic clk, reset_n,
     input  logic [31:0] instruction, // entire instruction vector
     input  logic [31:0] pc_current, // current pc to remember where to jump back after trap
+    input  logic [31:0] pc_if, // current pc to remember where to jump back after trap
     input  logic [31:0] rs1_data, // data from register[rs1]
-    input  logic [3:0] exc_cause, // decoder tells exception was recognized
-    input  logic [2:0] csr_op, // which operation, declared by decoder
-    input  logic csr_write, // enable writing in csr, declared by decoder
-    input  logic time_itr, // from CLINT, timer interrupt is required
-    output logic trap_taken, // override next pc, if trap was taken
+    input  logic [2:0]  csr_op, // which operation, declared by decoder
+    input  logic        csr_write, // enable writing in csr, declared by decoder
+    //input  logic [3:0] exc_cause, // decoder tells exception was recognized
+
+    //Exception
+    input  logic        id_ecall,  
+    input  logic        id_ebreak,  
+    input  logic        id_mret,  
+    input  logic        id_illegal_instr,  
+    input  logic        misaligned_load,  
+    input  logic        misaligned_store,  
+    input  logic [31:0] fault_address, 
+
+    //Interrput 
+    input  logic        time_itr, // from CLINT, timer interrupt is required
+
+    output logic        trap_taken, // override next pc, if trap was taken
+    output logic        mret_taken, // jump back to last pc stored in mret
     output logic [31:0] csr_res, // output for regular register
     output logic [31:0] csr_pc // pc to jump back after trap handled
 );
@@ -22,9 +36,6 @@ module csr_regfile(
     logic [31:0] csr_data;
     assign csr_data = csr_op[2] ? {27'b0, instruction[19:15]} : rs1_data;
 
-    logic mret_detected;
-    assign mret_detected = (instruction == 32'h30200073);
-
     // Workaround to prevent 4000+ unused registers
     // Must have register
     logic [31:0] mstatus;
@@ -33,6 +44,7 @@ module csr_regfile(
     logic [31:0] mepc;
     logic [31:0] mcause;
     logic [31:0] mip;
+    logic [31:0] mtval;
 
     // Nice to have register
     logic [31:0] mscratch;
@@ -62,6 +74,7 @@ module csr_regfile(
             12'h305: csr_res = mtvec;
             12'h341: csr_res = mepc;
             12'h342: csr_res = mcause;
+            12'h343: csr_res = mtval;
             12'h344: csr_res = mip;
             12'hF11: csr_res = mvendorid;
             12'hF12: csr_res = marchid;
@@ -81,13 +94,19 @@ module csr_regfile(
 
     always_comb begin
         trap_taken = '0;
+        mret_taken = '0;
         csr_pc = '0;
-        if(exc_cause != 0 || (time_itr && mie[7] && mstatus[3])) begin
+        if(id_ecall || id_ebreak || id_illegal_instr||
+                 misaligned_load || misaligned_store) begin
             trap_taken = 1'b1;
             csr_pc = mtvec;
         end
-        else if(mret_detected) begin
+        else if(time_itr && mie[7] && mstatus[3]) begin
             trap_taken = 1'b1;
+            csr_pc = mtvec;
+        end
+        else if(id_mret) begin
+            mret_taken = 1'b1;
             csr_pc = mepc;
         end
     end
@@ -100,16 +119,36 @@ module csr_regfile(
             mepc <= '0;
             mcause <= '0;
         end
-        else if (exc_cause != 0 || (time_itr && mie[7] && mstatus[3])) begin
+        else if (id_ecall || id_ebreak || id_illegal_instr||
+                 misaligned_load || misaligned_store) begin //Exceptions
             //Handle interrupts
             mepc <= pc_current;
-            if (exc_cause != 0) mcause <= {28'b0, exc_cause};
-            else mcause <= 32'h80000007;
+            if (id_illegal_instr) begin
+                mcause <= 32'd2;
+                mtval  <= instruction;
+            end
+            else if (misaligned_load) begin
+                mcause <= 32'd4;
+                mtval <= fault_address;
+            end
+            else if (misaligned_store) begin
+                mcause <= 32'd6;
+                mtval <= fault_address;
+            end
+            else if (id_ecall) mcause <= 32'd11;
+            else if (id_ebreak) mcause <= 32'd3;
             mstatus[7] <= mstatus[3];
             mstatus[3] <= 1'b0;
             mstatus[12:11] <= 2'b11;
         end
-        else if (mret_detected) begin
+        else if (time_itr && mie[7] && mstatus[3]) begin //Interrupts
+            mepc <= pc_if;
+            mcause <= 32'h80000007;
+            mstatus[7] <= mstatus[3];
+            mstatus[3] <= 1'b0;
+            mstatus[12:11] <= 2'b11;
+        end
+        else if (id_mret) begin
             //Exit trap handler
             mstatus[3] <= mstatus[7];
             mstatus[7] <= 1'b1;
@@ -123,6 +162,7 @@ module csr_regfile(
                 12'h305: mtvec <= csr_write_val;
                 12'h341: mepc <= csr_write_val;
                 12'h342: mcause <= csr_write_val;
+                12'h343: mtval <= csr_write_val;
                 12'h340: mscratch <= csr_write_val;
                 12'h344: ; // mip read-only, driven by CLINT
                 12'hF11: ; // mvendorid read-only

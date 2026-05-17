@@ -17,7 +17,11 @@ module decoder
     output logic [1:0] ex_src, ///< alu, mul or div result
     //CSR
     output logic [2:0] csr_op, ///< op code for csr module
-    output logic [3:0] exc_cause,
+    //output logic [3:0] exc_cause,
+    output logic id_ecall,
+    output logic id_ebreak,
+    output logic id_mret,
+    output logic id_illegal_instr,
     output logic csr_write
 );
 
@@ -27,7 +31,9 @@ module decoder
 
     assign op_code = instruction[6:2];
     assign funct3 = instruction[14:12];
-    assign funct7 = instruction[31:25];    
+    assign funct7 = instruction[31:25];   
+
+    assign id_mret = (instruction == 32'h30200073); 
 
     always_comb begin
         alu_op = 'x;
@@ -46,6 +52,9 @@ module decoder
         csr_op = funct3;
         csr_write = '0;
         exc_cause = 'x;
+        id_ecall = 1'b0;
+        id_ebreak = 1'b0;
+        id_illegal_instr = 1'b0;
         case (op_code)
             5'b01100: begin // R-Type
                 reg_write = 1'b1; // Single bit controlls are Type specific
@@ -197,8 +206,8 @@ module decoder
                 case (funct3) 
                     3'b000: begin
                         case (instruction[20])
-                            1'b0: exc_cause = 4'hB; ///< ECALL
-                            1'b1: exc_cause = 4'h3; ///< EBREAK
+                            1'b0: id_ecall = 1'b1; ///< ECALL
+                            1'b1: id_ebreak = 1'b1; ///< EBREAK
                         endcase
                     end
                     default: begin
@@ -209,7 +218,7 @@ module decoder
                 endcase
             end
             default: begin
-                exc_cause = 4'h2; ///< Illegal instruction
+                id_illegal_instr = 1'b1; ///< Illegal instruction
             end
         endcase        
     end

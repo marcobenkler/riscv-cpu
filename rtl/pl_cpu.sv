@@ -127,7 +127,10 @@ module pl_cpu
         .mem_s_type(id_ex_in.mem_s_type), //output
         .ex_src(id_ex_in.ex_src), //output
         .csr_op(id_ex_in.csr_op), //output
-        .exc_cause(id_ex_in.exc_cause), //output
+        .id_ecall(id_ex_in.id_ecall), //output
+        .id_ebreak(id_ex_in.id_ebreak), //output
+        .id_mret(id_ex_in.id_mret), //output
+        .id_illegal_instr(id_ex_in.id_illegal_instr), //output
         .csr_write(id_ex_in.csr_write) //output
     );
 
@@ -213,6 +216,15 @@ module pl_cpu
         .pc_src_ex(pc_src_ex) //output
     );
 
+    misaligned_detection misaligned_detection(
+        .funct3(id_ex_out.instruction[14:12]),
+        .alu_res(alu_res),
+        .mem_write(id_ex_out.mem_write),
+        .mem_read(id_ex_out.res_src == 3'b001),
+        .misaligned_load(ex_mem_in.misaligned_load),
+        .misaligned_store(ex_mem_in.misaligned_store),
+    );
+
     always_comb begin
         case (id_ex_out.ex_src)
             2'b00: ex_mem_in.ex_res = alu_res;
@@ -244,13 +256,17 @@ module pl_cpu
     assign ex_mem_in.res_src = id_ex_out.res_src;
     assign ex_mem_in.csr_write = id_ex_out.csr_write;
     assign ex_mem_in.csr_op = id_ex_out.csr_op;
-    assign ex_mem_in.exc_cause = id_ex_out.exc_cause;
     assign ex_mem_in.rd = id_ex_out.instruction[11:7];
+    // Exceptions
+    assign ex_mem_in.id_ecall = id_ex_out.id_ecall;
+    assign ex_mem_in.id_ebreak = id_ex_out.id_ebreak;
+    assign ex_mem_in.id_mret = id_ex_out.id_mret;
+    assign ex_mem_in.id_illegal_instr = id_ex_out.id_illegal_instr;
 
     pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush('0),
+        .flush(ex_mem_flush),
         .stall(ex_mem_stall),
         .in(ex_mem_in),
         .out(ex_mem_out)
@@ -282,13 +298,21 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .instruction(ex_mem_out.instruction),
-        .pc_current(ex_mem_out.pc_current),
+        .pc_current(ex_mem_out.pc_current), //Exception-mpec
+        .pc_if(if_id_in.pc_current), //in op out idk       //Interrutp-mpec
         .rs1_data(ex_mem_out.rs1_data),
-        .exc_cause(ex_mem_out.exc_cause),
+        .id_ecall(ex_mem_out.id_ecall),
+        .id_ebreak(ex_mem_out.id_ebreak),
+        .id_mret(ex_mem_out.id_mret),
+        .id_illegal_instr(ex_mem_out.id_illegal_instr),
+        .misaligned_load(ex_mem_out.misaligned_load),
+        .misaligned_store(ex_mem_out.misaligned_store),
+        .fault_address(ex_mem_out.ex_res),
         .csr_op(ex_mem_out.csr_op),
         .csr_write(ex_mem_out.csr_write),
         .time_itr(mtip),
         .trap_taken(trap_taken), //output
+        .mret_taken(mret_taken), //output
         .csr_res(mem_wb_in.csr_res), //output
         .csr_pc(csr_pc) //output
     );
@@ -364,10 +388,11 @@ module pl_cpu
         .reg_write(id_ex_out.reg_write),
         .pc_stall(pc_stall), //output
         .if_id_stall(if_id_stall), //output
+        .if_id_flush(if_id_flush) //output
+        .id_ex_flush(id_ex_flush), //output
         .id_ex_stall(id_ex_stall), //output
         .ex_mem_stall(ex_mem_stall), //output
-        .id_ex_flush(id_ex_flush), //output
-        .if_id_flush(if_id_flush) //output
+        .ex_mem_flush(ex_mem_flush), //output
     );
 
 endmodule
