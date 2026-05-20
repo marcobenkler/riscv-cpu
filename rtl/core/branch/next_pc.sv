@@ -3,17 +3,20 @@
 **/
 
 module next_pc(
-    input  logic [31:0] alu_res, imm_res, csr_pc, ///< Possible next pc's
-    input  logic [31:0]pc_current, ///< Current PC
-    input  logic [1:0] pc_src, ///< Control which possible one
-    input  logic trap_taken,
+    input  logic [31:0] alu_res,
+    input  logic [31:0] imm_res,
+    input  logic [31:0] csr_pc,
+    input  logic [31:0] pc_current, ///< Current PC
+    input  logic [1:0]  pc_src, ///< Control which possible one
+    input  logic        trap_taken,
+    input  logic        mret_taken,
     output logic [31:0] pc_next, ///< Next PC
     output logic [31:0] pc_default /// For JAL(R)
 );
 
     always_comb begin 
         pc_default = pc_current + 4;
-        if (trap_taken) pc_next = csr_pc;
+        if (trap_taken || mret_taken) pc_next = csr_pc;
         else begin
             case (pc_src) 
             2'b00: pc_next = pc_default; // Default update

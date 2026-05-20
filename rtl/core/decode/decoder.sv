@@ -51,7 +51,6 @@ module decoder
         //CSR
         csr_op = funct3;
         csr_write = '0;
-        exc_cause = 'x;
         id_ecall = 1'b0;
         id_ebreak = 1'b0;
         id_illegal_instr = 1'b0;

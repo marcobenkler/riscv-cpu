@@ -41,6 +41,7 @@ module pl_cpu
     // MEM Stage
     logic [31:0] mem_read_data;
     logic        trap_taken;
+    logic        mret_taken;
     logic        mem_write_en;
 
     // WB Stage
@@ -57,6 +58,7 @@ module pl_cpu
     logic        id_ex_stall;
     logic        id_ex_flush;
     logic        ex_mem_stall;
+    logic        ex_mem_flush;
 
     // IF Stage
     update_pc update_pc(
@@ -74,6 +76,7 @@ module pl_cpu
         .pc_current(if_id_in.pc_current),
         .pc_src(pc_src_ex),
         .trap_taken(trap_taken),
+        .mret_taken(mret_taken),
         .pc_next(pc_next), //output
         .pc_default(if_id_in.pc_default) //output
     );
@@ -222,7 +225,7 @@ module pl_cpu
         .mem_write(id_ex_out.mem_write),
         .mem_read(id_ex_out.res_src == 3'b001),
         .misaligned_load(ex_mem_in.misaligned_load),
-        .misaligned_store(ex_mem_in.misaligned_store),
+        .misaligned_store(ex_mem_in.misaligned_store)
     );
 
     always_comb begin
@@ -301,6 +304,8 @@ module pl_cpu
         .pc_current(ex_mem_out.pc_current), //Exception-mpec
         .pc_if(if_id_in.pc_current), //in op out idk       //Interrutp-mpec
         .rs1_data(ex_mem_out.rs1_data),
+        .csr_op(ex_mem_out.csr_op),
+        .csr_write(ex_mem_out.csr_write),
         .id_ecall(ex_mem_out.id_ecall),
         .id_ebreak(ex_mem_out.id_ebreak),
         .id_mret(ex_mem_out.id_mret),
@@ -308,8 +313,6 @@ module pl_cpu
         .misaligned_load(ex_mem_out.misaligned_load),
         .misaligned_store(ex_mem_out.misaligned_store),
         .fault_address(ex_mem_out.ex_res),
-        .csr_op(ex_mem_out.csr_op),
-        .csr_write(ex_mem_out.csr_write),
         .time_itr(mtip),
         .trap_taken(trap_taken), //output
         .mret_taken(mret_taken), //output
@@ -386,13 +389,15 @@ module pl_cpu
         .is_div(is_div),
         .srt_done(srt_done),
         .reg_write(id_ex_out.reg_write),
+        .trap_taken(trap_taken),
+        .mret_taken(mret_taken),
         .pc_stall(pc_stall), //output
         .if_id_stall(if_id_stall), //output
-        .if_id_flush(if_id_flush) //output
+        .if_id_flush(if_id_flush), //output
         .id_ex_flush(id_ex_flush), //output
         .id_ex_stall(id_ex_stall), //output
         .ex_mem_stall(ex_mem_stall), //output
-        .ex_mem_flush(ex_mem_flush), //output
+        .ex_mem_flush(ex_mem_flush) //output
     );
 
 endmodule
