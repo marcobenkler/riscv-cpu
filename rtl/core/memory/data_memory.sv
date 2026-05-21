@@ -5,7 +5,7 @@
 **/
 
 module data_memory #(
-    parameter MEM_DEPTH = 8192
+    parameter MEM_DEPTH = 65536
 )(
     input  logic mem_write_en, clk, reset_n, ///< enable writing, clock, reset
     input  logic [2:0] mem_s_type, ///< which funct3 of S-Type was used

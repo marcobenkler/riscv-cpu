@@ -3,68 +3,60 @@
 module tb_pl_cpu();
 
     logic clk, reset_n;
+    string test_file;
 
-    pl_cpu pl_cpu(
-        .clk(clk),
-        .reset_n(reset_n)
-    );
-
-    initial $readmemh("tb/core/program.hex", pl_cpu.instruction_memory.memo);
+    pl_cpu pl_cpu(.clk(clk), .reset_n(reset_n));
 
     initial clk = 0;
     always #5 clk = ~clk;
 
-    initial begin
-        $dumpfile("sim/pip_cpu.fst");
-        $dumpvars(0, tb_pl_cpu);
-    end
+    // tohost: 0x1000 – placed at ALIGN(0x1000) from base 0x0 in env/p/link.ld
+    localparam TOHOST_ADDR = 32'h1000;
 
-    logic [7:0] dbg_mem_0, dbg_mem_1, dbg_mem_2, dbg_mem_3;
-    always_comb begin
-        dbg_mem_0 = tb_pl_cpu.pl_cpu.data_memory.mem[0];
-        dbg_mem_1 = tb_pl_cpu.pl_cpu.data_memory.mem[1];
-        dbg_mem_2 = tb_pl_cpu.pl_cpu.data_memory.mem[2];
-        dbg_mem_3 = tb_pl_cpu.pl_cpu.data_memory.mem[3];
-    end
-
-    // Tap memory bus at MEM stage (ex_mem_out holds stable values at posedge)
     wire        mem_write = pl_cpu.ex_mem_out.mem_write;
     wire [31:0] mem_addr  = pl_cpu.ex_mem_out.ex_res;
     wire [31:0] mem_wdata = pl_cpu.ex_mem_out.rs2_data;
 
-    // PicoRV32 test protocol: PASS writes "OK\n", FAIL writes "ERROR\n" to 0x10000000
-    logic [7:0] prev_char = 8'h00;
-
-    always @(posedge clk) begin
-        if (mem_write && mem_addr == 32'h10000000) begin
-            $write("%c\n", mem_wdata[7:0]);
-            if (prev_char == "O" && mem_wdata[7:0] == "K") begin //Display all register that are not 0
-                $display("");
-                $finish;
-            end
-            prev_char <= mem_wdata[7:0];
-        end
-    end
-
     initial begin
+        if (!$value$plusargs("test=%s", test_file))
+            test_file = "tb/core/program.hex";
+
+        $readmemh(test_file, pl_cpu.instruction_memory.memo);
+        $readmemh(test_file, pl_cpu.data_memory.mem);
+
         reset_n = 0;
         repeat(2) @(posedge clk);
         reset_n = 1;
-        $readmemh("tb/core/program.hex", pl_cpu.data_memory.mem);
-        repeat(2000) @(posedge clk);
+
+        repeat(10000) @(posedge clk);
         $display("TIMEOUT");
         $finish;
     end
 
-
     always @(posedge clk) begin
-        if (reset_n)
-            $display("PC=%0h ra_reg=%0h sp_reg=%0h gp_reg=%0h t4_reg=%0h mem_reg_1044=%0h mem_reg_1045=%0h mem_read=%0h addr=%0d mem_write=%0b write_data=%0b",
-                pl_cpu.if_id_in.pc_current, pl_cpu.register_file.regi[1], 
-                pl_cpu.register_file.regi[2], pl_cpu.register_file.regi[3], 
-                pl_cpu.register_file.regi[29], pl_cpu.data_memory.mem[1044], pl_cpu.data_memory.mem[1045],
-                pl_cpu.data_memory.mem_read_data, pl_cpu.data_memory.address, pl_cpu.ex_mem_out.mem_write, pl_cpu.ex_mem_out.rs2_data);
+        $display("PC=0x%h instr=0x%h mcause=0x%h", pl_cpu.if_id_in.pc_current, pl_cpu.instruction_memory.instruction, pl_cpu.csr_regfile.mcause);
     end
 
+    always @(posedge clk) begin
+        if (mem_write) begin
+            $display("MEM WRITE: addr=0x%h data=0x%h", mem_addr, mem_wdata);
+        end
+    end
+
+    always @(posedge clk) begin
+    if (pl_cpu.csr_regfile.trap_taken)
+        $display("TRAP! PC=0x%h mcause=0x%h", 
+                 pl_cpu.if_id_in.pc_current, pl_cpu.csr_regfile.mcause);
+    end
+
+    always @(posedge clk) begin
+        if (mem_write && mem_addr == TOHOST_ADDR) begin
+            if (mem_wdata == 32'h1)
+                $display("PASS");
+            else
+                $display("FAIL (test=%0d)", mem_wdata >> 1);
+            $finish;
+        end
+    end
 
 endmodule

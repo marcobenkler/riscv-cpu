@@ -251,7 +251,7 @@ module pl_cpu
     assign ex_mem_in.pc_current = id_ex_out.pc_current;
     assign ex_mem_in.pc_default = id_ex_out.pc_default;
     assign ex_mem_in.pc_src = id_ex_out.pc_src;
-    assign ex_mem_in.rs1_data = id_ex_out.rs1_data;
+    assign ex_mem_in.rs1_data = a;
     assign ex_mem_in.imm = id_ex_out.imm;
     assign ex_mem_in.reg_write = id_ex_out.reg_write;
     assign ex_mem_in.mem_write = id_ex_out.mem_write;

@@ -170,7 +170,8 @@ module csr_regfile(
                 12'hF13: ; // mimpid read-only
                 12'hF14: ; // mhartid read-only
                 12'h301: ; // misa read-only
-                default: $error("CSR write to unknown address: 0x%h", csr_addr);
+                default: ;
+                //default: $display("CSR write to unknown address: 0x%h", csr_addr);
             endcase
         end
     end

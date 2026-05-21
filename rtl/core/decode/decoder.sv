@@ -201,13 +201,17 @@ module decoder
                 res_src = 3'b011;
                 alu_op = ALU_ADD;
             end
+            5'b00011: begin // FENCE / FENCE.I - treated as NOP
+                reg_write = 1'b0;
+                mem_write = 1'b0;
+            end
             5'b11100: begin // CSR
                 case (funct3) 
                     3'b000: begin
-                        case (instruction[20])
-                            1'b0: id_ecall = 1'b1; ///< ECALL
-                            1'b1: id_ebreak = 1'b1; ///< EBREAK
-                        endcase
+                        if      (instruction[29]) ;
+                        else if (instruction[20]) id_ebreak = 1'b1;
+                        else                      id_ecall = 1'b1;
+
                     end
                     default: begin
                         csr_write = 1'b1;
