@@ -10,12 +10,14 @@ module tb_pl_cpu();
     initial clk = 0;
     always #5 clk = ~clk;
 
-    // tohost: 0x1000 – placed at ALIGN(0x1000) from base 0x0 in env/p/link.ld
-    localparam TOHOST_ADDR = 32'h1000;
+    // Most tests: tohost at 0x1000. ld_st has tohost at 0x2000.
+    localparam TOHOST_ADDR_A = 32'h1000;
+    localparam TOHOST_ADDR_B = 32'h2000;
 
-    wire        mem_write = pl_cpu.ex_mem_out.mem_write;
-    wire [31:0] mem_addr  = pl_cpu.ex_mem_out.ex_res;
-    wire [31:0] mem_wdata = pl_cpu.ex_mem_out.rs2_data;
+    wire        mem_write  = pl_cpu.ex_mem_out.mem_write;
+    wire [31:0] mem_addr   = pl_cpu.ex_mem_out.ex_res;
+    wire [31:0] mem_wdata  = pl_cpu.ex_mem_out.rs2_data;
+    wire [2:0]  mem_s_type = pl_cpu.ex_mem_out.mem_s_type;
 
     initial begin
         if (!$value$plusargs("test=%s", test_file))
@@ -34,7 +36,7 @@ module tb_pl_cpu();
     end
 
     always @(posedge clk) begin
-        $display("PC=0x%h instr=0x%h mcause=0x%h", pl_cpu.if_id_in.pc_current, pl_cpu.instruction_memory.instruction, pl_cpu.csr_regfile.mcause);
+        $display("PC=0x%h instr=0x%h mcause=0x%h mret=0x%h", pl_cpu.if_id_in.pc_current, pl_cpu.instruction_memory.instruction, pl_cpu.csr_regfile.mcause, pl_cpu.mret_taken);
     end
 
     always @(posedge clk) begin
@@ -50,7 +52,8 @@ module tb_pl_cpu();
     end
 
     always @(posedge clk) begin
-        if (mem_write && mem_addr == TOHOST_ADDR) begin
+        if (mem_write && (mem_addr == TOHOST_ADDR_A ||
+                          (mem_addr == TOHOST_ADDR_B && mem_s_type == 3'b010 && mem_wdata < 32'h1000))) begin
             if (mem_wdata == 32'h1)
                 $display("PASS");
             else

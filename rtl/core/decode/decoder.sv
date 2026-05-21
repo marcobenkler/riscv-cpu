@@ -135,14 +135,17 @@ module decoder
                 res_src = 3'b000;
                 case (funct3)
                     3'b000: alu_op = ALU_ADD;
-                    3'b001: alu_op = ALU_SLL;
+                    3'b001: begin
+                        if (instruction[25]) id_illegal_instr = 1'b1;
+                        alu_op = ALU_SLL;
+                    end
                     3'b010: alu_op = ALU_SLT;
                     3'b011: alu_op = ALU_SLTU;
                     3'b100: alu_op = ALU_XOR;
                     3'b101: case (funct7)
                                 7'b0000000: alu_op = ALU_SRL;
                                 7'b0100000: alu_op = ALU_SRA;
-                                default: ;
+                                default: id_illegal_instr = 1'b1;
                             endcase
                     3'b110: alu_op = ALU_OR;
                     3'b111: alu_op = ALU_AND;

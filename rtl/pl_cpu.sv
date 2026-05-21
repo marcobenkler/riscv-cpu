@@ -281,6 +281,7 @@ module pl_cpu
             3'b000: ex_mem_forward_data = ex_mem_out.ex_res;
             3'b010: ex_mem_forward_data = ex_mem_out.imm;
             3'b011: ex_mem_forward_data = ex_mem_out.pc_default;
+            3'b100: ex_mem_forward_data = mem_wb_in.csr_res;
             default: ex_mem_forward_data = '0;
         endcase
     end

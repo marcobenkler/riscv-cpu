@@ -29,12 +29,8 @@ module data_memory #(
         endcase
     end
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
-            for (int i = 0; i < $size(mem); i++) begin
-                mem[i] <= 0;
-            end
-        end else if (mem_write_en) begin 
+    always_ff @(posedge clk) begin
+        if (mem_write_en) begin
             case (mem_s_type)
                 3'b000: mem[address] <= mem_write_data[7:0];
                 3'b001: begin
