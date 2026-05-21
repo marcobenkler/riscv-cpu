@@ -78,7 +78,7 @@ module pl_cpu
         .trap_taken(trap_taken),
         .mret_taken(mret_taken),
         .pc_next(pc_next), //output
-        .pc_default(if_id_in.pc_default) //output
+        .pc_default(if_id_in.pc_default) //utput
     );
 
     instruction_memory instruction_memory(
@@ -224,8 +224,10 @@ module pl_cpu
         .alu_res(alu_res),
         .mem_write(id_ex_out.mem_write),
         .mem_read(id_ex_out.res_src == 3'b001),
+        .pc_src_ex(pc_src_ex),
         .misaligned_load(ex_mem_in.misaligned_load),
-        .misaligned_store(ex_mem_in.misaligned_store)
+        .misaligned_store(ex_mem_in.misaligned_store),
+        .misaligned_fetch(ex_mem_in.misaligned_fetch)
     );
 
     always_comb begin
@@ -313,6 +315,7 @@ module pl_cpu
         .id_illegal_instr(ex_mem_out.id_illegal_instr),
         .misaligned_load(ex_mem_out.misaligned_load),
         .misaligned_store(ex_mem_out.misaligned_store),
+        .misaligned_fetch(ex_mem_out.misaligned_fetch),
         .fault_address(ex_mem_out.ex_res),
         .time_itr(mtip),
         .trap_taken(trap_taken), //output

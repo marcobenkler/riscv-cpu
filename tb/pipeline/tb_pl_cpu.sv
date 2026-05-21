@@ -52,6 +52,20 @@ module tb_pl_cpu();
     end
 
     always @(posedge clk) begin
+    if (mem_write && mem_addr == 32'h1000)
+        $display("tohost write: gp=0x%h", mem_wdata);
+    end
+
+    always @(posedge clk) begin
+    if (pl_cpu.trap_taken)
+        $display("TRAP: mepc=0x%h mtval=0x%h mcause=0x%h pc=0x%h", 
+                 pl_cpu.csr_regfile.mepc, 
+                 pl_cpu.csr_regfile.mtval,
+                 pl_cpu.csr_regfile.mcause,
+                 pl_cpu.ex_mem_out.pc_current);
+    end
+
+    always @(posedge clk) begin
         if (mem_write && (mem_addr == TOHOST_ADDR_A ||
                           (mem_addr == TOHOST_ADDR_B && mem_s_type == 3'b010 && mem_wdata < 32'h1000))) begin
             if (mem_wdata == 32'h1)

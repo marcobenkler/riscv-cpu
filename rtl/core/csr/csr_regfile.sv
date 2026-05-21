@@ -19,6 +19,7 @@ module csr_regfile(
     input  logic        id_illegal_instr,  
     input  logic        misaligned_load,  
     input  logic        misaligned_store,  
+    input  logic        misaligned_fetch,  
     input  logic [31:0] fault_address, 
 
     //Interrput 
@@ -97,7 +98,7 @@ module csr_regfile(
         mret_taken = '0;
         csr_pc = '0;
         if(id_ecall || id_ebreak || id_illegal_instr||
-                 misaligned_load || misaligned_store) begin
+                 misaligned_load || misaligned_store || misaligned_fetch) begin
             trap_taken = 1'b1;
             csr_pc = mtvec;
         end
@@ -120,10 +121,14 @@ module csr_regfile(
             mcause <= '0;
         end
         else if (id_ecall || id_ebreak || id_illegal_instr||
-                 misaligned_load || misaligned_store) begin //Exceptions
+                 misaligned_load || misaligned_store || misaligned_fetch) begin //Exceptions
             //Handle interrupts
             mepc <= pc_current;
-            if (id_illegal_instr) begin
+            if (misaligned_fetch) begin
+                mcause <= 32'd0;
+                mtval <= fault_address;
+            end
+            else if (id_illegal_instr) begin
                 mcause <= 32'd2;
                 mtval  <= instruction;
             end

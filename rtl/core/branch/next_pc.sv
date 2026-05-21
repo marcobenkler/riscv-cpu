@@ -26,5 +26,4 @@ module next_pc(
             endcase 
         end
     end
-
 endmodule
