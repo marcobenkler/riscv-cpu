@@ -71,17 +71,24 @@ _run_tests:
 clean:
 	rm -rf $(BUILD) obj_dir
 
-SRCR_imm_gen := rtl/core/decode/imm_gen.sv
-SRCV_imm_gen := verify/assertions/core/decode/assert_imm_gen.sv
+SRCS_imm_gen := rtl/core/decode/imm_gen.sv
+SRCT_imm_gen := verify/assertions/core/decode/assert_imm_gen.sv
 
-SRCR_fwd_integration := $(shell find rtl -name "*.sv" ! -name "sc_cpu.sv")
-
-SRCV_fwd_integration := \
+SRCT_fwd_integration := \
+	verify/tb/pipeline/tb_fwd_integration.sv \
 	verify/assertions/pipeline/assert_fwd_integration.sv \
 	verify/bind/fwd_bind.sv
 
 sim-%:
-	verilator --binary --assert --sv -Wall \
-	    -Mdir obj_dir -o sim_$* $(SRCV_$*) \
-	    --top-module assert_$* $(SRCR_$*)
+	verilator --binary --assert --sv --coverage \
+		-Wno-DECLFILENAME \
+		-Wno-SYNCASYNCNET \
+		-Wno-UNUSEDSIGNAL \
+		-Wno-UNUSEDPARAM \
+		-Wno-UNDRIVEN \
+		-Mdir obj_dir -o sim_$* \
+		$(RTL_PKG_FILES) $(RTL_OTHER_FILES) $(SRCT_$*) \
+		--top-module tb_$*
 	./obj_dir/sim_$*
+	verilator_coverage --annotate logs/coverage_$* coverage.dat
+	mv coverage.dat logs/coverage_$*.dat
