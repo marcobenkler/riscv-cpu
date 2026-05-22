@@ -70,3 +70,11 @@ _run_tests:
 
 clean:
 	rm -rf $(BUILD) obj_dir
+
+SRCS_imm_gen = rtl/core/decode/imm_gen.sv
+
+sim-%:
+	verilator --binary --assert --sv -Wall \
+	    -Mdir obj_dir -o sim_$* tb/decode/tb_$*.sv \
+	    --top-module tb_$* $(SRCS_$*)
+	./obj_dir/sim_$*

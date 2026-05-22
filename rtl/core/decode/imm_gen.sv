@@ -5,7 +5,9 @@
 **/
 
 module imm_gen(
+    /* verilator lint_off UNUSEDSIGNAL */
     input logic [31:0] instruction, ///< entire instruction vector
+    /* verilator lint_on UNUSEDSIGNAL */
     output logic [31:0] imm ///< sign extended immediate number
 );
     logic [4:0] op_code;
