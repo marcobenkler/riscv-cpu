@@ -79,6 +79,11 @@ SRCT_fwd_integration := \
 	verify/assertions/pipeline/assert_fwd_integration.sv \
 	verify/bind/fwd_bind.sv
 
+SRCT_hazard_integration :=	\
+	verify/tb/pipeline/tb_hazard_integration.sv	\
+	verify/assertions/pipeline/assert_hazard_integration.sv \
+	verify/bind/hazard_bind.sv
+
 sim-%:
 	verilator --binary --assert --sv --coverage \
 		-Wno-DECLFILENAME \
