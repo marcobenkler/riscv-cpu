@@ -5,7 +5,7 @@ BUILD     := build
 RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
 RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv" ! -name "sc_cpu.sv")
 RTL_FILES       := $(RTL_PKG_FILES) $(RTL_OTHER_FILES)
-TB_FILES        := tb/pipeline/tb_pl_cpu.sv
+TB_FILES        := verify/tb/pipeline/tb_pl_cpu.sv
 
 TEST ?= rv32ui-p-add
 
@@ -75,6 +75,6 @@ SRCS_imm_gen = rtl/core/decode/imm_gen.sv
 
 sim-%:
 	verilator --binary --assert --sv -Wall \
-	    -Mdir obj_dir -o sim_$* tb/decode/tb_$*.sv \
+	    -Mdir obj_dir -o sim_$* verify/assertions/core/decode/tb_$*.sv \
 	    --top-module tb_$* $(SRCS_$*)
 	./obj_dir/sim_$*

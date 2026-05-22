@@ -23,7 +23,7 @@ module tb_imm_gen();
         for (int i = 0; i < $size(testvectors); i++) begin
             instruction = testvectors[i];
             #1;
-            assert (imm[11:0] == 12'b0 && imm[31:12] == instruction[31:12]) begin
+            assert final (imm[11:0] == 12'b0 && imm[31:12] == instruction[31:12]) begin
                 succ_count++;
                 $info("[%1d] U-Type immedate generation is correct", i+1);
             end
@@ -32,7 +32,7 @@ module tb_imm_gen();
                 $error("[%1d] U-Type immediate generation is wrong", i+1);
             end
         end
-        $display("Error: %d\nSuccess: %d", err_count, succ_count);
+        $display("Error:   %d\nSuccess: %d", err_count, succ_count);
     end
 
 endmodule
