@@ -18,30 +18,50 @@ module asser_hazard_integration(
     logic div_stall;
     assign div_stall = is_div && !srt_done;
 
-    property load_use_flush_rs1;
+    property p_load_use_flush_rs1;
         @(posedge clk) disable iff (!reset_n)
         (id_ex_rd == if_id_rs1 && res_src == 3'b001)
         |=> !(id_ex_id_ecall || id_ex_reg_write);
     endproperty
 
-    property load_use_flush_rs2;
+    property p_load_use_flush_rs2;
         @(posedge clk) disable iff (!reset_n)
         (id_ex_rd == if_id_rs2 && res_src == 3'b001)
         |=> !(id_ex_id_ecall || id_ex_reg_write);
     endproperty
 
-    property no_stall_without_reason;
+    property p_no_stall_without_reason;
         @(posedge clk) disable iff (!reset_n)
-        (div_stall || (res_src == 3'b001 && (id_ex_rd == if_id_rs1 || id_ex_rd == if_id_rs2)))
-        |-> (pc_stall || if_id_stall || id_ex_stall || ex_mem_stall);
+        (!div_stall && !(res_src == 3'b001 && 
+        (id_ex_rd == if_id_rs1 || id_ex_rd == if_id_rs2)) &&
+        id_ex_rd != 0)
+        |-> !(pc_stall || if_id_stall || id_ex_stall);
     endproperty
 
-    assert property (load_use_flush_rs1) else $error("LOAD USE RS1 ERROR");
-    assert property (load_use_flush_rs2) else $error("LOAD USE RS2 ERROR");
-    assert property (no_stall_without_reason) else $error("EXECUTED STALL WITHOUT REASON");
+    property p_load_use_stall;
+        @(posedge clk) disable iff (!reset_n)
+        (res_src == 3'b001 && 
+        (id_ex_rd == if_id_rs1 || id_ex_rd == if_id_rs2) &&
+        id_ex_rd != 0)
+        |-> pc_stall && if_id_stall;
+    endproperty
 
-    cover  property (load_use_flush_rs1);
-    cover  property (load_use_flush_rs2);
-    cover  property (no_stall_without_reason);
+    property p_div_stall;
+        @(posedge clk) disable iff (!reset_n)
+        (is_div && !srt_done)
+        |-> pc_stall && if_id_stall && id_ex_stall;
+    endproperty
+
+    assert property (p_load_use_flush_rs1) else $error("LOAD USE RS1 ERROR");
+    assert property (p_load_use_flush_rs2) else $error("LOAD USE RS2 ERROR");
+    assert property (p_no_stall_without_reason) else $error("EXECUTED STALL WITHOUT REASON");
+    assert property (p_load_use_stall) else $error("EXECUTED NO STALL");
+    assert property (p_div_stall) else $error("NO STALL THOUGH DIV WORKING");
+
+    cover  property (p_load_use_flush_rs1);
+    cover  property (p_load_use_flush_rs2);
+    cover  property (p_no_stall_without_reason);
+    cover  property (p_load_use_stall);
+    cover  property (p_div_stall);
 
 endmodule
