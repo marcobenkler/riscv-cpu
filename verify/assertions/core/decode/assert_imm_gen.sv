@@ -1,4 +1,4 @@
-module tb_imm_gen();
+module assert_imm_gen();
 
     logic [31:0] instruction;
     logic [31:0] imm;
