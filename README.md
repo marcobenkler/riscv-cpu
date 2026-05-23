@@ -2,8 +2,8 @@
 
 ## Overview
 
-A clean, modular **single-cycle RISC-V CPU** implementing the **RV32IM** instruction set in SystemVerilog.  
-The project focuses on architectural correctness and clear RTL structure rather than maximum performance.
+A clean, modular **pipelined RISC-V CPU** implementing the **RV32IM** instruction set in SystemVerilog.  
+The project focuses on architectural correctness and clear RTL structure. Built stage by stage — from a single-cycle baseline to a full 5-stage pipeline with forwarding and hazard detection.
 
 ---
 
@@ -18,43 +18,57 @@ The project focuses on architectural correctness and clear RTL structure rather 
 ```
 .
 ├── rtl/
-│   ├── common/          # Shared packages (ALU opcodes, CLINT addresses)
-│   ├── clint/           # Core-Local Interruptor
+│   ├── common/              # Shared packages (ALU opcodes, CLINT, pipeline structs)
+│   ├── clint/               # Core-Local Interruptor
+│   ├── pipeline/            # Pipeline-specific units
+│   │   ├── forwarding_unit.sv
+│   │   ├── hazard_unit.sv
+│   │   └── pipeline_reg.sv
 │   └── core/
-│       ├── branch/      # PC selection and update
-│       ├── csr/         # Machine-Mode CSR register file & trap logic
-│       ├── decode/      # Instruction decoder, immediate generator, register file
+│       ├── branch/          # PC selection and update
+│       ├── csr/             # Machine-Mode CSR register file & trap logic
+│       ├── decode/          # Instruction decoder, immediate generator, register file
 │       ├── execute/
-│       │   ├── alu/     # ALU (add/sub, logic, shift, compare)
-│       │   └── muldiv/  # SRT-2 radix-2 multiplier/divider
-│       ├── fetch/       # Instruction memory
-│       ├── memory/      # Data memory & bus interconnect
-│       ├── writeback/   # Result select mux
-│       └── sc_cpu.sv    # Top-level single-cycle CPU
-├── tb/
-│   ├── alu/             # ALU testbench
-│   ├── core/            # Full-CPU testbench
-│   └── muldiv/srt2/     # SRT-2 unit testbenches
-├── sim/                 # Waveform outputs (.vcd)
-├── synth/               # Yosys synthesis scripts & netlists
-├── scripts/             # Linker script and startup assembly
+│       │   ├── alu/         # ALU (add/sub, logic, shift, compare)
+│       │   └── muldiv/      # SRT-2 radix-2 multiplier/divider
+│       ├── fetch/           # Instruction memory
+│       ├── memory/          # Data memory & bus interconnect
+│       ├── writeback/       # Result select mux
+│       ├── sc_cpu.sv        # Top-level single-cycle CPU
+│       └── operand_select.sv
+├── pl_cpu.sv                # Top-level pipelined CPU
+├── verify/
+│   ├── tb/                  # Testbenches
+│   │   ├── alu/
+│   │   ├── core/            # Single-cycle CPU testbench
+│   │   ├── muldiv/srt2/
+│   │   └── pipeline/        # Pipeline integration testbenches
+│   ├── assertions/          # SVA assertion modules
+│   │   ├── core/decode/     # Decoder / imm_gen assertions
+│   │   └── pipeline/        # Forwarding & hazard assertions
+│   └── bind/                # Bind files (attach assertions to DUT)
+├── sim/                     # Waveform outputs (.vcd / .fst)
+├── synth/                   # Yosys synthesis scripts & netlists
+├── scripts/                 # Linker script and startup assembly
 ├── Makefile
-└── synth.tcl            # Vivado synthesis script
+└── synth.tcl                # Vivado synthesis script
 ```
 
 ---
 
 ## Module Descriptions
 
+### Single-Cycle Core
+
 | Module | Path | Function |
 |---|---|---|
-| `sc_cpu` | `rtl/core/sc_cpu.sv` | Top-level single-cycle CPU — wires all five stages |
+| `sc_cpu` | `rtl/core/sc_cpu.sv` | Top-level single-cycle CPU |
 | `instruction_memory` | `rtl/core/fetch/` | Instruction ROM, synchronous read |
 | `decoder` | `rtl/core/decode/` | Decodes instruction to control signals |
 | `imm_gen` | `rtl/core/decode/` | Sign-extends all immediate formats (I/S/B/U/J) |
 | `register_file` | `rtl/core/decode/` | 32×32-bit integer register file, x0 hardwired to 0 |
 | `operand_select` | `rtl/core/execute/` | Mux for ALU operands A and B |
-| `alu_top` | `rtl/core/execute/alu/` | ALU top — dispatches to sub-units below |
+| `alu_top` | `rtl/core/execute/alu/` | ALU top — dispatches to sub-units |
 | `alu_addsub` | `rtl/core/execute/alu/` | Addition and subtraction |
 | `alu_logic` | `rtl/core/execute/alu/` | Bitwise AND/OR/XOR |
 | `alu_shift` | `rtl/core/execute/alu/` | Logical and arithmetic shifts |
@@ -71,8 +85,23 @@ The project focuses on architectural correctness and clear RTL structure rather 
 | `bus_interconnect` | `rtl/core/memory/` | Memory-mapped I/O bus mux (RAM ↔ CLINT) |
 | `result_select` | `rtl/core/writeback/` | Writeback result mux (ALU / memory / PC+4 / CSR) |
 | `clint` | `rtl/clint/` | Core-Local Interruptor — `mtime` / `mtimecmp` |
-| `alu_pkg` | `rtl/common/` | ALU opcode enum |
-| `clint_pkg` | `rtl/common/` | CLINT MMIO address constants |
+
+### Pipeline Extensions
+
+| Module | Path | Function |
+|---|---|---|
+| `pl_cpu` | `rtl/pl_cpu.sv` | Top-level pipelined CPU |
+| `pipeline_reg` | `rtl/pipeline/pipeline_reg.sv` | IF/ID, ID/EX, EX/MEM, MEM/WB pipeline registers |
+| `forwarding_unit` | `rtl/pipeline/forwarding_unit.sv` | EX/MEM and MEM/WB forwarding to EX stage |
+| `hazard_unit` | `rtl/pipeline/hazard_unit.sv` | Load-use stall detection and control-flow flush |
+
+### Packages
+
+| Package | Path | Contents |
+|---|---|---|
+| `alu_pkg` | `rtl/common/alu_pkg.sv` | ALU opcode enum |
+| `clint_pkg` | `rtl/common/clint_pkg.sv` | CLINT MMIO address constants |
+| `pipeline_pkg` | `rtl/common/pipeline_pkg.sv` | Pipeline register structs |
 
 ---
 
@@ -82,7 +111,7 @@ The project focuses on architectural correctness and clear RTL structure rather 
 |---|---|
 | [Verilator](https://www.veripool.org/verilator/) | RTL simulation |
 | `riscv64-unknown-elf-gcc` | Compile assembly test programs |
-| [GTKWave](https://gtkwave.sourceforge.net/) | View `.vcd` waveforms |
+| [GTKWave](https://gtkwave.sourceforge.net/) / [Surfer](https://surfer-project.org/) | View `.vcd` / `.fst` waveforms |
 | [Yosys](https://yosyshq.net/yosys/) | Open-source synthesis |
 | Vivado | FPGA synthesis (`synth.tcl`) |
 
@@ -96,51 +125,50 @@ The project focuses on architectural correctness and clear RTL structure rather 
 # macOS (Homebrew)
 brew install verilator riscv-gnu-toolchain
 
-# Linux
-sudo apt install verilatorgcc-risc64-unknown-elf
-
 # 64-bit toolchain supports RV32 via `-march=rv32i -mabi=ilp32`
 ```
 
-### Simulate the full CPU
+### Simulate
 
 ```bash
-# Run the default test (add)
-make sim
-
-# Run a specific test from the PicoRV32 test suite
-make sim TEST=lui
-make sim TEST=jalr
-make sim TEST=sw
-
-# Run all tests at once make test-all
+make sim          # single-cycle CPU
+make sim-pl       # pipelined CPU
 ```
-
-This compiles the assembly test with `riscv64-unknown-elf-gcc`, converts the binary to a hex file, then builds and runs the Verilator simulation. A waveform is written to `sim/cpu.vcd`.
 
 ### View waveforms
 
 ```bash
-surfer sim/cpu.vcd
+surfer sim/pip_cpu.fst
 ```
 
 ---
 
 ## Testing & Verification
 
-Each major module has a dedicated SystemVerilog testbench under `tb/`:
+### Testbenches
 
-| Testbench | Covers |
-|---|---|
-| `tb/core/tb_sc_cpu.sv` | Full single-cycle CPU — loads a compiled test program |
-| `tb/alu/tb_alu.sv` | ALU top-level |
-| `tb/muldiv/srt2/tb_STR2.sv` | SRT-2 divider end-to-end |
-| `tb/muldiv/srt2/tb_LZD.sv` | Leading-zero detector |
-| `tb/muldiv/srt2/tb_normalize.sv` | Operand normalizer |
-| `tb/muldiv/srt2/tb_DigitSelector.sv` | Digit selector |
-| `tb/muldiv/srt2/tb_RemainderUpdate.sv` | Remainder update |
+| Testbench | Path | Covers |
+|---|---|---|
+| `tb_sc_cpu` | `verify/tb/core/` | Full single-cycle CPU |
+| `tb_pl_cpu` | `verify/tb/pipeline/` | Full pipelined CPU |
+| `tb_fwd_integration` | `verify/tb/pipeline/` | Forwarding unit integration |
+| `tb_hazard_integration` | `verify/tb/pipeline/` | Hazard unit integration |
+| `tb_alu` | `verify/tb/alu/` | ALU top-level |
+| `tb_STR2` | `verify/tb/muldiv/srt2/` | SRT-2 divider end-to-end |
+| `tb_LZD` | `verify/tb/muldiv/srt2/` | Leading-zero detector |
+| `tb_normalize` | `verify/tb/muldiv/srt2/` | Operand normalizer |
+| `tb_DigitSelector` | `verify/tb/muldiv/srt2/` | Digit selector |
+| `tb_RemainderUpdate` | `verify/tb/muldiv/srt2/` | Remainder update |
 
-Full-CPU tests use the [PicoRV32 compliance test suite](https://github.com/YosysHQ/picorv32) — individual assembly programs that verify instruction behavior by checking register values at the end of execution.
+### SVA (SystemVerilog Assertions)
+
+Formal/simulation assertions are in `verify/assertions/` and attached to the DUT via bind files in `verify/bind/`.
+
+| Assertion Module | Bind File | Covers |
+|---|---|---|
+| `assert_fwd_integration` | `fwd_bind.sv` | Forwarding correctness — correct data selected for EX operands under all hazard combinations |
+| `assert_hazard_integration` | `hazard_bind.sv` | Hazard detection — stall and flush signals asserted at the right cycles for load-use and control hazards |
+| `assert_imm_gen` | *(core/decode)* | Immediate sign-extension for all formats |
 
 ---
 
@@ -155,12 +183,13 @@ Full-CPU tests use the [PicoRV32 compliance test suite](https://github.com/Yosys
 | CLINT (`mtime` / `mtimecmp`) | ✅ |
 | Memory-mapped I/O bus | ✅ |
 | Timer interrupts | ✅ |
-| Pipelining | ⬜ |
+| 5-stage pipeline (forwarding, hazard detection) | ✅ |
+| SVA assertion coverage | ✅ |
 | FreeRTOS bring-up | ⬜ |
-| FreeTROS on FPGA | ⬜ |
+| FreeRTOS on FPGA | ⬜ |
 
 ---
 
 ## Design Philosophy
 
-Architecture-first: correctness, clarity, and extensibility take priority over microarchitectural optimizations. The single-cycle implementation provides a clean, debuggable baseline before pipelining is introduced.
+Architecture-first: correctness, clarity, and extensibility take priority over microarchitectural optimizations. The single-cycle implementation provides a clean, debuggable baseline; the pipelined design builds directly on that structure with minimal added complexity.

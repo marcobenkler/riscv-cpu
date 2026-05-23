@@ -49,6 +49,7 @@ module pl_cpu
 
     // EXTERNAL
     logic        clint_write_en;
+    logic        uart_write_en;
     logic [31:0] clint_read_data;
     logic [1:0]  forward_a;
     logic [1:0]  forward_b;
@@ -327,11 +328,13 @@ module pl_cpu
     bus_interconnect bus_interconnect(
         .address(ex_mem_out.ex_res),
         .clint_read_data(clint_read_data),
+        .uart_read_data(uart_read_data),
         .mem_data(mem_read_data),
         .mem_write(ex_mem_out.mem_write),
         .rdata(mem_wb_in.rdata), //output
         .clint_write_en(clint_write_en), //output
-        .mem_write_en(mem_write_en) //output
+        .mem_write_en(mem_write_en), //output
+        .uart_write_en(uart_write_en) //output
     );
 
     assign mem_wb_in.reg_write = ex_mem_out.reg_write;

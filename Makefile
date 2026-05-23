@@ -74,6 +74,8 @@ clean:
 SRCS_imm_gen := rtl/core/decode/imm_gen.sv
 SRCT_imm_gen := verify/assertions/core/decode/assert_imm_gen.sv
 
+SRCT_uart_baud := verify/tb/external/tb_uart_baud.sv
+
 SRCT_fwd_integration := \
 	verify/tb/pipeline/tb_fwd_integration.sv \
 	verify/assertions/pipeline/assert_fwd_integration.sv \
