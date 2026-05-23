@@ -75,6 +75,7 @@ SRCS_imm_gen := rtl/core/decode/imm_gen.sv
 SRCT_imm_gen := verify/assertions/core/decode/assert_imm_gen.sv
 
 SRCT_uart_baud := verify/tb/external/tb_uart_baud.sv
+SRCT_uart_tx := verify/tb/external/tb_uart_tx.sv
 
 SRCT_fwd_integration := \
 	verify/tb/pipeline/tb_fwd_integration.sv \
@@ -86,8 +87,9 @@ SRCT_hazard_integration :=	\
 	verify/assertions/pipeline/assert_hazard_integration.sv \
 	verify/bind/hazard_bind.sv
 
+
 sim-%:
-	verilator --binary --assert --sv --coverage \
+	verilator --binary --trace --assert --sv --coverage \
 		-Wno-DECLFILENAME \
 		-Wno-SYNCASYNCNET \
 		-Wno-UNUSEDSIGNAL \
