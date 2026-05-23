@@ -50,6 +50,7 @@ module pl_cpu
     // EXTERNAL
     logic        clint_write_en;
     logic        uart_write_en;
+    logic [31:0] uart_read_data;
     logic [31:0] clint_read_data;
     logic [1:0]  forward_a;
     logic [1:0]  forward_b;
@@ -60,6 +61,8 @@ module pl_cpu
     logic        id_ex_flush;
     logic        ex_mem_stall;
     logic        ex_mem_flush;
+    logic        uart_rx_bit;
+    logic        uart_tx_bit;
 
     // IF Stage
     update_pc update_pc(
@@ -405,6 +408,17 @@ module pl_cpu
         .id_ex_stall(id_ex_stall), //output
         .ex_mem_stall(ex_mem_stall), //output
         .ex_mem_flush(ex_mem_flush) //output
+    );
+
+    uart_top uart_top(
+        .clk(clk),
+        .reset_n(reset_n),
+        .address(ex_mem_out.ex_res),
+        .rx(uart_rx_bit), //peripherie
+        .uart_write_data(ex_mem_out.rs2_data),
+        .tx_start(uart_write_en),
+        .uart_read_data(uart_read_data), //output
+        .tx(uart_tx_bit) //output peripherie
     );
 
 endmodule
