@@ -50,7 +50,7 @@ module uart_tx
             tx_ready = 1'b0;
         end
         else if (state == DATA) begin
-            tx = wdata[bit_cnt];
+            tx = shift_reg[bit_cnt];
         end
         else if (state == STOP) begin
             tx = 1'b1;
