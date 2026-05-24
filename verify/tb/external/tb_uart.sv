@@ -25,4 +25,6 @@ module tb_uart();
         $finish;
     end
 
+    assign u_pl_cpu.uart_rx_bit = u_pl_cpu.uart_tx_bit;
+
 endmodule

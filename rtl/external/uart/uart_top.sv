@@ -38,7 +38,7 @@ module uart_top
         .reset_n(reset_n),
         .baud_tick(baud_tick_tx),
         .tx_start(tx_start),
-        .wdata(uart_tx_reg[7:0]),
+        .wdata(uart_write_data[7:0]),
         .tx_ready(tx_ready), //output
         .tx(tx) //output
     );
@@ -58,7 +58,7 @@ module uart_top
             uart_rx_reg <= '0;
         end
         else begin
-            if(tx_start) uart_tx_reg <= uart_write_data;
+            //if(tx_start) uart_tx_reg <= uart_write_data; caused one clock delay
             if(rx_valid) uart_rx_reg <= {24'b0, wdata_r};
         end
     end

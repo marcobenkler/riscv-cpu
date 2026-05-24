@@ -25,8 +25,8 @@ module uart_tx
             shift_reg <= wdata;
         end
         else if (state == START && baud_tick) begin
-            state   <= DATA;
-            bit_cnt <= 3'b0;
+            state     <= DATA;
+            bit_cnt   <= 3'b0;
         end
         else if (state == DATA && baud_tick)begin
             if(bit_cnt == 7) state <= STOP;

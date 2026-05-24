@@ -42,9 +42,9 @@ module uart_rx
             if(tick_count == 4'b1111) tick_count <= '0;
             else tick_count <= tick_count + 1;
         end
-        rx_valid <= (state == DATA && baud_tick && bit_cnt == 7);
     end
 
-    assign baud_tick = (tick_count == 4'b1000);
+    assign rx_valid = (state == STOP);
+    assign baud_tick = (tick_count == 4'b1111 && baud_tick_fast);
 
 endmodule
