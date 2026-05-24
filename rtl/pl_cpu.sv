@@ -2,8 +2,12 @@ module pl_cpu
     import pipeline_pkg::*;
 (
     input logic clk,
-    input logic reset_n
+    input logic reset_n_external,
+    input logic uart_rx_bit,
+    output logic uart_tx_bit
 );
+
+    assign reset_n = ~reset_n_external;
 
     if_id_t if_id_in;
     if_id_t if_id_out;
@@ -61,8 +65,6 @@ module pl_cpu
     logic        id_ex_flush;
     logic        ex_mem_stall;
     logic        ex_mem_flush;
-    logic        uart_rx_bit;
-    logic        uart_tx_bit;
 
     // IF Stage
     update_pc update_pc(
