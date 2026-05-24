@@ -13,7 +13,7 @@ module instruction_memory #(
     logic [7:0] memo [MEM_DEPTH:0];
 
     initial begin
-        $readmemh("/opt/projects/riscv-cpu/program.hex");
+        $readmemh("/opt/projects/riscv-cpu/program.hex", memo);
     end
 
     always_comb begin
