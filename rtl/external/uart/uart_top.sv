@@ -1,4 +1,6 @@
-module uart_top(
+module uart_top
+    import uart_pkg::*;
+(
     input  logic        clk,
     input  logic        reset_n,
     input  logic        tx_start,
@@ -62,7 +64,7 @@ module uart_top(
     end
 
     always_comb begin
-        case (address)
+        case (address - UART_BASE)
             UART_STATUS: uart_read_data = {30'b0, rx_valid, tx_ready};
             UART_RX:     uart_read_data = uart_rx_reg;
             default:     uart_read_data = '0;

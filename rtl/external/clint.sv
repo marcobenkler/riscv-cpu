@@ -21,7 +21,7 @@ logic [31:0] mtime_hi;
 logic [31:0] msip;
 
 always_comb begin
-    case (address)
+    case (address - CLINT_BASE)
         CLINT_MSIP: clint_read_data = msip;
         CLINT_MTIMECMP_LO: clint_read_data = mtimecmp_lo;
         CLINT_MTIMECMP_HI: clint_read_data = mtimecmp_hi;
@@ -40,7 +40,7 @@ always_ff @(posedge clk or negedge reset_n) begin
         mtime_hi <= '0;
     end 
     else if (clint_write_en) begin
-        case (address)
+        case (address - CLINT_BASE)
             CLINT_MSIP: msip <= clint_write_data;
             CLINT_MTIMECMP_LO: mtimecmp_lo <= clint_write_data;
             CLINT_MTIMECMP_HI: mtimecmp_hi <= clint_write_data;
