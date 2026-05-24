@@ -11,6 +11,11 @@ module instruction_memory #(
 );
 
     logic [7:0] memo [MEM_DEPTH:0];
+
+    initial begin
+        $readmemh("/opt/projects/riscv-cpu/program.hex")
+    end
+
     always_comb begin
         for(int i = 0; i < 4; i++) begin
             instruction[8*i +: 8] = memo[pc + i];
