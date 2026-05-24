@@ -4,7 +4,7 @@
 * By using the pc combine 4 byte into 1 instruction vector via comb
 **/
 module instruction_memory #(
-    parameter MEM_DEPTH = 1024
+    parameter MEM_DEPTH = 32
 )(
     input logic [31:0] pc,          ///< which instruction to take
     output logic [31:0] instruction ///< instruction vector
