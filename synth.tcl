@@ -1,7 +1,7 @@
 # =============================================================================
-# RISC-V CPU — Vivado Synthesis (No Place & Route, No Bitstream)
+# RISC-V CPU — Vivado Full Build (Synth + Impl + Bitstream)
 # Target: Zynq-7010 (xc7z010clg400-1)
-# Usage:  vivado -mode batch -source synth.tcl -log synth.log -journal synth.jou
+# Usage:  vivado -mode batch -source synth.tcl -log output/synth.log -journal output/synth.jou
 # =============================================================================
 
 set project_dir /opt/projects/riscv-cpu
@@ -11,6 +11,9 @@ set output_dir  ${project_dir}/output
 
 file mkdir ${output_dir}
 
+# =============================================================================
+# Read Sources
+# =============================================================================
 read_verilog -sv [list \
     ${project_dir}/rtl/common/alu_pkg.sv \
     ${project_dir}/rtl/common/clint_pkg.sv \
@@ -51,10 +54,56 @@ read_verilog -sv [list \
     ${project_dir}/rtl/pl_cpu.sv \
 ]
 
-synth_design -top ${top_module} -part ${part} -flatten_hierarchy rebuilt -generic MEM_DEPTH=15
+# =============================================================================
+# Read Constraints
+# =============================================================================
+read_xdc ${project_dir}/constraints/zybo_z7.xdc
 
-report_utilization -file ${output_dir}/utilization.rpt
+# =============================================================================
+# Synthesis
+# =============================================================================
+puts "============================================"
+puts " Starting Synthesis..."
+puts "============================================"
+
+synth_design \
+    -top ${top_module} \
+    -part ${part} \
+    -flatten_hierarchy rebuilt
+
+write_checkpoint -force ${output_dir}/post_synth.dcp
+report_utilization -file ${output_dir}/utilization_synth.rpt
+
+# =============================================================================
+# Implementation
+# =============================================================================
+puts "============================================"
+puts " Starting Implementation..."
+puts "============================================"
+
+opt_design
+place_design
+phys_opt_design
+route_design
+
+write_checkpoint -force ${output_dir}/post_route.dcp
+
+# =============================================================================
+# Reports
+# =============================================================================
+report_timing_summary  -file ${output_dir}/timing.rpt
+report_utilization     -file ${output_dir}/utilization.rpt
+report_power           -file ${output_dir}/power.rpt
+
+# =============================================================================
+# Bitstream
+# =============================================================================
+puts "============================================"
+puts " Generating Bitstream..."
+puts "============================================"
+
+write_bitstream -force ${output_dir}/pl_cpu.bit
 
 puts "============================================"
-puts " Synthesis complete! Reports in: ${output_dir}/"
+puts " BUILD DONE: ${output_dir}/pl_cpu.bit"
 puts "============================================"
