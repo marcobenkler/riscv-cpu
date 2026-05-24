@@ -83,6 +83,7 @@ puts "============================================"
 
 opt_design
 place_design
+report_utilization -hierarchical -file ${output_dir}/utilization_hier.rpt
 phys_opt_design
 route_design
 
