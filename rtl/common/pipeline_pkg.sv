@@ -1,5 +1,10 @@
 package pipeline_pkg;
     typedef struct packed {
+        logic [31:0] pc_current;
+        logic [31:0] pc_default;
+    } if1_if2_t;
+    
+    typedef struct packed {
         // Data
         logic [31:0] pc_current;
         logic [31:0] pc_default;

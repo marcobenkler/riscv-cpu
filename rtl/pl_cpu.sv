@@ -2,12 +2,16 @@ module pl_cpu
     import pipeline_pkg::*;
 (
     input logic clk,
-    input logic reset_n_external,
-    input logic uart_rx_bit,
-    output logic uart_tx_bit
+    input logic reset_n
+    //input logic reset_n_external
+    //input logic uart_rx_bit,
+    //output logic uart_tx_bit
 );
 
-    assign reset_n = ~reset_n_external;
+    //assign reset_n = ~reset_n_external;
+    
+    if1_if2_t if1_if2_in;
+    if1_if2_t if1_if2_out;
 
     if_id_t if_id_in;
     if_id_t if_id_out;
@@ -66,32 +70,47 @@ module pl_cpu
     logic        ex_mem_stall;
     logic        ex_mem_flush;
 
+    //Simulation
+    logic uart_rx_bit;
+    logic uart_tx_bit;
+
     // IF Stage
     update_pc update_pc(
         .clk(clk),
         .reset_n(reset_n), 
         .pc_next(pc_next), 
         .pc_stall(pc_stall),
-        .pc_current(if_id_in.pc_current) //output
+        .pc_current(if1_if2_in.pc_current) //output
     );
 
     next_pc next_pc(
         .alu_res(alu_res),
         .imm_res(imm_res),
         .csr_pc(csr_pc),
-        .pc_current(if_id_in.pc_current),
+        .pc_current(if1_if2_in.pc_current),
         .pc_src(pc_src_ex),
         .trap_taken(trap_taken),
         .mret_taken(mret_taken),
         .pc_next(pc_next), //output
-        .pc_default(if_id_in.pc_default) //utput
+        .pc_default(if1_if2_in.pc_default) //utput
+    );
+
+    pipeline_reg #(.T(if1_if2_t)) if1_if2_reg (
+        .clk(clk),
+        .reset_n(reset_n),
+        .flush(if_id_flush),
+        .stall(if_id_stall),
+        .in(if1_if2_in),
+        .out(if1_if2_out)
     );
 
     instruction_memory instruction_memory(
-        .pc(if_id_in.pc_current),
+        .clk(clk),
+        .pc(if1_if2_in.pc_current),
         .instruction(if_id_in.instruction)
     );
-    
+    assign if_id_in.pc_current = if1_if2_out.pc_current;
+    assign if_id_in.pc_default = if1_if2_out.pc_default;
     assign if_id_in.rs1 = if_id_in.instruction[19:15];
     assign if_id_in.rs2 = if_id_in.instruction[24:20];
 
