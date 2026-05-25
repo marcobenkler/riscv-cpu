@@ -2,13 +2,12 @@ module pl_cpu
     import pipeline_pkg::*;
 (
     input logic clk,
-    input logic reset_n
-    //input logic reset_n_external
-    //input logic uart_rx_bit,
-    //output logic uart_tx_bit
+    input logic reset_n_external
+    input logic uart_rx_bit,
+    output logic uart_tx_bit
 );
 
-    //assign reset_n = ~reset_n_external;
+    assign reset_n = ~reset_n_external;
     
     if1_if2_t if1_if2_in;
     if1_if2_t if1_if2_out;
