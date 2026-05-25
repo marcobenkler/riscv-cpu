@@ -1,5 +1,5 @@
 module uart_baud #(
-    parameter clk_freq = 125_000_000,
+    parameter clk_freq = 100_000_000,
     parameter baud_rate = 115_200
 )(
     input  logic clk,
