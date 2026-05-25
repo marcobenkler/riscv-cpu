@@ -24,8 +24,8 @@ ALL_TESTS := $(addprefix rv32ui-p-,$(RV32UI)) \
 
 .PHONY: sim verilate test-all rv32ui rv32um rv32mi _run_tests clean
 
-sim: verilate $(BUILD)/$(TEST).hex
-	./obj_dir/Vtb_pl_cpu +test=$(BUILD)/$(TEST).hex
+sim: verilate $(BUILD)/$(TEST).hex $(BUILD)/$(TEST).byte.hex
+	./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$(TEST).hex +dtest=$(BUILD)/$(TEST).byte.hex
 
 verilate:
 	verilator --binary --trace -sv --top-module tb_pl_cpu \
@@ -34,8 +34,12 @@ verilate:
 	    $(RTL_FILES) $(TB_FILES)
 
 $(BUILD)/$(TEST).hex: $(BUILD)/$(TEST).bin | $(BUILD)
-	python3 -c "import sys; data=open('$<','rb').read(); \
-	    sys.stdout.write('\n'.join('%02x' % b for b in data) + '\n')" > $@
+	python3 -c "import sys; d=open('$<','rb').read(); d+=b'\x00'*((-len(d))%4); \
+	    sys.stdout.write('\n'.join(f'{int.from_bytes(d[i:i+4],\"little\"):08x}' for i in range(0,len(d),4))+'\n')" > $@
+
+$(BUILD)/$(TEST).byte.hex: $(BUILD)/$(TEST).bin | $(BUILD)
+	python3 -c "import sys; d=open('$<','rb').read(); \
+	    sys.stdout.write('\n'.join(f'{b:02x}' for b in d)+'\n')" > $@
 
 $(BUILD)/$(TEST).bin: $(TESTS_DIR)/$(TEST) | $(BUILD)
 	$(TOOLCHAIN)-objcopy -O binary $< $@
@@ -58,8 +62,8 @@ test-all: verilate
 _run_tests:
 	@pass=0; fail=0; \
 	for test in $(SUITE); do \
-		$(MAKE) -B --no-print-directory "$(BUILD)/$$test.hex" TEST=$$test > /dev/null 2>&1; \
-		result=$$(./obj_dir/Vtb_pl_cpu +test=$(BUILD)/$$test.hex 2>&1); \
+		$(MAKE) -B --no-print-directory "$(BUILD)/$$test.hex" "$(BUILD)/$$test.byte.hex" TEST=$$test > /dev/null 2>&1; \
+		result=$$(./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$$test.hex +dtest=$(BUILD)/$$test.byte.hex 2>&1); \
 		if echo "$$result" | grep -q "^PASS"; then \
 			printf "\033[1;32mPASS\033[0m  $$test\n"; pass=$$((pass+1)); \
 		else \

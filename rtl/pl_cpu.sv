@@ -70,6 +70,8 @@ module pl_cpu
     logic        ex_mem_stall;
     logic        ex_mem_flush;
 
+    logic        if_id_flush_delayed;
+
     //Simulation
     logic uart_rx_bit;
     logic uart_tx_bit;
@@ -98,7 +100,7 @@ module pl_cpu
     pipeline_reg #(.T(if1_if2_t)) if1_if2_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush(if_id_flush),
+        .flush(1'b0),
         .stall(if_id_stall),
         .in(if1_if2_in),
         .out(if1_if2_out)
@@ -106,6 +108,7 @@ module pl_cpu
 
     instruction_memory instruction_memory(
         .clk(clk),
+        .stall(if_id_stall),
         .pc(if1_if2_in.pc_current),
         .instruction(if_id_in.instruction)
     );
@@ -114,10 +117,15 @@ module pl_cpu
     assign if_id_in.rs1 = if_id_in.instruction[19:15];
     assign if_id_in.rs2 = if_id_in.instruction[24:20];
 
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) if_id_flush_delayed <= '0;
+        else if_id_flush_delayed <= if_id_flush;
+    end
+
     pipeline_reg #(.T(if_id_t)) if_id_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush(if_id_flush),
+        .flush(if_id_flush | if_id_flush_delayed),
         .stall(if_id_stall),
         .in(if_id_in),
         .out(if_id_out)
@@ -330,7 +338,7 @@ module pl_cpu
         .reset_n(reset_n),
         .instruction(ex_mem_out.instruction),
         .pc_current(ex_mem_out.pc_current), //Exception-mpec
-        .pc_if(if_id_in.pc_current), //in op out idk       //Interrutp-mpec
+        .pc_if(if1_if2_in.pc_current), //Interrutp-mpec
         .rs1_data(ex_mem_out.rs1_data),
         .csr_op(ex_mem_out.csr_op),
         .csr_write(ex_mem_out.csr_write),

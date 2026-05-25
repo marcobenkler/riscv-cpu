@@ -3,7 +3,8 @@
 module tb_pl_cpu();
 
     logic clk, reset_n;
-    string test_file;
+    string itest_file;
+    string dtest_file;
 
     pl_cpu pl_cpu(.clk(clk), .reset_n(reset_n));
 
@@ -20,11 +21,11 @@ module tb_pl_cpu();
     wire [2:0]  mem_s_type = pl_cpu.ex_mem_out.mem_s_type;
 
     initial begin
-        if (!$value$plusargs("test=%s", test_file))
-            test_file = "tb/core/program.hex";
+        if (!$value$plusargs("itest=%s", itest_file)) itest_file = "program.hex";
+        if (!$value$plusargs("dtest=%s", dtest_file)) dtest_file = "program.byte.hex";
 
-        $readmemh(test_file, pl_cpu.instruction_memory.memo);
-        $readmemh(test_file, pl_cpu.data_memory.mem);
+        $readmemh(itest_file, pl_cpu.instruction_memory.memo);
+        $readmemh(dtest_file, pl_cpu.data_memory.mem);
 
         reset_n = 0;
         repeat(2) @(posedge clk);
@@ -34,6 +35,26 @@ module tb_pl_cpu();
         $display("TIMEOUT");
         $finish;
     end
+
+    
+
+    always @(posedge clk) begin
+    $display("PC=0x%h instr=0x%h x30=0x%h x31=0x%h mepc=0x%h", 
+             pl_cpu.if_id_in.pc_current, 
+             pl_cpu.instruction_memory.instruction,
+             pl_cpu.register_file.regi[30],
+             pl_cpu.register_file.regi[31],
+             pl_cpu.csr_regfile.mepc);
+
+             $display("PC=0x%h instr=0x%h csr_res=0x%h res_src=0x%h fwd_a=%b fwd_b=%b",
+         pl_cpu.if_id_in.pc_current,
+         pl_cpu.instruction_memory.instruction,
+         pl_cpu.csr_regfile.csr_res,
+         pl_cpu.ex_mem_out.res_src,
+         pl_cpu.forward_a,
+         pl_cpu.forward_b);
+
+end
 
     always @(posedge clk) begin
         $display("PC=0x%h instr=0x%h mcause=0x%h mret=0x%h", pl_cpu.if_id_in.pc_current, pl_cpu.instruction_memory.instruction, pl_cpu.csr_regfile.mcause, pl_cpu.mret_taken);
