@@ -24,6 +24,7 @@ module pl_cpu
     mem_wb_t mem_wb_in;
     mem_wb_t mem_wb_out;
 
+
     // IF Stage
     logic [31:0] pc_next;
     logic [31:0] csr_pc;
