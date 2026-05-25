@@ -59,6 +59,10 @@ read_verilog -sv [list \
 # =============================================================================
 read_xdc ${project_dir}/Zybo-Z7-Master.xdc
 
+# HEX file für BRAM Initialisierung
+add_files ${project_dir}/program.hex
+set_property file_type {Memory File} [get_files program.hex]
+
 # =============================================================================
 # Synthesis
 # =============================================================================
@@ -69,7 +73,8 @@ puts "============================================"
 synth_design \
     -top ${top_module} \
     -part ${part} \
-    -flatten_hierarchy rebuilt
+    -flatten_hierarchy rebuilt \
+    -include_dirs ${project_dir}
 
 write_checkpoint -force ${output_dir}/post_synth.dcp
 report_utilization -file ${output_dir}/utilization_synth.rpt

@@ -12,10 +12,10 @@ module instruction_memory #(
     output logic [31:0] instruction ///< instruction vector
 );
 
-    logic [31:0] memo [0:MEM_DEPTH-1];
+    (* rom_style = "block" *) logic [31:0] memo [0:MEM_DEPTH-1];
     /* Synthesis*/
     initial begin
-        $readmemh("/opt/projects/riscv-cpu/program.hex", memo);
+        $readmemh("program.hex", memo);
     end
     /**/
 
