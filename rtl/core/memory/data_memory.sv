@@ -19,23 +19,42 @@ module data_memory #(
     logic [1:0]  addr_lsb_reg;
     logic [2:0]  s_type_reg;
 
-    // BRAM — ein Process, sauber
+    // Byte enables — Vivado-BRAM-natives Template
+    logic [3:0] we;
+
+    always_comb begin
+        case (write_mem_s_type)
+            3'b000: we = mem_write_en ? (4'b0001 << write_address[1:0]) : 4'b0000;
+            3'b001: we = mem_write_en ? (4'b0011 << write_address[1:0]) : 4'b0000;
+            3'b010: we = mem_write_en ? 4'b1111 : 4'b0000;
+            default: we = 4'b0000;
+        endcase
+    end
+
+    // Write data — auf alle Byte-Lanes replizieren
+    logic [31:0] write_data_aligned;
+    always_comb begin
+        case (write_mem_s_type)
+            3'b000: write_data_aligned = {4{mem_write_data[7:0]}};
+            3'b001: write_data_aligned = {2{mem_write_data[15:0]}};
+            3'b010: write_data_aligned = mem_write_data;
+            default: write_data_aligned = mem_write_data;
+        endcase
+    end
+
+    // BRAM — Byte-Enable-Template das Vivado erkennt
     always_ff @(posedge clk) begin
         raw_read     <= mem[read_address[AW+1:2]];
         addr_lsb_reg <= read_address[1:0];
         s_type_reg   <= read_mem_s_type;
 
-        if (mem_write_en) begin
-            case (write_mem_s_type)
-                3'b000: mem[write_address[AW+1:2]][write_address[1:0]*8 +: 8]  <= mem_write_data[7:0];
-                3'b001: mem[write_address[AW+1:2]][write_address[1:0]*8 +: 16] <= mem_write_data[15:0];
-                3'b010: mem[write_address[AW+1:2]]                              <= mem_write_data;
-                default: ;
-            endcase
-        end
+        if (we[0]) mem[write_address[AW+1:2]][7:0]   <= write_data_aligned[7:0];
+        if (we[1]) mem[write_address[AW+1:2]][15:8]  <= write_data_aligned[15:8];
+        if (we[2]) mem[write_address[AW+1:2]][23:16] <= write_data_aligned[23:16];
+        if (we[3]) mem[write_address[AW+1:2]][31:24] <= write_data_aligned[31:24];
     end
 
-    // Bypass-Tracking — registriere Write-Info, kein mem[]-Zugriff
+    // Bypass — Write-Info registrieren
     logic        prev_wr_en;
     logic [AW-1:0] prev_wr_word_addr;
     logic [1:0]  prev_wr_byte_off;
@@ -52,7 +71,6 @@ module data_memory #(
         rd_word_addr_reg  <= read_address[AW+1:2];
     end
 
-    // Bypass: overlay geschriebene Bytes auf raw_read
     logic bypass;
     logic [31:0] merged;
 
