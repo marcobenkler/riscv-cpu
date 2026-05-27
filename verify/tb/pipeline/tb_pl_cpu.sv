@@ -22,10 +22,13 @@ module tb_pl_cpu();
 
     initial begin
         if (!$value$plusargs("itest=%s", itest_file)) itest_file = "program.hex";
-        if (!$value$plusargs("dtest=%s", dtest_file)) dtest_file = "program.byte.hex";
+        if (!$value$plusargs("dtest=%s", dtest_file)) dtest_file = "program.hex";
 
         $readmemh(itest_file, pl_cpu.instruction_memory.memo);
         $readmemh(dtest_file, pl_cpu.data_memory.mem);
+
+        $dumpfile("sim/test.fst");
+        $dumpvars(0, tb_pl_cpu);
 
         reset_n = 0;
         repeat(2) @(posedge clk);

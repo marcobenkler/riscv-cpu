@@ -2,12 +2,13 @@ module pl_cpu
     import pipeline_pkg::*;
 (
     input logic clk,
-    input logic reset_n_external,
-    input logic uart_rx_bit,
-    output logic uart_tx_bit
+    input logic reset_n
+    //input logic reset_n_external,
+    //input logic uart_rx_bit,
+    //output logic uart_tx_bit
 );
 
-    assign reset_n = ~reset_n_external;
+    //assign reset_n = ~reset_n_external;
     
     if1_if2_t if1_if2_in;
     if1_if2_t if1_if2_out;
@@ -324,12 +325,15 @@ module pl_cpu
     // MEM Stage
     data_memory data_memory(
         .clk(clk),
-        .reset_n(reset_n),
+        // Read: EX-stage (BRAM-pipelined)
+        .read_address(ex_mem_in.ex_res),
+        .read_mem_s_type(ex_mem_in.mem_s_type),
+        .mem_read_data(mem_read_data),
+        // Write: MEM-stage
         .mem_write_en(mem_write_en),
-        .mem_s_type(ex_mem_out.mem_s_type),
-        .address(ex_mem_out.ex_res),
-        .mem_write_data(ex_mem_out.rs2_data),
-        .mem_read_data(mem_read_data) //output
+        .write_address(ex_mem_out.ex_res),
+        .write_mem_s_type(ex_mem_out.mem_s_type),
+        .mem_write_data(ex_mem_out.rs2_data)
     );
 
     //csr
