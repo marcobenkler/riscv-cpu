@@ -35,7 +35,7 @@ module operand_select(
                 2'b00: b = rs2_data;
                 2'b01: b = mem_wb_data;
                 2'b10: b = ex_mem_data;
-                default: a = 'x;
+                default: b = 'x;
             endcase
         end
     end

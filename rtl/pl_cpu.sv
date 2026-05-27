@@ -269,7 +269,7 @@ module pl_cpu
             2'b00: ex_mem_in.ex_res = alu_res;
             2'b01: ex_mem_in.ex_res = mul_res;
             2'b10: ex_mem_in.ex_res = div_res;
-            default: ;
+            default: ex_mem_in.ex_res = alu_res;
         endcase
     end
     
