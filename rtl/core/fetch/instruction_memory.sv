@@ -13,11 +13,11 @@ module instruction_memory #(
 );
 
     (* rom_style = "block" *) logic [31:0] memo [0:MEM_DEPTH-1];
-    /* Synthesis
+    /* Synthesis*/
     initial begin
         $readmemh("program.hex", memo);
     end
-    */
+    /**/
 
     always_ff @(posedge clk) begin
         if (!stall) instruction <= memo[pc[$clog2(MEM_DEPTH)+1:2]];
