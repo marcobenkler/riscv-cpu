@@ -8,6 +8,7 @@ module pl_cpu
     output logic uart_tx_bit
 );
 
+    logic reset_n;
     assign reset_n = ~reset_n_external;
     
     if1_if2_t if1_if2_in;
