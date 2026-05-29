@@ -9,7 +9,7 @@ The project focuses on architectural correctness and clear RTL structure. Built 
 
 ## Architecture
 
-![CPU Architecture](architecture.png)
+![CPU Architecture](pipe_architecture.svg)
 
 
 ---
