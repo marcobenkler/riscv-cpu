@@ -3,63 +3,16 @@
 ## Overview
 
 A clean, modular **pipelined RISC-V CPU** implementing the **RV32IM** instruction set in SystemVerilog.  
-The project focuses on architectural correctness and clear RTL structure. Built stage by stage — from a single-cycle baseline to a full 6-stage pipeline with forwarding and hazard detection, running on FPGA with UART communication.
 
 ---
+
+# Design 
 
 ## Architecture
 
-![CPU Architecture](further/pipe_architecture.svg)
+![CPU Architecture](further/pipe_architecture.svg)  
+Left out trivial connections, i.e. instruction_memory -> decoder for improved overview  
 
-
----
-
-## Project Structure
-
-```
-.
-├── rtl/
-│   ├── common/              # Shared packages (ALU opcodes, CLINT, UART, pipeline structs)
-│   ├── external/            # Memory-mapped peripherals
-│   │   ├── clint.sv         # Core-Local Interruptor
-│   │   └── uart/            # UART peripheral (TX, RX, baud generator, top)
-│   ├── pipeline/            # Pipeline-specific units
-│   │   ├── forwarding_unit.sv
-│   │   ├── hazard_unit.sv
-│   │   └── pipeline_reg.sv
-│   └── core/
-│       ├── branch/          # PC selection and update
-│       ├── csr/             # Machine-Mode CSR register file & trap logic
-│       ├── decode/          # Instruction decoder, immediate generator, register file
-│       ├── execute/
-│       │   ├── alu/         # ALU (add/sub, logic, shift, compare)
-│       │   ├── muldiv/      # Multiplier + SRT-2 radix-2 divider
-│       │   ├── branch_unit.sv        # Branch condition evaluation
-│       │   ├── misaligned_detection.sv  # Misaligned access exception detection
-│       │   └── operand_select.sv
-│       ├── fetch/           # Instruction memory (BRAM)
-│       ├── memory/          # Data memory & bus interconnect
-│       ├── writeback/       # Result select mux
-│       └── sc_cpu.sv        # Top-level single-cycle CPU (reference)
-├── rtl/pl_cpu.sv            # Top-level pipelined CPU (FPGA top)
-├── verify/
-│   ├── tb/                  # Testbenches
-│   │   ├── alu/
-│   │   ├── core/            # Single-cycle CPU testbench
-│   │   ├── muldiv/srt2/
-│   │   ├── pipeline/        # Pipeline integration testbenches
-│   │   └── external/        # UART testbenches + assembly test program
-│   ├── assertions/          # SVA assertion modules
-│   │   ├── core/decode/     # Decoder / imm_gen assertions
-│   │   └── pipeline/        # Forwarding & hazard assertions
-│   └── bind/                # Bind files (attach assertions to DUT)
-├── sim/                     # Waveform outputs (.vcd / .fst)
-├── synth/                   # Yosys synthesis scripts & netlists
-├── scripts/                 # Linker script and startup assembly
-├── Zybo-Z7-Master.xdc       # FPGA pin constraints (Zybo Z7)
-├── Makefile
-└── synth.tcl                # Vivado synthesis script
-```
 
 ---
 
@@ -137,45 +90,12 @@ UART MMIO map (base `0x1000_0000`):
 
 | Tool | Purpose |
 |---|---|
-| [Verilator](https://www.veripool.org/verilator/) | RTL simulation |
+| [Verilator](https://www.veripool.org/verilator/) | RTL simulation, capable of useful UVM since v.5050 |
 | `riscv64-unknown-elf-gcc` | Compile assembly test programs |
-| [GTKWave](https://gtkwave.sourceforge.net/) / [Surfer](https://surfer-project.org/) | View `.vcd` / `.fst` waveforms |
-| [Yosys](https://yosyshq.net/yosys/) | Open-source synthesis |
-| Vivado | FPGA synthesis & implementation (`synth.tcl`) |
+| [Surfer](https://surfer-project.org/) | View `.vcd` / `.fst` waveforms |
+| Vivado | FPGA synthesis, implementation and STA |
 
 ---
-
-## How to Run
-
-### Prerequisites
-
-```bash
-# macOS (Homebrew)
-brew install verilator riscv-gnu-toolchain
-
-# 64-bit toolchain supports RV32 via `-march=rv32i -mabi=ilp32`
-```
-
-### Simulate a single test
-
-```bash
-make sim TEST=rv32ui-p-add   # run one RISC-V ISA test
-```
-
-### Run the full ISA test suite
-
-```bash
-make rv32ui    # all RV32I base tests
-make rv32um    # all M-extension tests (mul/div)
-make rv32mi    # all machine-mode tests (CSR, traps, misaligned)
-make test-all  # all of the above
-```
-
-### View waveforms
-
-```bash
-surfer sim/pip_cpu.fst
-```
 
 ### FPGA (Zybo Z7)
 
@@ -184,7 +104,41 @@ After programming the bitstream, connect via a serial terminal at **115 200 baud
 
 ---
 
-## Testing & Verification
+# Verification
+
+## UVM
+UVM testbench with HDL/HVL separation via split transactor, enabling FPGA-based co-emulation. Synthesizable BFM and DUT on hardware, untimed transaction-level stimulus on the host increasing testing speed x100
+
+---
+
+## Implementation Status
+
+| Feature | Status |
+|---|---|
+| RV32I base instruction set | ✅ |
+| RV32M multiply/divide | ✅ |
+| Machine-Mode CSRs (`mstatus`, `mepc`, `mcause`, …) | ✅ |
+| Trap/exception handling (M-mode) | ✅ |
+| Misaligned load/store/fetch exceptions | ✅ |
+| CLINT (`mtime` / `mtimecmp`) | ✅ |
+| Memory-mapped I/O bus | ✅ |
+| Timer interrupts | ✅ |
+| 6-stage pipeline (forwarding, hazard detection) | ✅ |
+| UART peripheral (115 200 baud, TX + RX) | ✅ |
+| SVA assertion coverage | ✅ |
+| RISC-V ISA test suite (rv32ui / rv32um / rv32mi) | ✅ |
+| Bare-Metal on FPGA with UART | ✅ |
+| FreeRTOS bring-up | ⬜ |
+| FreeRTOS on FPGA | ⬜ |
+
+---
+
+## Timing
+
+Clock: 90 MHz (11.1 ns period)  
+WNS: +0.361 ns, 0 timing violations  
+
+# Legacy due to UVM learnings
 
 ### Testbenches
 
@@ -223,43 +177,3 @@ Formal/simulation assertions are in `verify/assertions/` and attached to the DUT
 | `assert_fwd_integration` | `fwd_bind.sv` | Forwarding correctness — correct data selected for EX operands under all hazard combinations |
 | `assert_hazard_integration` | `hazard_bind.sv` | Hazard detection — stall and flush signals asserted at the right cycles for load-use and control hazards |
 | `assert_imm_gen` | *(core/decode)* | Immediate sign-extension for all formats |
-
----
-
-## Implementation Status
-
-| Feature | Status |
-|---|---|
-| RV32I base instruction set | ✅ |
-| RV32M multiply/divide | ✅ |
-| Machine-Mode CSRs (`mstatus`, `mepc`, `mcause`, …) | ✅ |
-| Trap/exception handling (M-mode) | ✅ |
-| Misaligned load/store/fetch exceptions | ✅ |
-| CLINT (`mtime` / `mtimecmp`) | ✅ |
-| Memory-mapped I/O bus | ✅ |
-| Timer interrupts | ✅ |
-| 6-stage pipeline (forwarding, hazard detection) | ✅ |
-| UART peripheral (115 200 baud, TX + RX) | ✅ |
-| SVA assertion coverage | ✅ |
-| RISC-V ISA test suite (rv32ui / rv32um / rv32mi) | ✅ |
-| Bare-Metal on FPGA with UART | ✅ |
-| FreeRTOS bring-up | ⬜ |
-| FreeRTOS on FPGA | ⬜ |
-
----
-
-## Timing
-
-Clock: 90 MHz (11.1 ns period)  
-WNS: +0.361 ns, 0 timing violations  
-
-Note: 125 MHz yields WNS −1.589 ns (367 violations), 100 MHz yields  
-WNS −0.373 ns (108 violations). Critical path is WB→IF/ID branch  
-enable signal (11 logic levels, routing-dominated with 73%).  
-Architectural fix deferred.
-
----
-
-## Design Philosophy
-
-Architecture-first: correctness, clarity, and extensibility take priority over microarchitectural optimizations. The single-cycle implementation provides a clean, debuggable baseline; the pipelined design builds directly on that structure with minimal added complexity. The extra IF1/IF2 fetch stage handles the one-cycle BRAM read latency without changing the core datapath.
