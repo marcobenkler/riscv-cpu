@@ -111,6 +111,12 @@ UVM testbench with HDL/HVL separation via split transactor, enabling FPGA-based 
 
 ---
 
+## Restrictions  
+
+Due to verilator being 2 state (1/0) and not 4 state (1/0/x/z) it's not garanteed, every cornercase is verified correctly
+
+---  
+
 ## Implementation Status
 
 | Feature | Status |
