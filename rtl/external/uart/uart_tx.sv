@@ -69,17 +69,17 @@ module uart_tx
         @(posedge clk) disable iff (!reset_n)
         (state == IDLE) |-> (tx == 1'b1);
     endproperty
-    
+
     property tx_ready_on_low;
         @(posedge clk) disable iff (!reset_n)
         (state != IDLE) |-> (tx_ready == 1'b0);
     endproperty
-    
+
     property tx_ready_on_high;
         @(posedge clk) disable iff (!reset_n)
         (state == IDLE) |-> (tx_ready == 1'b1);
     endproperty
-    
+
     assert property (tx_low_on_start) else $error("TX is NOT low on start");
     assert property (tx_high_on_idle) else $error("TX is not high in idle");
     assert property (tx_ready_on_low) else $error("TX_READY is NOT low when transmitting");
