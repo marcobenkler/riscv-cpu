@@ -2,7 +2,7 @@ package common_uart_pkg;
     typedef struct packed {
         logic [7:0] data;
         logic       delay;
-        logic       framing_err;
+        logic       frame_err;
     } uart_trans_t;
 
     typedef enum logic [1:0] {

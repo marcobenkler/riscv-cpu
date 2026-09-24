@@ -23,7 +23,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
     // dec
     uart_trans_t dec_trans;
     logic [3:0]  bit_cnt_in;
-    logic [7:0] frame_in;
+    logic [7:0]  frame_in;
     logic        line_in_sync;
     logic        frame_done;
     uart_rx_states_t DEC_STATE;
@@ -45,6 +45,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
                 if (!rst_n) begin
                     ENC_STATE <= ENC_IDLE;
                     line_out  <= 1'b1;
+                    req_rdy   <= 1'b1;
                 end
                 else begin
                     case (ENC_STATE)
@@ -55,6 +56,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
                                 frame_out <= {~enc_trans.frame_err, enc_trans.data, 1'b0};
                                 ENC_STATE <= ENC_WAIT;
                                 cnt       <= enc_trans.delay;
+                                req_rdy   <= 1'b0;
                             end
                         end
                         ENC_WAIT: if (baud_tick) begin
@@ -68,6 +70,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
                             if (bit_cnt_out == 10) begin
                                 ENC_STATE <= ENC_IDLE;
                                 line_out  <= 1'b1;
+                                req_rdy <= 1'b1;
                             end else begin
                                 line_out    <= frame_out[0];
                                 frame_out   <= frame_out >> 1;
@@ -124,12 +127,12 @@ interface uart_bfm #(parameter bit IsActive = 1)
             req_val   <= 1'b0;
         endtask
 
+        //Monitor call
         task automatic wait_frame(output uart_trans_t t);
             do @(posedge clk); while(!frame_done);
             t = dec_trans;
         endtask
 
-        //Monitor call
     `endif
 
 endinterface

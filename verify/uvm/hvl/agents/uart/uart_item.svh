@@ -12,6 +12,20 @@ class uart_item extends uvm_sequence_item;
         super.new(name);
     endfunction
 
+    function uart_trans_t to_struct();
+        uart_trans_t t;
+        t.data      = data;
+        t.delay     = delay;
+        t.frame_err = frame_err;
+        return t;
+    endfunction
+
+    function void from_struct(uart_trans_t t);
+        data      = t.data;
+        delay     = t.delay;
+        frame_err = t.frame_err;
+    endfunction
+
     constraint frame_err_c     { soft frame_err == 0;};
     constraint min_max_delay_c { soft delay inside {[3:19]}; }
 
