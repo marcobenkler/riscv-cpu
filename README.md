@@ -106,7 +106,7 @@ After programming the bitstream, connect via a serial terminal at **115 200 baud
 
 # Verification
 
-## UVM
+## UVM (IEEE 1800.2-2020)
 UVM testbench with HDL/HVL separation via split transactor, enabling FPGA-based co-emulation. Synthesizable BFM and DUT on hardware, untimed transaction-level stimulus on the host increasing testing speed x100
 
 ---
