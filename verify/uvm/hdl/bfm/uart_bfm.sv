@@ -1,3 +1,4 @@
+//Replace baud_tick with custom counter to prevent errors at back-to-back frames at decoder
 interface uart_bfm #(parameter bit IsActive = 1)
 (
     input  logic clk,
@@ -22,6 +23,8 @@ interface uart_bfm #(parameter bit IsActive = 1)
 
     logic [3:0]  bit_cnt_in;
     logic [10:0] frame_in;
+
+    logic frame_done;
 
     uart_tx_states_t ENC_STATE;
     uart_rx_states_t DEC_STATE;
@@ -80,6 +83,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
         if (!rst_n) begin
             DEC_STATE <= DEC_IDLE;
             frame_in  <= '0;
+            frame_done <= 1'b0;
         end
         else begin
             case (DEC_STATE)
@@ -88,12 +92,13 @@ interface uart_bfm #(parameter bit IsActive = 1)
                         DEC_STATE  <= DEC_WORK;
                         bit_cnt_in <= '0;
                     end
+                    frame_done <= 1'b0;
                 end
                 DEC_WORK: if (baud_tick) begin
-                    if (bit_cnt_in == 10) begin
-                        DEC_STATE <= DEC_IDLE;
+                    if (bit_cnt_in == 9) begin
+                        DEC_STATE  <= DEC_IDLE;
+                        frame_done <= 1'b1;
                     end else begin
-                        frame_in[0] <= line_in_sync;
                         frame_in    <= {line_in_sync, frame_in[9:1]};
                         bit_cnt_in  <= bit_cnt_in + 1;
                     end
