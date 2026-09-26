@@ -1,5 +1,4 @@
 class uart_monitor extends uvm_monitor;
-    virtual uart_bfm bfm;
     uvm_analysis_port#(uart_item) item_collected_port;
 
     `uvm_component_utils(uart_monitor)
@@ -10,8 +9,8 @@ class uart_monitor extends uvm_monitor;
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if(!uvm_config_db#(virtual uart_bfm)::get(this, "", "bfm", bfm))
-            `uvm_fatal("NO_BFM", {"No BFM found for: ", get_full_name()})
+        // if(!uvm_config_db#(virtual uart_bfm)::get(this, "", "bfm", bfm))
+            // `uvm_fatal("NO_BFM", {"No BFM found for: ", get_full_name()})
         item_collected_port = new("item_collected_port", this);
     endfunction
 

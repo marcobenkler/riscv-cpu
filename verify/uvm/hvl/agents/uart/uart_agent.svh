@@ -3,6 +3,8 @@ class uart_agent extends uvm_agent;
     uart_monitor   mntr;
     uart_sequencer seqcr;
 
+    uart_config cfg;
+
     uvm_analysis_port#(uart_item) ap;
 
     `uvm_component_utils(uart_agent)
@@ -13,10 +15,13 @@ class uart_agent extends uvm_agent;
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
+        is_active = cfg.is_active;
         if(get_is_active() == UVM_ACTIVE) begin
+            drv.cfg = cfg;
             drv = uart_driver::type_id::create("drv", this);
             seqcr = uart_sequencer::type_id::create("seqcr", this);
         end
+        mntr.cfg = cfg;
         mntr = uart_monitor::type_id::create("mntr", this);
     endfunction
 
@@ -27,4 +32,3 @@ class uart_agent extends uvm_agent;
         ap = mntr.item_collected_port;
     endfunction
 endclass
-

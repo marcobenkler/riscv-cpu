@@ -120,17 +120,22 @@ interface uart_bfm #(parameter bit IsActive = 1)
     // Only VIVADO removes this part. Enables synth of hdl, but allows for easier start in verilator
     `ifndef SYNTHESIS
         //Driver call
-        task automatic send(uart_trans_t t);
+        task automatic send(uart_trans_t t, output bit aborted);
             enc_trans <= t;
             req_val   <= 1'b1;
             do @(posedge clk); while(!req_rdy);
             req_val   <= 1'b0;
+            aborted   <= !rst_n;
         endtask
 
         //Monitor call
         task automatic wait_frame(output uart_trans_t t);
             do @(posedge clk); while(!frame_done);
             t = dec_trans;
+        endtask
+
+        task automatic wait_reset_done();
+            @(posedge clk iff rst_n);
         endtask
 
     `endif

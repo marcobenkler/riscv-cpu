@@ -39,7 +39,7 @@ module tb_pl_cpu();
         $finish;
     end
 
-    
+
 
     always @(posedge clk) begin
     $display("PC=0x%h instr=0x%h x30=0x%h x31=0x%h mepc=0x%h", 

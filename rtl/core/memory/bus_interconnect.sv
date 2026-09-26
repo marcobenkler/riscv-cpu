@@ -19,15 +19,15 @@ module bus_interconnect
 
 logic clint_sel;
 logic uart_sel;
-    
+
 always_comb begin
     clint_sel = (address >= CLINT_BASE) && (address <= CLINT_BASE + CLINT_MTIME_HI);
     uart_sel = (address >= UART_BASE) && (address <= UART_BASE + UART_RX);
     // Space for further address extension
 end
 
-assign rdata = clint_sel ? clint_read_data : 
-               uart_sel  ? uart_read_data  : 
+assign rdata = clint_sel ? clint_read_data :
+               uart_sel  ? uart_read_data  :
                            mem_data;
 
 always_comb begin
