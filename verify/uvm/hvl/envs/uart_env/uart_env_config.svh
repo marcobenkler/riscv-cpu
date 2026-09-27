@@ -1,4 +1,4 @@
-class uart_env_config extends uart_object;
+class uart_env_config extends uvm_object;
     `uvm_object_utils(uart_env_config)
 
     uart_config rx_cfg;

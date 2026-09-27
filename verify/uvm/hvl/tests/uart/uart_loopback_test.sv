@@ -19,16 +19,17 @@ class uart_loopback_test extends uvm_test;
         env_cfg.rx_cfg = uart_config::type_id::create("rx_cfg");
         env_cfg.tx_cfg = uart_config::type_id::create("tx_cfg");
 
-        if(!uvm_config_db#(uart_config)::get(this, "", "bfm_rx", env_cfg.rx_cfg.bfm))
+        //Get bfm always with virtual
+        if(!uvm_config_db#(virtual uart_bfm)::get(this, "", "bfm_rx", env_cfg.rx_cfg.bfm))
             `uvm_fatal("NO_BFM", {"Could not found bfm at: ", get_full_name()})
-        if(!uvm_config_db#(uart_config)::get(this, "", "bfm_tx", env_cfg.tx_cfg.bfm))
+        if(!uvm_config_db#(virtual uart_bfm)::get(this, "", "bfm_tx", env_cfg.tx_cfg.bfm))
             `uvm_fatal("NO_BFM", {"Could not found bfm at: ", get_full_name()})
 
         env_cfg.rx_cfg.is_active = UVM_ACTIVE;
         env_cfg.tx_cfg.is_active = UVM_PASSIVE;
         env_cfg.loopback = 1'b1;
 
-        umv_config_db#(uart_env_cfg)::set(this, "*", "cfg", env_cfg);
+        uvm_config_db#(uart_env_config)::set(this, "*", "cfg", env_cfg);
         env = uart_env::type_id::create("env", this);
         seq = uart_sequence::type_id::create("seq");
     endfunction

@@ -17,12 +17,12 @@ class uart_agent extends uvm_agent;
         super.build_phase(phase);
         is_active = cfg.is_active;
         if(get_is_active() == UVM_ACTIVE) begin
-            drv.cfg = cfg;
             drv = uart_driver::type_id::create("drv", this);
+            drv.cfg = cfg;
             seqcr = uart_sequencer::type_id::create("seqcr", this);
         end
-        mntr.cfg = cfg;
         mntr = uart_monitor::type_id::create("mntr", this);
+        mntr.cfg = cfg;
     endfunction
 
     function void connect_phase(uvm_phase phase);

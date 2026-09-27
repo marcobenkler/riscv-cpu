@@ -16,7 +16,7 @@ class uart_driver extends uvm_driver #(uart_item);
 
     virtual task run_phase(uvm_phase phase);
         bit aborted;
-        wait_reset_done();
+        cfg.bfm.wait_reset_done();
         forever begin
             seq_item_port.get_next_item(req);
             cfg.bfm.send(req.to_struct(), aborted);

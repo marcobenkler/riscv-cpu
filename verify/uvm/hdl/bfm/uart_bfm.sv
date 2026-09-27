@@ -51,7 +51,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
                     case (ENC_STATE)
                         ENC_IDLE: begin
                             line_out <= 1'b1;
-                            if (start_req) begin
+                            if (req_vld) begin
                                 //UART sends LSB first
                                 frame_out <= {~enc_trans.frame_err, enc_trans.data, 1'b0};
                                 ENC_STATE <= ENC_WAIT;
@@ -61,7 +61,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
                         end
                         ENC_WAIT: if (baud_tick) begin
                             if (cnt == 0) begin
-                                ENC_WORK    <= ENC_START;
+                                ENC_STATE    <= ENC_WORK;
                                 bit_cnt_out <= '0;
                             end
                             else cnt <= cnt - 1;
@@ -122,9 +122,9 @@ interface uart_bfm #(parameter bit IsActive = 1)
         //Driver call
         task automatic send(uart_trans_t t, output bit aborted);
             enc_trans <= t;
-            req_val   <= 1'b1;
+            req_vld   <= 1'b1;
             do @(posedge clk); while(!req_rdy);
-            req_val   <= 1'b0;
+            req_vld   <= 1'b0;
             aborted   <= !rst_n;
         endtask
 

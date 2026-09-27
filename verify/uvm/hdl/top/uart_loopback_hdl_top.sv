@@ -24,6 +24,7 @@ module uart_loopback_hdl_top;
     initial clk = 0;
     always #5 clk = ~clk;
 
+    /* wrong, set ist 6 cycles after get => Always null handler
     initial begin
         rst_n = 0;
         repeat(3) @(posedge clk);
@@ -32,5 +33,17 @@ module uart_loopback_hdl_top;
         uvm_config_db#(virtual uart_bfm)::set(null, "*", "bfm_rx", bfm_rx);
         uvm_config_db#(virtual uart_bfm)::set(null, "*", "bfm_tx", bfm_tx);
     end
+    */
+    initial begin
+        uvm_config_db#(virtual uart_bfm)::set(null, "*", "bfm_rx", bfm_rx);
+        uvm_config_db#(virtual uart_bfm)::set(null, "*", "bfm_tx", bfm_tx);
+    end
+
+    initial begin
+        rst_n = 0;
+        repeat(3) @(posedge clk);
+        rst_n = 1;
+    end
+
 
 endmodule

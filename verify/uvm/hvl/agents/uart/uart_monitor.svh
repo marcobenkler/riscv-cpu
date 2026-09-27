@@ -3,6 +3,8 @@ class uart_monitor extends uvm_monitor;
 
     `uvm_component_utils(uart_monitor)
 
+    uart_config cfg;
+
     function new(string name, uvm_component parent);
         super.new(name, parent);
     endfunction
@@ -18,7 +20,7 @@ class uart_monitor extends uvm_monitor;
         uart_item    trans_collected;
         uart_trans_t t;
         forever begin
-            bfm.wait_frame(t);
+            cfg.bfm.wait_frame(t);
             trans_collected = uart_item::type_id::create("trans_collected");
             trans_collected.from_struct(t);
             item_collected_port.write(trans_collected);

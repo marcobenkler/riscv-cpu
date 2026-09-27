@@ -44,6 +44,9 @@ class uart_scoreboard extends uvm_scoreboard;
 
     function void report_phase(uvm_phase phase);
         super.report_phase(phase);
-        `uvm_info("SCB", $sformatf("%b frames matched, %b frames missmatched", suc_cnt, err_cnt))
+        `uvm_info(
+            "SCB",
+            $sformatf("%b frames matched, %b frames missmatched", suc_cnt, err_cnt),
+            UVM_LOW)
     endfunction
 endclass

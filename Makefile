@@ -101,7 +101,7 @@ sim-%:
 	verilator_coverage --annotate logs/coverage_$* coverage.dat
 	mv coverage.dat logs/coverage_$*.dat
 
-UVM_TOP := tb_top_loopback
+UVM_TOP := tb_uart_loopback
 TEST := uart_loopback_test
 OBJ := ./obj_dir/$(UVM_TOP)
 FILES := verify/uvm/hvl/tests/uart/files_loopback.f
@@ -125,9 +125,10 @@ VFLAGS := --binary \
 .PHONY: build run clean
 
 uvm_build:
+	mkdir -p $(OBJ)
 	verilator $(VFLAGS)
 
-uvm: uvm_build
+uvm: clean uvm_build
 	$(OBJ)/V$(UVM_TOP) +UVM_TESTNAME=$(TEST)
 
 clean:
