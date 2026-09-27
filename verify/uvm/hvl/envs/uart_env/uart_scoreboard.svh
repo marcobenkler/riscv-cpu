@@ -21,6 +21,7 @@ class uart_scoreboard extends uvm_scoreboard;
 
     function write_source(uart_item item);
         queue.push_back(item);
+        `uvm_info("SCB_SRC", $sformatf("Item received from source"), UVM_LOW)
     endfunction
 
     function write_sink(uart_item item);
@@ -34,6 +35,8 @@ class uart_scoreboard extends uvm_scoreboard;
             err_cnt++;
         end
         else suc_cnt++;
+        // Makros always after all declarations. If var needed begin...end wrapper
+        `uvm_info("SCB_SNK", $sformatf("Item received from sink"), UVM_LOW)
     endfunction
 
     function void check_phase(uvm_phase phase);

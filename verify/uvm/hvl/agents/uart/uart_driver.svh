@@ -18,6 +18,7 @@ class uart_driver extends uvm_driver #(uart_item);
         bit aborted;
         cfg.bfm.wait_reset_done();
         forever begin
+            `uvm_info("DRV", $sformatf("Waited reset, now sending item"), UVM_LOW)
             seq_item_port.get_next_item(req);
             cfg.bfm.send(req.to_struct(), aborted);
             seq_item_port.item_done();

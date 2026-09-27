@@ -8,6 +8,7 @@ class uart_sequence extends uvm_sequence #(uart_item);
     virtual task body();
         req = uart_item::type_id::create("req");
         start_item(req);
+        `uvm_info("SEQ", $sformatf("A sequence was sent"), UVM_LOW)
         if(!req.randomize())
             `uvm_fatal("NORAND", {"Could not randomize for: ", get_full_name()})
         finish_item(req);

@@ -31,6 +31,15 @@ interface uart_bfm #(parameter bit IsActive = 1)
     logic        req_vld;
     logic        req_rdy;
 
+    logic [3:0] baud_cnt;
+
+    always_ff @(posedge clk)
+        if(!rst_n)
+            baud_cnt <= '0;
+        else baud_cnt <= baud_cnt + 1;
+
+    assign baud_tick = baud_cnt == 4'b1000;
+
 
     sync_2ff sync_line_in(
         .clk(clk),
