@@ -68,8 +68,6 @@ _run_tests:
 	done; \
 	echo ""; echo "$$pass passed, $$fail failed out of $$((pass+fail)) tests"
 
-clean:
-	rm -rf $(BUILD) obj_dir
 
 SRCS_imm_gen := rtl/core/decode/imm_gen.sv
 SRCT_imm_gen := verify/assertions/core/decode/assert_imm_gen.sv
@@ -102,3 +100,35 @@ sim-%:
 	./obj_dir/sim_$*
 	verilator_coverage --annotate logs/coverage_$* coverage.dat
 	mv coverage.dat logs/coverage_$*.dat
+
+UVM_TOP := tb_top_loopback
+TEST := uart_loopback_test
+OBJ := ./obj_dir/$(UVM_TOP)
+FILES := verify/uvm/hvl/tests/uart/files_loopback.f
+
+VFLAGS := --binary \
+	  --timing \
+	  --top-module $(UVM_TOP) \
+          --Mdir $(OBJ) \
+          --timescale 1ns/1ps \
+          -j 6 \
+          +incdir+$(UVM_HOME) \
+          +incdir+$(CURDIR) \
+          +define+UVM_NO_DPI \
+          --coverage-user \
+          --coverage-line \
+          --coverage-toggle \
+          -Wno-fatal \
+          --error-limit 500 \
+	  -f $(FILES)
+
+.PHONY: build run clean
+
+uvm_build:
+	verilator $(VFLAGS)
+
+uvm: uvm_build
+	$(OBJ)/V$(UVM_TOP) +UVM_TESTNAME=$(TEST)
+
+clean:
+	rm -rf build obj_dir annotated coverage.dat coverage.info *.fst *.log

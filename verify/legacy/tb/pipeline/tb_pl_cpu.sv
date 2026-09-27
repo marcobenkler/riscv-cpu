@@ -42,7 +42,7 @@ module tb_pl_cpu();
 
 
     always @(posedge clk) begin
-    $display("PC=0x%h instr=0x%h x30=0x%h x31=0x%h mepc=0x%h", 
+    $display("PC=0x%h instr=0x%h x30=0x%h x31=0x%h mepc=0x%h",
              pl_cpu.if_id_in.pc_current, 
              pl_cpu.instruction_memory.instruction,
              pl_cpu.register_file.regi[30],
@@ -71,7 +71,7 @@ end
 
     always @(posedge clk) begin
     if (pl_cpu.csr_regfile.trap_taken)
-        $display("TRAP! PC=0x%h mcause=0x%h", 
+        $display("TRAP! PC=0x%h mcause=0x%h",
                  pl_cpu.if_id_in.pc_current, pl_cpu.csr_regfile.mcause);
     end
 
@@ -82,8 +82,8 @@ end
 
     always @(posedge clk) begin
     if (pl_cpu.trap_taken)
-        $display("TRAP: mepc=0x%h mtval=0x%h mcause=0x%h pc=0x%h", 
-                 pl_cpu.csr_regfile.mepc, 
+        $display("TRAP: mepc=0x%h mtval=0x%h mcause=0x%h pc=0x%h",
+                 pl_cpu.csr_regfile.mepc,
                  pl_cpu.csr_regfile.mtval,
                  pl_cpu.csr_regfile.mcause,
                  pl_cpu.ex_mem_out.pc_current);

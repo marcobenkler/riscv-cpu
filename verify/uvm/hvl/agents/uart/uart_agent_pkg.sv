@@ -8,4 +8,4 @@ package uart_agent_pkg;
     `include "uart_driver.svh"
     `include "uart_monitor.svh"
     `include "uart_agent.svh"
-endpackage : uvm_uart_pkg
+endpackage : uart_agent_pkg
