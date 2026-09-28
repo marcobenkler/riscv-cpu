@@ -117,7 +117,13 @@ Due to verilator being 2 state (1/0) and not 4 state (1/0/x/z) it's not garantee
 
 ---  
 
-## Implementation Status
+## Tests
+
+UART Loopback
+
+Lockstep via Spike, inspired by IBEX, using RVFI convetions
+
+# Implementation Status
 
 | Feature | Status |
 |---|---|

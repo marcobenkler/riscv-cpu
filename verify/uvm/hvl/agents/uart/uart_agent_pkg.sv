@@ -1,6 +1,7 @@
 package uart_agent_pkg;
     import uvm_pkg::*;
     `include "uvm_macros.svh"
+    `include "dv_macros.svh"
 
     // Look in the module the pkg is made for, import every pkg needed. They are NOT transistive
     import common_uart_pkg::*;
