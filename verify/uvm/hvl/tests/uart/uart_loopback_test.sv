@@ -5,7 +5,8 @@ class uart_loopback_test extends uvm_test;
 
     uart_env        env;
     uart_env_config env_cfg;
-    uart_sequence   seq;
+    // vseq now. uart_sequence   seq;
+    uart_vsequence  vseq;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
@@ -31,13 +32,22 @@ class uart_loopback_test extends uvm_test;
 
         uvm_config_db#(uart_env_config)::set(this, "*", "cfg", env_cfg);
         env = uart_env::type_id::create("env", this);
-        seq = uart_sequence::type_id::create("seq");
+        // vseq now. seq = uart_sequence::type_id::create("seq");
+        vseq = uart_vsequence::type_id::create("vseq");
+        // vseq.seqcr = env.agnt_rx.seqcr; wrong, move to phase after build. first build, then build of children
+        // when vseq.seqcr gets assigned, the build phase of the env didnt got through
+    endfunction
+
+    function void connect_phase(uvm_phase phase);
+        super.connect_phase(phase);
+        vseq.seqcr = env.agnt_rx.seqcr;
     endfunction
 
     task run_phase(uvm_phase phase);
         phase.raise_objection(this);
         phase.get_objection().set_drain_time(this, 300us);
-        seq.start(env.agnt_rx.seqcr);
+        // vseq now. seq.start(env.agnt_rx.seqcr);
+        vseq.start(null);
         phase.drop_objection(this);
     endtask
 endclass

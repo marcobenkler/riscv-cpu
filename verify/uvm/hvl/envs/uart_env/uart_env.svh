@@ -37,14 +37,12 @@ class uart_env extends uvm_env;
                 agnt_mem.ap.connect(scb.item_collected_mem);
                 agnt_tx.ap.connect(scb.item_collected_sink_per);
             end*/
-        end /*
+        end
         if (cfg.en_cov) begin
-            if (!cfg.loopback) begin
-                agnt_rx.ap.connect(cov.rx_imp_per);
-                agnt_mem.ap.connect(cov.imp_mem);
-                agnt_tx.ap.connect(cov.tx_imp_per);
+            if (cfg.loopback) begin
+                agnt_rx.ap.connect(cov.rx_imp);
             end
-        end */
+        end
     endfunction
 
 

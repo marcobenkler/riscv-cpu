@@ -130,6 +130,7 @@ uvm_build:
 
 uvm: clean uvm_build
 	$(OBJ)/V$(UVM_TOP) +UVM_TESTNAME=$(TEST)
+	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
 
 clean:
 	rm -rf build obj_dir annotated coverage.dat coverage.info *.fst *.log
