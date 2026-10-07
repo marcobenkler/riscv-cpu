@@ -26,7 +26,15 @@ class uart_item extends uvm_sequence_item;
         frame_err = t.frame_err;
     endfunction
 
-    constraint frame_err_c     { soft frame_err == 0;};
+    constraint frame_err_c     { soft frame_err == 0;}
     constraint min_max_delay_c { soft delay inside {[3:19]}; }
+    constraint data_split_c {
+        data dist {
+            [0:63]    :/ 30, // :/ x entire sections gets x chance evenly distributed, := each one
+            [64:127]  :/ 30,
+            [128:191] :/ 30,
+            [192:255] :/ 30
+        };
+    }
 
 endclass

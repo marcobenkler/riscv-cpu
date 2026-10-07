@@ -23,7 +23,7 @@ class uart_monitor extends uvm_monitor;
             cfg.bfm.wait_frame(t);
             trans_collected = uart_item::type_id::create("trans_collected");
             trans_collected.from_struct(t);
-            `uvm_info("MNTR", $sformatf("Monitor write item to port"), UVM_LOW)
+            `uvm_info("MNTR", $sformatf("Monitor write item to port"), UVM_DEBUG)
             item_collected_port.write(trans_collected);
         end
     endtask

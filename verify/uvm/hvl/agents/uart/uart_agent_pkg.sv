@@ -9,6 +9,8 @@ package uart_agent_pkg;
     `include "uart_config.svh"
     `include "uart_item.svh"
     `include "uart_sequence.svh"
+    `include "uart_sequence_cross.svh"
+    `include "uart_sequence_trans.svh"
     `include "uart_sequencer.svh"
     `include "uart_vsequence.svh"
     `include "uart_driver.svh"
