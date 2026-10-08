@@ -13,7 +13,11 @@ package common_lsu_pkg;
         int unsigned data_ready_delay;
         int unsigned b_valid_delay;
         int unsigned b_ready_delay;
-    } lsu_trans_t;
+    } axil_trans_t;
+
+    typedef struct packed {
+
+    } pipe_trans_t;
 
     typedef enum bit {
         READ,

@@ -1,4 +1,4 @@
-class lsu_item extends uvm_sequence_item;
+class axil_item extends uvm_sequence_item;
     // Fused READ and WRITE, only one was used anyways
     rand kind_e       kind;
     rand bit [31:0]   addr;
@@ -14,7 +14,7 @@ class lsu_item extends uvm_sequence_item;
     rand int unsigned b_valid_delay;
     rand int unsigned b_ready_delay;
 
-    `uvm_object_utils_begin(lsu_item)
+    `uvm_object_utils_begin(axil_item)
     `uvm_field_enum(kind_e, kind, UVM_ALL_ON)
     `uvm_field_int(addr, UVM_ALL_ON | UVM_HEX)
     `uvm_field_int(prot, UVM_ALL_ON)
@@ -30,8 +30,8 @@ class lsu_item extends uvm_sequence_item;
     `uvm_object_utils_end
     `uvm_object_new
 
-    function lsu_trans_t to_struct();
-        lsu_trans_t t;
+    function axil_trans_t to_struct();
+        axil_trans_t t;
         t.kind             = kind;
         t.addr             = addr;
         t.prot             = prot;
@@ -43,11 +43,11 @@ class lsu_item extends uvm_sequence_item;
         t.data_valid_delay = data_valid_delay;
         t.data_ready_delay = data_ready_delay;
         t.b_valid_delay    = b_valid_delay;
-        t.b_ready_delay    = b_valid_delay;
+        t.b_ready_delay    = b_ready_delay;
         return t;
     endfunction
 
-    function void from_struct(lsu_trans_t t);
+    function void from_struct(axil_trans_t t);
         kind             = t.kind;
         addr             = t.addr;
         prot             = t.prot;
@@ -80,7 +80,7 @@ class lsu_item extends uvm_sequence_item;
     }
 
     constraint fix_prot_c {
-        //[2] data access [1] secure zone [0] privliedged
+        //[2] data access [1] secure zone [0] priviledged
         soft prot == 3'b001;
     }
 

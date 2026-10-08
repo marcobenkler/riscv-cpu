@@ -1,5 +1,5 @@
-class lsu_agent extends uvm_agent;
-    `uvm_component_utils(lsu_agent)
+class axil_agent extends uvm_agent;
+    `uvm_component_utils(axil_agent)
 
     lsu_sequencer seqcr;
     lsu_monitor   mntr;
@@ -7,7 +7,7 @@ class lsu_agent extends uvm_agent;
 
     lsu_config cfg;
 
-    uvm_analysis_port#(lsu_item) ap;
+    uvm_analysis_port#(axil_item) ap;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
