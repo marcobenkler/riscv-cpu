@@ -119,8 +119,8 @@ Due to verilator being 2 state (1/0) and not 4 state (1/0/x/z) it's not garantee
 
 ## Tests
 
-UART Loopback
-
+UART Loopback TEST
+LSU TEST
 Lockstep via Spike, inspired by IBEX, using RVFI convetions
 
 # Implementation Status
