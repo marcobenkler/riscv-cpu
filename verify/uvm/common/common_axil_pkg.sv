@@ -1,4 +1,4 @@
-package common_lsu_pkg;
+package common_axil_pkg;
     typedef struct packed {
         kind_e       kind;
         bit [31:0]   addr;
@@ -14,10 +14,6 @@ package common_lsu_pkg;
         int unsigned b_valid_delay;
         int unsigned b_ready_delay;
     } axil_trans_t;
-
-    typedef struct packed {
-
-    } pipe_trans_t;
 
     typedef enum bit {
         READ,

@@ -2,7 +2,7 @@ package pipe_agent_pkg;
     import uvm_pkg::*;
     `include "uvm_macros.svh"
     `include "dv_macros.svh"
-    import common_lsu_pkg::*;
+    import common_pipe_pkg::*;
     `include "pipe_config.svh"
     `include "pipe_item.svh"
 

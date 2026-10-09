@@ -1,0 +1,30 @@
+# axil_agent — spec decisions
+
+## Protocol
+
+- Terms: Manager/Subordinate (IHI 0022 H.b+), in code `mst`/`slv`
+- 32-bit addr/data, 4-bit `strb`, 3-bit `prot`; no AxSIZE/AxLEN
+- Handshake = VALID && READY at rising edge
+- Every signal has exactly one driver
+- All VALID outputs low during reset
+- Only READ or WRITE, tightening spec for specific usecase
+- Using synchronous reset only to prevent metastability and decreased clk frequency
+
+## Delays (cycles; driver waits, monitor measures — same definition)
+
+| Delay | From | To |
+|---|---|---|
+| `addr_valid` (AW/AR) | End of previous transaction (B or R handshake); first: reset release | VALID high |
+| `data_valid` (W) | Same as `addr_valid`, **not** AW | WVALID high |
+| `data_valid` (R) | AR handshake | RVALID high |
+| `b_valid` | Later of AW and W handshake | BVALID high |
+| `*_ready` | First cycle VALID high (READY already high → 0) | Handshake |
+
+## Monitor
+
+- Read and write tracked independently; W before AW allowed
+- Payload and timestamp sampled at handshake
+- Transaction complete at B / R handshake
+- Reset drops partial transactions
+- Max one outstanding per direction; second AW/AR before response → error
+- Only monitor data is evaluated, never driver items
