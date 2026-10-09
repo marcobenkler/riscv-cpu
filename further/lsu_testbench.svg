@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="430" viewBox="0 0 680 430" font-family="Helvetica, Arial, sans-serif">
+  <title>LSU Testbench Architecture</title>
+  <desc>One agent per LSU interface; both monitors write JSONL to the Python comparator.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#378ADD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      /* Saturated, opaque boxes with white text: readable on any background. */
+      .box-gray   { fill: #444441; stroke: #888780; stroke-width: 1.5; }
+      .box-purple { fill: #534AB7; stroke: #7F77DD; stroke-width: 1; }
+      .box-teal   { fill: #0F6E56; stroke: #1D9E75; stroke-width: 1.5; }
+      .box-coral  { fill: #993C1D; stroke: #D85A30; stroke-width: 1.5; }
+      .th  { font-size: 14px; font-weight: 600; }
+      .t   { font-size: 14px; }
+      .ts  { font-size: 12px; }
+      .white   { fill: #FFFFFF; }
+      .gray2   { fill: #D3D1C7; }
+      .purple2 { fill: #CECBF6; }
+      .teal2   { fill: #9FE1CB; }
+      .coral2  { fill: #F5C4B3; }
+      /* Lines and labels on the background: mid blue, readable on light and dark. */
+      .out { fill: #378ADD; font-weight: 600; }
+      .arr { stroke: #378ADD; stroke-width: 1.75; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Pipeline agent -->
+  <rect class="box-gray" x="40" y="40" width="170" height="230" rx="16"/>
+  <text class="th white" x="125" y="60" text-anchor="middle" dominant-baseline="central">Pipeline Agent</text>
+  <text class="ts gray2" x="125" y="78" text-anchor="middle" dominant-baseline="central">active</text>
+
+  <!-- AXI agent -->
+  <rect class="box-gray" x="470" y="40" width="170" height="230" rx="16"/>
+  <text class="th white" x="555" y="60" text-anchor="middle" dominant-baseline="central">axil_agent</text>
+  <text class="ts gray2" x="555" y="78" text-anchor="middle" dominant-baseline="central">active, subordinate mode</text>
+
+  <!-- Pipeline agent internals -->
+  <rect class="box-purple" x="55" y="96" width="140" height="36" rx="6"/>
+  <text class="t white" x="125" y="114" text-anchor="middle" dominant-baseline="central">Sequencer</text>
+  <rect class="box-purple" x="55" y="146" width="140" height="36" rx="6"/>
+  <text class="t white" x="125" y="164" text-anchor="middle" dominant-baseline="central">Driver</text>
+  <rect class="box-purple" x="55" y="200" width="140" height="48" rx="6"/>
+  <text class="th white" x="125" y="216" text-anchor="middle" dominant-baseline="central">Monitor</text>
+  <text class="ts purple2" x="125" y="234" text-anchor="middle" dominant-baseline="central">request + result</text>
+
+  <!-- AXI agent internals -->
+  <rect class="box-purple" x="485" y="96" width="140" height="36" rx="6"/>
+  <text class="t white" x="555" y="114" text-anchor="middle" dominant-baseline="central">Sequencer</text>
+  <rect class="box-purple" x="485" y="146" width="140" height="36" rx="6"/>
+  <text class="t white" x="555" y="164" text-anchor="middle" dominant-baseline="central">Driver</text>
+  <rect class="box-purple" x="485" y="200" width="140" height="48" rx="6"/>
+  <text class="th white" x="555" y="216" text-anchor="middle" dominant-baseline="central">Monitor</text>
+  <text class="ts purple2" x="555" y="234" text-anchor="middle" dominant-baseline="central">all 5 channels</text>
+
+  <!-- DUT -->
+  <rect class="box-teal" x="280" y="120" width="120" height="88" rx="8"/>
+  <text class="th white" x="340" y="152" text-anchor="middle" dominant-baseline="central">LSU</text>
+  <text class="ts teal2" x="340" y="172" text-anchor="middle" dominant-baseline="central">DUT</text>
+
+  <!-- Interface labels -->
+  <text class="ts out" x="246" y="148" text-anchor="middle">pipeline_if</text>
+  <text class="ts out" x="442" y="148" text-anchor="middle">axil_if</text>
+
+  <!-- Drive connections -->
+  <line class="arr" x1="197" y1="164" x2="276" y2="164" marker-end="url(#arrow)"/>
+  <line class="arr" x1="404" y1="164" x2="481" y2="164" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+  <!-- Observe connections -->
+  <path class="arr" d="M278 196 H232 V224 H199" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <path class="arr" d="M402 196 H448 V224 H481" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+
+  <!-- Python comparator -->
+  <rect class="box-coral" x="230" y="310" width="220" height="56" rx="8"/>
+  <text class="th white" x="340" y="328" text-anchor="middle" dominant-baseline="central">Python Comparator</text>
+  <text class="ts coral2" x="340" y="348" text-anchor="middle" dominant-baseline="central">model + ordering</text>
+
+  <path class="arr" d="M125 250 V338 H226" marker-end="url(#arrow)"/>
+  <path class="arr" d="M555 250 V338 H454" marker-end="url(#arrow)"/>
+  <text class="ts out" x="135" y="300">JSONL</text>
+  <text class="ts out" x="545" y="300" text-anchor="end">JSONL</text>
+
+  <!-- Legend -->
+  <line class="arr" x1="180" y1="402" x2="215" y2="402"/>
+  <text class="ts out" x="222" y="402" dominant-baseline="central">drives</text>
+  <line class="arr" x1="330" y1="402" x2="365" y2="402" stroke-dasharray="4 3"/>
+  <text class="ts out" x="372" y="402" dominant-baseline="central">observes only</text>
+</svg>
