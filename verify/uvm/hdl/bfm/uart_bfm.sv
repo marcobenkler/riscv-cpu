@@ -134,7 +134,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
             req_vld   <= 1'b1;
             do @(posedge clk); while(!req_rdy);
             req_vld   <= 1'b0;
-            aborted   <= !rst_n;
+            aborted   = !rst_n;
         endtask
 
         //Monitor call
@@ -144,7 +144,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
         endtask
 
         task automatic wait_reset_done();
-            @(posedge clk iff rst_n);
+            @(posedge clk iff !rst_n);
         endtask
 
     `endif

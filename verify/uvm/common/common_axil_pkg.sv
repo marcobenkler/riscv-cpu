@@ -26,4 +26,9 @@ package common_axil_pkg;
         DECERR
     } resp_e;
 
+    typedef enum bit {
+        RDY,
+        CNT
+    } dry_state_e;
+
 endpackage

@@ -10,6 +10,17 @@ interface axil_sub_bfm #(
 )(axil_if.sub bus);
     axil_trans_t trans;
 
+    // Filled from HVL transaction
+    // Depending on the kind
+    // WRITE: Filled with bresp and bvalid
+    // READ:  Filled with rdata, rresp, rvalid
+    // Because the answer of the slave is always min 1 clk buffered, the delay can be
+    // set clean by den HVL
+    axil_trans_t trans_returned;
+
+    logic resp_req;
+    logic resp_ack;
+
     logic [15:0] lfsr_aw;
     logic [15:0] lfsr_w;
     logic [15:0] lfsr_ar;
@@ -18,12 +29,97 @@ interface axil_sub_bfm #(
     logic [3:0] wready_delay;
     logic [3:0] arready_delay;
 
+    rdy_state_e aw_state;
+    rdy_state_e w_state;
+    rdy_state_e ar_state;
+
+    logic [3:0] aw_cnt;
+    logic [3:0] w_cnt;
+    logic [3:0] ar_cnt;
+
     logic [15:0] thresh [5] = {zero, low, mid, high, ultra};
 
+    // FSM for managing AW, W and AR delays
     always_ff @(posedge bus.clk) begin
         if (!bus.rst_n) begin
-
+            aw_cnt   <= awready_delay;
+            w_cnt    <= wready_delay;
+            ar_cnt   <= arready_delay;
+            aw_state <= (awready_delay == 0) ? RDY : CNT;
+            w_state  <= (wready_delay == 0) ? RDY : CNT;
+            ar_state <= (arready_delay == 0) ? RDY : CNT;
         end else begin
+            case(aw_state)
+                //Set new delay and switch in the next transaction state
+                RDY: if (bus.awvalid) begin
+                    aw_cnt   <= awready_delay;
+                    aw_state <= (awready_delay == 0) ? RDY : CNT;
+                end
+                //Ready takes some time
+                CNT: if (bus.awvalid) begin
+                    if (aw_cnt == 1) aw_state <= RDY;
+                    aw_cnt <= aw_cnt - 1;
+                end
+                default: aw_state <= RDY;
+            endcase
+            case(w_state)
+                //Set new delay and switch in the next transaction state
+                RDY: if (bus.wvalid) begin
+                    w_cnt   <= wready_delay;
+                    w_state <= (wready_delay == 0) ? RDY : CNT;
+                end
+                //Ready takes some time
+                CNT: if (bus.wvalid) begin
+                    if (w_cnt == 1) w_state <= RDY;
+                    w_cnt <= w_cnt - 1;
+                end
+                default: w_state <= RDY;
+            endcase
+            case(ar_state)
+                RDY: if (bus.arvalid) begin
+                    ar_cnt <= arready_delay;
+                    ar_state <= (arready_delay == 0) ? RDY : CNT;
+                end
+                CNT: if (bus.arvalid) begin
+                    if (ar_cnt == 1) ar_state <= RDY;
+                    ar_cnt <= ar_cnt - 1;
+                end
+                default: ar_state <= RDY;
+            endcase
+        end
+    end
+
+    assign bus.awready = (aw_state == RDY);
+    assign bus.wready  = (w_state == RDY);
+    assign bus.arready = (ar_state == RDY);
+
+    // Manage filling up trans_item, depending on ready and valid
+    always_ff @(posedge clk) begin
+        // AW
+        if (bus.awready && bus.awvalid) begin
+            trans.addr <= bus.awaddr;
+            trans.prot <= bus.awprot;
+            aw_rdy     <= 1'b1;
+        end
+        // W
+        if (bus.wready && bus.wvalid) begin
+            trans.data <= bus.wdata;
+            trans.strb <= bus.wstrb;
+            w_rdy      <= 1'b1;
+        end
+        // kind works this easy, cause my spec only allows READ or WRITE, never both due to
+        // straight cpu (trading easyness against advanced reusabilty)
+        // If a WRITE valid is high, that means the CPU wants to write
+        if (bus.awvalid) trans.kind <= WRITE;
+    end
+
+    assign trans_rdy = aw_rdy && w_rdy;
+
+    // Manage delay, and when the transaction is done
+    always_ff @(posedge clk) begin
+        // B
+        // New response was put in the trans_returned, data now valid
+        if (resp_req != resp_ack) begin
 
         end
     end
@@ -36,9 +132,9 @@ interface axil_sub_bfm #(
             lfsr_w  <= w_seed;
             lfsr_ar <= ar_seed;
         end else begin
-            lfsr_aw <= {lfsr_aw[14:0], ~(lfsr_w[15] ^ lfsr_w[14] ^ lfsr_w[12] ^ lfsr_w[3])};
+            lfsr_aw <= {lfsr_aw[14:0], ~(lfsr_aw[15] ^ lfsr_aw[14] ^ lfsr_aw[12] ^ lfsr_aw[3])};
             lfsr_w  <= {lfsr_w[14:0], ~(lfsr_w[15] ^ lfsr_w[14] ^ lfsr_w[12] ^ lfsr_w[3])};
-            lfsr_ar <= {lfsr_ar[14:0], ~(lfsr_w[15] ^ lfsr_w[14] ^ lfsr_w[12] ^ lfsr_w[3])};
+            lfsr_ar <= {lfsr_ar[14:0], ~(lfsr_ar[15] ^ lfsr_ar[14] ^ lfsr_ar[12] ^ lfsr_ar[3])};
         end
 
     end
@@ -53,6 +149,36 @@ interface axil_sub_bfm #(
 
     assign awready_delay = map_delay(lfsr_aw);
     assign wready_delay  = map_delay(lfsr_w);
-    assign wrready_delay = map_delay(lfsr_ar);
+    assign arready_delay = map_delay(lfsr_ar);
+
+    `ifndef SYNTHESIS
+
+        // Requires 2 tasks not 1. Wait for a trans item to be filled partially
+        // Send it to the hvl, that sets the remaining attributes and put it back on
+
+        // Blocking function, waits til the trans item is filled enought
+        // i.e. at WRITE with addr, prot, data and strb. Then sends it to the
+        // driver, that fills its item with the struct data
+        task automatic get_request(output axil_trans_t t, output bit aborted);
+            do @(posedge clk); while(!trans_rdy);
+            t       = trans;
+            aborted = !bus.rst_n;
+        endtask
+
+        // Non Blocking function, that puts the, from the hvl, filled struct back in the bfm
+        // so the answer can be sent back to the manager
+        function automatic void put_response(axil_trans_t t);
+            trans_returned <= t;
+            // cant overried the resp_req if its written in an ff as well
+            // -> toggle bits, if resp_req gets toggled, the ff realises the response
+            // => resp_req != resp_ack
+            resp_req <= ~resp_req;
+        endfunction
+
+        task automatic wait_reset_done();
+            @(posedge clk iff !bus.rst_n);
+        endtask
+
+    `endif
 
 endinterface
