@@ -32,7 +32,7 @@ import common_lsu_pkg::*;
     logic        rvalid;
     logic        rready;
 
-        modport mst (
+        modport mgr (
         input  clk, rst_n,
         // AW
         output awaddr, awprot, awvalid,
@@ -51,7 +51,7 @@ import common_lsu_pkg::*;
         output rready
     );
 
-    modport slv (
+    modport sub (
         input  clk, rst_n,
         // AW
         input  awaddr, awprot, awvalid,

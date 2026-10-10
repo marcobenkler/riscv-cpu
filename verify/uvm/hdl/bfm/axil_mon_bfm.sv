@@ -86,9 +86,9 @@ interface axil_mon_bfm #(parameter int CntWdth = 32)(axil_if.mon bus);
                 trans_wr.kind             <= WRITE;
                 trans_wr_done             <= 1'b1;
                 aw_valid_seen <= '0;
-                w_valid_seen <= '0;
+                w_valid_seen  <= '0;
                 // multi assignment is allowed, as long as its in one ff block. The last one wins
-                b_valid_seen <= '0;
+                b_valid_seen  <= '0;
             end
         end
     end
@@ -129,17 +129,17 @@ interface axil_mon_bfm #(parameter int CntWdth = 32)(axil_if.mon bus);
                 trans_rd.addr_valid_delay <= ar_valid_anker     - last_trans_rd;
                 trans_rd.addr_ready_delay <= ar_handshake_anker - aw_valid_anker;
                 if (r_valid_seen) begin
-                    trans_rd.data_valid_delay <= r_valid_anker - ar_handshake_anker;
-                    trans_rd.data_ready_delay <= glb_cnt       - r_valid_anker;
+                    trans_rd.data_valid_delay <= r_valid_anker  - ar_handshake_anker;
+                    trans_rd.data_ready_delay <= glb_cnt        - r_valid_anker;
                 end
                 else begin
-                    trans_rd.data_valid_delay <= glb_cnt - ar_handshake_anker;
+                    trans_rd.data_valid_delay <= glb_cnt        - ar_handshake_anker;
                     trans_rd.data_ready_delay <= '0;
                 end
                 last_trans_rd <= glb_cnt;
                 trans_rd_done <= 1'b1;
                 ar_valid_seen <= 1'b0;
-                r_valid_seen <= 1'b0;
+                r_valid_seen  <= 1'b0;
             end
         end
     end
