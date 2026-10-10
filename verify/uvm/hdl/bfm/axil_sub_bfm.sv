@@ -39,8 +39,18 @@ interface axil_sub_bfm #(
     logic [3:0] aw_cnt;
     logic [3:0] w_cnt;
     logic [3:0] ar_cnt;
+    logic [3:0] b_cnt;
+    logic [3:0] r_cnt;
 
-    logic [15:0] thresh [5] = {zero, low, mid, high, ultra};
+    logic aw_rdy;
+    logic w_rdy;
+    logic ar_rdy;
+
+    logic trans_rdy;
+
+    logic trans_done;
+
+    assign trans_done = (bus.bvalid && bus.bready) || (bus.rvalid && bus.rready);
 
     // FSM for managing AW, W and AR delays
     always_ff @(posedge bus.clk) begin
@@ -125,7 +135,7 @@ interface axil_sub_bfm #(
 
     assign trans_rdy = (aw_rdy && w_rdy) || ar_rdy;
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge bus.clk) begin
         if (!bus.rst_n) begin
             b_state <= IDLE;
             r_state <= IDLE;
@@ -166,7 +176,7 @@ interface axil_sub_bfm #(
                     else    r_cnt <= r_cnt - 1;
                 end
                 default: begin
-                    b_state <= IDLE;
+                    r_state <= IDLE;
                     $info("DEFAULT USED IN R_STATE");
                 end
             endcase
@@ -174,7 +184,7 @@ interface axil_sub_bfm #(
     end
 
     // Manage delay, and when the transaction is done
-    always_ff @(posedge clk) begin
+    always_ff @(posedge bus.clk) begin
         if (!bus.rst_n) begin
             resp_req <= 0;
             resp_ack <= 0;
@@ -215,11 +225,12 @@ interface axil_sub_bfm #(
     end
 
     function automatic logic [3:0] map_delay(input logic [15:0] r);
-        if      (r < zero) return 4'b0000;
-        else if (r < low)  return 4'b0001;
-        else if (r < mid)  return 4'b0100;
-        else if (r < high) return 4'b1000;
-        else               return 4'b1111;
+        if      (r < zero)  return 4'b0000;
+        else if (r < low)   return 4'b0001;
+        else if (r < mid)   return 4'b0100;
+        else if (r < high)  return 4'b1000;
+        else if (r < ultra) return 4'b1010;
+        else                return 4'b1111;
     endfunction
 
     assign awready_delay = map_delay(lfsr_aw);
@@ -235,7 +246,7 @@ interface axil_sub_bfm #(
         // i.e. at WRITE with addr, prot, data and strb. Then sends it to the
         // driver, that fills its item with the struct data
         task automatic get_request(output axil_trans_t t, output bit aborted);
-            do @(posedge clk); while(!trans_rdy);
+            do @(posedge bus.clk); while(!trans_rdy && bus.rst_n);
             t       = trans;
             aborted = !bus.rst_n;
         endtask
@@ -251,7 +262,7 @@ interface axil_sub_bfm #(
         endfunction
 
         task automatic wait_reset_done();
-            @(posedge clk iff !bus.rst_n);
+            @(posedge bus.clk iff bus.rst_n);
         endtask
 
     `endif

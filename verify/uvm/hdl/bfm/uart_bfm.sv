@@ -144,7 +144,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
         endtask
 
         task automatic wait_reset_done();
-            @(posedge clk iff !rst_n);
+            @(posedge clk iff rst_n);
         endtask
 
     `endif
