@@ -111,9 +111,16 @@ interface axil_sub_bfm #(
         // straight cpu (trading easyness against advanced reusabilty)
         // If a WRITE valid is high, that means the CPU wants to write
         if (bus.awvalid) trans.kind <= WRITE;
+        // AR
+        if (bus.arready && bus.arvalid) begin
+            trans.addr <= bus.araddr;
+            trans.prot <= bus.arprot;
+            ar_rdy;
+        end
+        if (bus.arvalid) trans.kind <= READ;
     end
 
-    assign trans_rdy = aw_rdy && w_rdy;
+    assign trans_rdy = (aw_rdy && w_rdy) || ar_rdy;
 
     // Manage delay, and when the transaction is done
     always_ff @(posedge clk) begin
