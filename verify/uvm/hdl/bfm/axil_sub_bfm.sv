@@ -33,6 +33,9 @@ interface axil_sub_bfm #(
     rdy_state_e w_state;
     rdy_state_e ar_state;
 
+    vld_state_e b_state;
+    vld_state_e r_state;
+
     logic [3:0] aw_cnt;
     logic [3:0] w_cnt;
     logic [3:0] ar_cnt;
@@ -122,14 +125,79 @@ interface axil_sub_bfm #(
 
     assign trans_rdy = (aw_rdy && w_rdy) || ar_rdy;
 
-    // Manage delay, and when the transaction is done
     always_ff @(posedge clk) begin
-        // B
-        // New response was put in the trans_returned, data now valid
-        if (resp_req != resp_ack) begin
-
+        if (!bus.rst_n) begin
+            b_state <= IDLE;
+            r_state <= IDLE;
+            b_cnt <= 0;
+            r_cnt <= 0;
+        end else begin
+            case (b_state)
+                IDLE: begin
+                    if (resp_req != resp_ack && trans_returned.kind == WRITE)
+                        b_state <= (trans_returned.b_valid_delay == 0) ? VLD : CNT;
+                end
+                VLD: begin
+                    if (trans_done) b_state <= IDLE;
+                end
+                CNT: begin
+                    if      (b_cnt == 1) b_state <= VLD;
+                    else if (trans_returned.b_valid_delay == 1) b_state <= VLD;
+                    else if (b_cnt == 0) b_cnt <= trans_returned.b_valid_delay;
+                    else    b_cnt <= b_cnt - 1;
+                end
+                default: begin
+                    b_state <= IDLE;
+                    $info("DEFAULT USED IN B_STATE");
+                end
+            endcase
+            case (r_state)
+                IDLE: begin
+                    if (resp_req != resp_ack && trans_returned.kind == READ)
+                        r_state <= (trans_returned.r_valid_delay == 0) ? VLD : CNT;
+                end
+                VLD: begin
+                    if (trans_done) r_state <= IDLE;
+                end
+                CNT: begin
+                    if      (r_cnt == 1) r_state <= VLD;
+                    else if (trans_returned.r_valid_delay == 1) r_state <= VLD;
+                    else if (r_cnt == 0) r_cnt <= trans_returned.r_valid_delay;
+                    else    r_cnt <= r_cnt - 1;
+                end
+                default: begin
+                    b_state <= IDLE;
+                    $info("DEFAULT USED IN R_STATE");
+                end
+            endcase
         end
     end
+
+    // Manage delay, and when the transaction is done
+    always_ff @(posedge clk) begin
+        if (!bus.rst_n) begin
+            resp_req <= 0;
+            resp_ack <= 0;
+        end
+        // New response was put in the trans_returned, data now valid
+        else if (resp_req != resp_ack) begin
+            bus.bresp <= '0;
+            bus.rdata <= '0;
+            bus.rresp <= '0;
+            // B
+            if (trans_returned.kind == WRITE && b_state == VLD && bus.bready) begin
+                bus.bresp <= trans_returned.resp;
+            end
+            // R
+            else if (trans_returned.kind == READ && r_state == VLD && bus.rready) begin
+                bus.rdata <= trans_returned.data;
+                bus.rresp <= trans_returned.resp;
+            end
+        end
+    end
+
+    assign bus.bvalid = b_state == VLD;
+    assign bus.rvalid = r_state == VLD;
 
     //LFSR pseudo random generator. READY Delays need to be generated randomly in the bfm
     // to avoid lookahead logic thats buggy
