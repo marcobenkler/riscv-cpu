@@ -46,7 +46,7 @@ interface axil_sub_bfm #(
     logic aw_seen;
     logic w_seen;
     logic ar_seen;
-    logic wr_complete;
+    logic hsk_complete;
 
     logic trans_rdy;
 
@@ -133,16 +133,16 @@ interface axil_sub_bfm #(
             trans.prot <= bus.arprot;
         end
         if (bus.arvalid) trans.kind <= READ;
-        if (wr_complete) begin
+        if (hsk_complete) begin
             trans_rdy <= 1'b1;
             aw_seen <= 1'b0;
             w_seen <= 1'b0;
         end
     end
 
-    assign wr_complete = ((aw_seen || bus.awready && bus.awvalid) &&
-                         (w_seen  || bus.wready  && bus.wvalid)) ||
-                         (bus.arready && bus.arvalid);
+    assign hsk_complete = ((aw_seen || bus.awready && bus.awvalid) &&
+                          (w_seen  || bus.wready  && bus.wvalid)) ||
+                          (bus.arready && bus.arvalid);
 
     always_ff @(posedge bus.clk) begin
         if (!bus.rst_n) begin

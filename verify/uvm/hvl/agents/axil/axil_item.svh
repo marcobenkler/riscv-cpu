@@ -6,6 +6,7 @@ class axil_item extends uvm_sequence_item;
     rand bit [31:0]   data;
     rand bit [3:0]    strb;
     resp_e            resp;
+    bit               aborted; // only used for 2 phase sequence
 
     rand int unsigned addr_valid_delay;
     rand int unsigned addr_ready_delay;
