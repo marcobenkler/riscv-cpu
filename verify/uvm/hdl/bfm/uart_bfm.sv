@@ -132,7 +132,7 @@ interface uart_bfm #(parameter bit IsActive = 1)
         task automatic send(uart_trans_t t, output bit aborted);
             enc_trans <= t;
             req_vld   <= 1'b1;
-            do @(posedge clk); while(!req_rdy);
+            do @(posedge clk); while(!req_rdy && rst_n);
             req_vld   <= 1'b0;
             aborted   = !rst_n;
         endtask

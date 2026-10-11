@@ -9,11 +9,12 @@ package axil_agent_pkg;
     `include "axil_item.svh"
 
     //Space for all sequences
-    `include "axil_sequence.svh"
+    `include "axil_test_seq.svh"
 
     //
 
     `include "axil_sequencer.svh"
+    `include "axil_vsequence.svh"
     `include "axil_driver.svh"
     `include "axil_monitor.svh"
     `include "axil_agent.svh"

@@ -31,4 +31,15 @@ package common_axil_pkg;
         CNT
     } dry_state_e;
 
+    typedef enum logic [1:0] {
+        IDLE,
+        VLD,
+        CNT
+    } vld_state_e;
+
+    typedef enum logic {
+        RDY,
+        CNT
+    } rdy_state_e;
+
 endpackage
