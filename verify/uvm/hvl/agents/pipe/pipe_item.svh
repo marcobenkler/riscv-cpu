@@ -1,6 +1,5 @@
 class pipe_item extends uvm_sequence_item;
     // DATA
-    rand bit          is_store;
     rand bit [31:0]   addr;
     rand bit [31:0]   store_data;
     rand mem_type_e   mem_type;
@@ -21,7 +20,6 @@ class pipe_item extends uvm_sequence_item;
          int unsigned      lsu_stall_duration;
 
     `uvm_object_utils_begin(pipe_item)
-    `uvm_field_int(is_store, UVM_ALL_ON)
     `uvm_field_int(addr, UVM_ALL_ON)
     `uvm_field_int(store_data, UVM_ALL_ON)
     `uvm_field_enum(mem_type_e, mem_type, UVM_ALL_ON)
@@ -42,7 +40,6 @@ class pipe_item extends uvm_sequence_item;
 
     function pipe_trans_t to_struct();
         pipe_trans_t t;
-        t.is_store           = is_store;
         t.addr               = addr;
         t.store_data         = store_data;
         t.mem_type           = mem_type;
@@ -63,7 +60,6 @@ class pipe_item extends uvm_sequence_item;
     endfunction
 
     function void from_struct(pipe_trans_t t);
-        is_store           = t.is_store;
         addr               = t.addr;
         store_data         = t.store_data;
         mem_type           = t.mem_type;
@@ -82,10 +78,74 @@ class pipe_item extends uvm_sequence_item;
         lsu_stall_duration = t.lsu_stall_duration;
     endfunction
 
-    function pipe_trans_t to_struct();
-        pipe_trans_t t;
-    endfunction
-
     //constraints
+    constraint mem_type_c {
+        soft mem_type dist {
+            SB  := 10,
+            SH  := 10,
+            SW  := 10,
+            LB  := 10,
+            LH  := 10,
+            LW  := 10;
+            LBU := 20;
+            LHU := 20;
+        }
+    }
+
+    constraint interrupt_c {
+        stall_do dist { 0 := 95, 1 := 5 };
+        flush_do dist { 0 := 95, 1 := 5 };
+    }
+
+    constraint addr_c {
+        // mem:    32'h0000_0000:32'h0000_07FF
+        // periph: 32'h1000_0000:32'h1000_0008
+        // fault: else
+        soft addr dist {
+            [32'h0000_0000:32'h0000_07FF] :/ 70,
+            [32'h1000_0000:32'h1000_0008] :/ 20,
+            [32'h0000_0800:32'h0FFF_FFFF] :/ 5,
+            [32'h1000_0009:32'hFFFF_FFFF] :/ 5
+        };
+    }
+
+    constraint data_c {
+        soft store_data dist {
+            '0                            := 5,
+            [32'h0000_0001:32'h5555_5551] :/ 40,
+            // Offsets by 2n + 1 are visible instantly
+            32'h5555_5555                 := 5,
+            [32'h5555_5556:32'hAAAA_AAA9] :/ 40,
+            // Offsets by 2n + 1 are visible instantly
+            32'hAAAA_AAAA                 := 5,
+            '1                            := 5,
+        }
+    }
+
+    constraint timing_c {
+        soft stall_at dist {
+            0     := 20,
+            [1:2] :/ 30,
+            [3:8] :/ 50
+        };
+
+        soft flush_at dist {
+            0     := 20,
+            [1:2] :/ 30,
+            [3:8] :/ 50
+        }
+
+        soft stall_duration dist {
+            1     := 20,
+            [1:3] :/ 50,
+            [4:6] :/ 30
+        }
+
+        soft req_vld_at dist {
+            0     := 50,
+            [1:2] :/ 40,
+            [3:4] :/ 10
+        }
+    }
 
 endclass

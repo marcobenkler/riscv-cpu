@@ -3,10 +3,15 @@ package common_pipe_pkg;
         
     } pipe_trans_t;
 
-    typedef enum logic[1:0] {
-        BYTE,
-        HALF,
-        WORD
+    typedef enum logic[2:0] {
+        SB,
+        SH,
+        SW,
+        LB,
+        LH,
+        LW,
+        LBU,
+        LHU
     } mem_type_e;
 
     typedef enum logic [2:0] {
