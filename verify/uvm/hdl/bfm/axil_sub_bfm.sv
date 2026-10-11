@@ -18,7 +18,8 @@ interface axil_sub_bfm #(
     // set clean by den HVL
     axil_trans_t trans_returned;
 
-    logic resp_req;
+    // assignment in declaration usefull, if bit is set by function
+    logic resp_req = 1'b0;
     logic resp_ack;
 
     logic [15:0] lfsr_aw;
@@ -42,9 +43,10 @@ interface axil_sub_bfm #(
     logic [3:0] b_cnt;
     logic [3:0] r_cnt;
 
-    logic aw_rdy;
-    logic w_rdy;
-    logic ar_rdy;
+    logic aw_seen;
+    logic w_seen;
+    logic ar_seen;
+    logic wr_complete;
 
     logic trans_rdy;
 
@@ -107,18 +109,19 @@ interface axil_sub_bfm #(
     assign bus.arready = (ar_state == RDY);
 
     // Manage filling up trans_item, depending on ready and valid
-    always_ff @(posedge clk) begin
+    always_ff @(posedge bus.clk) begin
+        trans_rdy <= 1'b0;
         // AW
         if (bus.awready && bus.awvalid) begin
             trans.addr <= bus.awaddr;
             trans.prot <= bus.awprot;
-            aw_rdy     <= 1'b1;
+            aw_seen     <= 1'b1;
         end
         // W
         if (bus.wready && bus.wvalid) begin
             trans.data <= bus.wdata;
             trans.strb <= bus.wstrb;
-            w_rdy      <= 1'b1;
+            w_seen      <= 1'b1;
         end
         // kind works this easy, cause my spec only allows READ or WRITE, never both due to
         // straight cpu (trading easyness against advanced reusabilty)
@@ -128,24 +131,33 @@ interface axil_sub_bfm #(
         if (bus.arready && bus.arvalid) begin
             trans.addr <= bus.araddr;
             trans.prot <= bus.arprot;
-            ar_rdy;
         end
         if (bus.arvalid) trans.kind <= READ;
+        if (wr_complete) begin
+            trans_rdy <= 1'b1;
+            aw_seen <= 1'b0;
+            w_seen <= 1'b0;
+        end
     end
 
-    assign trans_rdy = (aw_rdy && w_rdy) || ar_rdy;
+    assign wr_complete = ((aw_seen || bus.awready && bus.awvalid) &&
+                         (w_seen  || bus.wready  && bus.wvalid)) ||
+                         (bus.arready && bus.arvalid);
 
     always_ff @(posedge bus.clk) begin
         if (!bus.rst_n) begin
-            b_state <= IDLE;
-            r_state <= IDLE;
-            b_cnt <= 0;
-            r_cnt <= 0;
+            b_state  <= IDLE;
+            r_state  <= IDLE;
+            b_cnt    <= 0;
+            r_cnt    <= 0;
+            resp_ack <= resp_req;
         end else begin
             case (b_state)
                 IDLE: begin
-                    if (resp_req != resp_ack && trans_returned.kind == WRITE)
+                    if (resp_req != resp_ack && trans_returned.kind == WRITE) begin
                         b_state <= (trans_returned.b_valid_delay == 0) ? VLD : CNT;
+                        resp_ack <= ~resp_ack;
+                    end
                 end
                 VLD: begin
                     if (trans_done) b_state <= IDLE;
@@ -163,8 +175,10 @@ interface axil_sub_bfm #(
             endcase
             case (r_state)
                 IDLE: begin
-                    if (resp_req != resp_ack && trans_returned.kind == READ)
+                    if (resp_req != resp_ack && trans_returned.kind == READ) begin
                         r_state <= (trans_returned.r_valid_delay == 0) ? VLD : CNT;
+                        resp_ack <= ~resp_ack;
+                    end
                 end
                 VLD: begin
                     if (trans_done) r_state <= IDLE;
@@ -183,29 +197,9 @@ interface axil_sub_bfm #(
         end
     end
 
-    // Manage delay, and when the transaction is done
-    always_ff @(posedge bus.clk) begin
-        if (!bus.rst_n) begin
-            resp_req <= 0;
-            resp_ack <= 0;
-        end
-        // New response was put in the trans_returned, data now valid
-        else if (resp_req != resp_ack) begin
-            bus.bresp <= '0;
-            bus.rdata <= '0;
-            bus.rresp <= '0;
-            // B
-            if (trans_returned.kind == WRITE && b_state == VLD && bus.bready) begin
-                bus.bresp <= trans_returned.resp;
-            end
-            // R
-            else if (trans_returned.kind == READ && r_state == VLD && bus.rready) begin
-                bus.rdata <= trans_returned.data;
-                bus.rresp <= trans_returned.resp;
-            end
-        end
-    end
-
+    assign bus.rresp  = trans_returned.resp;
+    assign bus.rdata  = trans_returned.data;
+    assign bus.bresp  = trans_returned.resp;
     assign bus.bvalid = b_state == VLD;
     assign bus.rvalid = r_state == VLD;
 
