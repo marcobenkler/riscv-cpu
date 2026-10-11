@@ -41,11 +41,45 @@ class pipe_item extends uvm_sequence_item;
     `uvm_object_utils_end
 
     function pipe_trans_t to_struct();
-
+        pipe_trans_t t;
+        t.is_store           = is_store;
+        t.addr               = addr;
+        t.store_data         = store_data;
+        t.mem_type           = mem_type;
+        t.stall_do           = stall_do;
+        t.flush_do           = flush_do;
+        t.load_data          = load_data;
+        t.lsu_exception      = lsu_exceptopn;
+        t.mcause             = mcause;
+        t.mtval              = mtval;
+        t.stall_at           = stall_at
+        t.stall_duration     = stall_duration;
+        t.flush_at           = flush_at;
+        t.req_vld_at         = req_vld_at;
+        t.out_vld_at         = out_vld_at;
+        t.lsu_stall_at       = lsu_stall_at;
+        t.lsu_stall_duration = lsu_stall_duration;
+        return t;
     endfunction
 
     function void from_struct(pipe_trans_t t);
-
+        is_store           = t.is_store;
+        addr               = t.addr;
+        store_data         = t.store_data;
+        mem_type           = t.mem_type;
+        stall_do           = t.stall_do;
+        flush_do           = t.flush_do;
+        load_data          = t.load_data;
+        lsu_exception      = t.lsu_exception;
+        mcause             = t.mcause;
+        mtval              = t.mtval;
+        stall_at           = t.stall_at;
+        stall_duration     = t.stall_duration;
+        flush_at           = t.flush_at;
+        req_vld_at         = t.req_vld_at;
+        out_vld_at         = t.out_vld_at;
+        lsu_stall_at       = t.lsu_stall_at;
+        lsu_stall_duration = t.lsu_stall_duration;
     endfunction
 
     function pipe_trans_t to_struct();
