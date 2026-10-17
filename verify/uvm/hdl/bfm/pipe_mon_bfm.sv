@@ -1,7 +1,13 @@
 interface pipe_bfm(pipe_if.mon bus);
     pipe_trans_t trans;
 
+    always_ff @(posedge bus.clk) begin
+        if (!bus.rst_n) begin
 
+        end else begin
+            
+        end
+    end
 
     `ifndef SYNTHESISE
 

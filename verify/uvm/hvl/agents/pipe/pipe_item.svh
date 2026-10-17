@@ -13,7 +13,7 @@ class pipe_item extends uvm_sequence_item;
     // TIMING
     rand int unsigned      stall_at;
     rand int unsigned      stall_duration;
-    rand int unsigned      flush_at;
+    rand int unsigned      flush_at; //
     rand int unsigned      req_vld_at;
          int unsigned      out_vld_at;
          int unsigned      lsu_stall_at;
