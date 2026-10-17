@@ -15,27 +15,11 @@
 
 <p><br><br></p>  
 
-# ADDRESSES
-## UART
-| KIND   | Offsett       | DESCRIPTION            |
-|--------|---------------|------------------------|
-| TX     | `0x0000_0000` | Data to send           |
-| STATUS | `0x0000_0004` | Status of transmission |
-| RX     | `0x0000_0008` | Received data          |  
 
-## CLINT
-| KIND        | Offsett       | DESCRIPTION                                     |
-|-------------|---------------|-------------------------------------------------|
-| MSIP        | `0x0000_0000` | Flag for software interrupt                     |
-| MTIMECMP_LO | `0x0000_4000` | Lower part of comparevalue for timer interrupt  |
-| MTIMECMP_HI | `0x0000_4004` | Higher part of comparevalue for timer interrupt |
-| MTIME_LO    | `0x0000_BFF8` | Lower part of freerunning clock                 |
-| MTIME_HI    | `0x0000_BFFC` | Higher part of freerunning clock                |
-<p><br><br></p> 
+# COMPONENTS
+## LSU
 
-# LSU
-
-## BUS INTERFACE
+### BUS INTERFACE
 AXI4-LITE, see [AMBA AXI Specification](https://developer.arm.com/documentation/ihi0022/latest).
 
 | Parameter          | Value                                  |
@@ -46,7 +30,7 @@ AXI4-LITE, see [AMBA AXI Specification](https://developer.arm.com/documentation/
 | Write strobes      | Used for SB / SH                       |
 | Error response     | SLVERR / DECERR raise access fault     |
 
-## Supported Instructions
+### Supported Instructions
 | Instruction | Width   | Extension | Alignment     |
 |-------------|---------|-----------|---------------|
 | LB / LBU    | 8 bit   | sign/zero | any           |
@@ -54,9 +38,31 @@ AXI4-LITE, see [AMBA AXI Specification](https://developer.arm.com/documentation/
 | LW          | 32 bit  | -         | 4-byte        |
 | SB / SH / SW| 8/16/32 | -         | as above      |
 
-# CSR
+<p><br><br></p>  
 
-## EXCEPTIONS
+## UART
+| KIND   | Offsett       | DESCRIPTION            |
+|--------|---------------|------------------------|
+| TX     | `0x0000_0000` | Data to send           |
+| STATUS | `0x0000_0004` | Status of transmission |
+| RX     | `0x0000_0008` | Received data          |  
+
+<p><br><br></p>  
+
+## CLINT
+| KIND        | Offsett       | DESCRIPTION                                     |
+|-------------|---------------|-------------------------------------------------|
+| MSIP        | `0x0000_0000` | Flag for software interrupt                     |
+| MTIMECMP_LO | `0x0000_4000` | Lower part of comparevalue for timer interrupt  |
+| MTIMECMP_HI | `0x0000_4004` | Higher part of comparevalue for timer interrupt |
+| MTIME_LO    | `0x0000_BFF8` | Lower part of freerunning clock                 |
+| MTIME_HI    | `0x0000_BFFC` | Higher part of freerunning clock                |
+
+<p><br><br></p>  
+
+## CSR
+
+### EXCEPTIONS
 
 | mcause | Cause                    | mtval          |
 |--------|--------------------------|--------------- |
@@ -67,7 +73,7 @@ AXI4-LITE, see [AMBA AXI Specification](https://developer.arm.com/documentation/
 | 6      | Store address misaligned | Fault address  |
 | 11     | Environment call         | 0              |
 
-## TRAP ENTRY / MRET
+### TRAP ENTRY / MRET
 On trap:
 1. mepc   ← PC of trapping instruction
 2. mcause ← cause
