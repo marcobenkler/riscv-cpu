@@ -10,7 +10,7 @@ A clean, modular **pipelined RISC-V CPU** implementing the **RV32IM** instructio
 
 ## Architecture
 
-![CPU Architecture](further/images/pipe_architecture.svg)  
+![CPU Architecture](images/svg/pipe_architecture.svg)  
 Left out trivial connections, i.e. instruction_memory -> decoder for improved overview  
 
 

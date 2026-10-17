@@ -1,7 +1,7 @@
 # OVERVIEW
 
 <p align="center">
-    <img src="../../../further/drawio/images/mem_stage.svg" alt="MEM STAGE WITH AXI INTERCONNECT">
+    <img src="../../../images/svg/mem_stage.svg" alt="MEM STAGE WITH AXI INTERCONNECT">
     <br>
     <br>
     <br>
