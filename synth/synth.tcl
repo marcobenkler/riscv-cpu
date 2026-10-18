@@ -19,8 +19,8 @@ read_verilog -sv [list \
     ${project_dir}/rtl/common/clint_pkg.sv \
     ${project_dir}/rtl/common/pipeline_pkg.sv \
     ${project_dir}/rtl/common/uart_pkg.sv \
-    ${project_dir}/rtl/core/branch/next_pc.sv \
-    ${project_dir}/rtl/core/branch/update_pc.sv \
+    ${project_dir}/rtl/core/fetch/next_pc.sv \
+    ${project_dir}/rtl/core/fetch/update_pc.sv \
     ${project_dir}/rtl/core/csr/csr_regfile.sv \
     ${project_dir}/rtl/core/decode/decoder.sv \
     ${project_dir}/rtl/core/decode/imm_gen.sv \

@@ -2,15 +2,18 @@ module pl_cpu
     import pipeline_pkg::*;
 (
     input logic clk,
-    //input logic reset_n
-    input logic reset_n_external,
-    input logic uart_rx_bit,
-    output logic uart_tx_bit
+    // ---- SIMULATION (1/2) ----
+    input logic reset_n
+    // ---- SYNTHESIS (1/2) ----
+    //input logic reset_n_external,
+    //input logic uart_rx_bit,
+    //output logic uart_tx_bit
 );
 
-    logic reset_n;
-    assign reset_n = ~reset_n_external;
-    
+    // ---- SYNTHESIS (2/2) ----
+    //logic reset_n;
+    //assign reset_n = ~reset_n_external;
+
     if1_if2_t if1_if2_in;
     if1_if2_t if1_if2_out;
 
@@ -74,7 +77,7 @@ module pl_cpu
 
     logic        if_id_flush_delayed;
 
-    //Simulation
+    // ---- SIMULATION (2/2) ----
     logic uart_rx_bit;
     logic uart_tx_bit;
 
