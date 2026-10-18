@@ -138,25 +138,81 @@ clean:
 	rm -rf build obj_dir annotated coverage.dat coverage.info *.fst *.log
 
 ### FREERTOS ###
-CC := riscv64-unknown-elf
-BUILD_OS :=
+CROSS := riscv64-unknown-elf-
+CC := $(CROSS)gcc
+OBJCOPY := $(CROSS)objcopy
+OBJDUMP := $(CROSS)objdump
+SIZE := $(CROSS)size
 
-FREERTOS = freertos/kernel
+#In official GNU, march for the machine architecture,
+#mabi for machine application binary interface (how big are datatypes, pointer etc)
+AARCH := -march=rv32i_zicsr -mabi=ilp32
+
+TARGET   := firmware
+BUILD_OS := build_os
+FREERTOS := freertos/kernel
+BSP := freertos/bsp
 PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
 
-CFLAGS += -I$(FREERTOS)/include
-CFLAGS += -I$(PORT)
-CFLAGS += -I$(PORT)/chip_specific_extension/RV32I_CLINT_no_extensions
-CFLAGS += -Ifreertos/app
-
-SRCS += $(FREERTOS)/tasks.c
-SRCS += $(FREERTOS)/list.c
-SRCS += $(FREERTOS)/queue.c
+SRCS += $(wildcard $(FREERTOS)/portable/*.c)
+SRCS += $(BSP)/start.S
 SRCS += $(FREERTOS)/portable/MemMang/heap_1.c
 SRCS += $(PORT)/port.c
 SRCS += $(PORT)/portASM.S
 SRCS += $(wildcard freertos/app/*.c)
 
-os:
+# Declare what files are needed. basenam: remove ending, addsuffix: add ending, addprefix ...
+OBJS := $(addprefix $(BUILD_OS)/, $(addsuffix .o, $(basename $(SRCS))))
+
+# Og: optimize, but keep it readable for debugging. g: debug infos in the .elf file
+# Wall: Enable All Warnings
+CFLAGS += $(AARCH) -Og -g -Wall
+#sections: Each function and data gehts own section => Linker can throw away unused
+CFLAGS += -ffunction-sections -fdata-sections
+#MMD MP: Create .d file so make builds again, if header changes
+CFLAGS += -MMD -MP
+CFLAGS += -I$(FREERTOS)/include
+CFLAGS += -I$(PORT)
+CFLAGS += -I$(PORT)/chip_specific_extension/RISCV_MTIME_CLINT_no_extensions
+CFLAGS += -Ifreertos/app
+
+#-T link.ld: Use this link script. nostartfiles: Exclude default start.S file, got my own
+LDFLAGS += $(ARCH) -T $(BSP)/link.ld -nostartfiles
+#gc-section: garbage collect unused sections, Map: Build map file that is a great overview
+#Wl: GCC doesnt know all linker options, so don't throw error, just pass to linker
+LDFLAGS += -Wl,--gc-sections -Wl,-Map=$(BUILD)/$(TARGET).map
+
+# Define Goal: make sees this and walks recursively mem -> bin -> elf -> .o -> .c
+os: $(BUILD_OS)/$(TARGET).mem $(BUILD_OS)/$(TARGET).dis
+
+$(BUILD_OS)/%.o: %.c
+# @ before terminal command just makes it invisible for better overview
+# $@ is goal of the rule (whats left of ":" in our case %.o), i.e. buidl_os/app/main.o
+# $< is first requirement (whats right of ":" in our case %.c), i.e. app/main.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_OS)/%.o: %.S
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_OS)/$(TARGET).elf: $(OBJS)
+# $^ all requirements (right side of ":")
+	$(CC) $(LDFLAGS) $^ -o $@
+	$(SIZE) $@
+
+$(BUILD_OS)/$(TARGET).bin: $(BUILD_OS)/$(TARGET).elf
+	$(OBJCOPY) -O binary $< $@
+
+$(BUILD_OS)/$(TARGET).mem: $(BUILD_OS)/$(TARGET).bin
+	od -An -v -tx4 -w4 $< | tr -d ' ' > $@
+
+$(BUILD_OS)/$(TARGET).dis: $(BUILD_OS)/$(TARGET).elf
+	$(OBJDUMP) -d $< > $@
+
+-include $(OBJS:.o=.d)
 
 clean_os:
+	rm -rf $(BUILD_OS)
+
+.PHONY: os, clean_os

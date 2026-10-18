@@ -38,6 +38,20 @@ After programming the bitstream, connect via a serial terminal at **115 200 baud
 
 ---
 
+## Software
+
+This CPU is going to run FreeRTOS. If you want to use it, you do not have to implement anything manually. All ports and Board Support Packages are configured and the kernel is loaded in the project already.  
+  
+Just run the command `make os` while being in the root dir. It will put the `.elf` and `.dis` file for debugging and `.mem` file that's read in the bram via `$readmemh`
+
+---
+
+## Simulation
+
+All Simulations run with $\frac{1}{5ns} = 200MHz$
+
+---
+
 ## Implementation Status
 
 | Feature | Status |

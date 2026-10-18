@@ -85,7 +85,8 @@
 /* Scheduling behaviour related definitions. **********************************/
 /******************************************************************************/
 
-/*Increases CMP each interrupt by 80k: interrupt each ~1ms*/
+/*Increases CMP each interrupt by 80k: interrupt each ~1ms in synth*/
+/* Use 50000000 when simulating, so contextswitch is each 4 tick */
 #define configTICK_RATE_HZ                         1000
 
 //Task with higher priority wins
