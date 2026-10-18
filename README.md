@@ -1,14 +1,18 @@
 # RISC-V CPU Core (RV32IM)
 
+## Use of AI  
+This project was written entirely by me. AI did not write a single line in this project.  
+I use it as a tool to understand concepts and help with debugging if I struggel for more than 1h. 
+
 ## Overview
 
 A clean, modular **pipelined RISC-V CPU** implementing the **RV32IM** instruction set in SystemVerilog.  
 
 ---
 
-# Design 
+## Design 
 
-## Architecture
+### Architecture
 
 ![CPU Architecture](images/svg/pipe_architecture.svg)  
 Left out trivial connections, i.e. instruction_memory -> decoder for improved overview  
@@ -18,45 +22,24 @@ Left out trivial connections, i.e. instruction_memory -> decoder for improved ov
 
 ## Module Descriptions
 
-### Single-Cycle Core
+### Top Level
 
 | Module | Path | Function |
 |---|---|---|
 | `sc_cpu` | `rtl/core/sc_cpu.sv` | Top-level single-cycle CPU |
-| `instruction_memory` | `rtl/core/fetch/` | Instruction ROM, synchronous read |
-| `decoder` | `rtl/core/decode/` | Decodes instruction to control signals |
-| `imm_gen` | `rtl/core/decode/` | Sign-extends all immediate formats (I/S/B/U/J) |
-| `register_file` | `rtl/core/decode/` | 32×32-bit integer register file, x0 hardwired to 0 |
-| `operand_select` | `rtl/core/execute/` | Mux for ALU operands A and B |
-| `alu_top` | `rtl/core/execute/alu/` | ALU top — dispatches to sub-units |
-| `alu_addsub` | `rtl/core/execute/alu/` | Addition and subtraction |
-| `alu_logic` | `rtl/core/execute/alu/` | Bitwise AND/OR/XOR |
-| `alu_shift` | `rtl/core/execute/alu/` | Logical and arithmetic shifts |
-| `alu_compare` | `rtl/core/execute/alu/` | SLT / SLTU comparisons |
-| `multiply` | `rtl/core/execute/muldiv/` | Combinational 32×32 multiplier (MUL/MULH/MULHSU/MULHU) |
-| `srt_top` | `rtl/core/execute/muldiv/srt2/` | SRT-2 radix-2 divider top |
-| `normalize` | `rtl/core/execute/muldiv/srt2/` | Operand normalization |
-| `LZD` | `rtl/core/execute/muldiv/srt2/` | Leading-zero detector |
-| `DigitSelector` | `rtl/core/execute/muldiv/srt2/` | SRT-2 digit selection |
-| `RemainderUpdate` | `rtl/core/execute/muldiv/srt2/` | Partial remainder update |
-| `branch_unit` | `rtl/core/execute/` | Branch condition evaluation (BEQ/BNE/BLT/BGE/BLTU/BGEU + JAL/JALR) |
-| `misaligned_detection` | `rtl/core/execute/` | Detects misaligned load/store/fetch — raises exception cause |
-| `next_pc` | `rtl/core/fetch/` | Computes next PC (sequential / branch / jump / trap) |
-| `update_pc` | `rtl/core/fetch/` | PC register |
-| `csr_regfile` | `rtl/core/memory/` | Machine-Mode CSR registers and trap handler |
-| `data_memory` | `rtl/core/memory/` | Data RAM with byte/half/word access |
-| `bus_interconnect` | `rtl/core/memory/` | Memory-mapped I/O bus mux (RAM ↔ CLINT ↔ UART) |
-| `result_select` | `rtl/core/writeback/` | Writeback result mux (ALU / memory / PC+4 / CSR) |
-| `clint` | `rtl/external/` | Core-Local Interruptor — `mtime` / `mtimecmp` |
+| `pl_cpu` | `rtl/pl_cpu.sv` | Top-level pipelined CPU (FPGA top, exposes UART pins) |
 
-### Pipeline Extensions
+### Writeback
 
 | Module | Path | Function |
 |---|---|---|
-| `pl_cpu` | `rtl/pl_cpu.sv` | Top-level pipelined CPU (FPGA top, exposes UART pins) |
-| `pipeline_reg` | `rtl/pipeline/pipeline_reg.sv` | IF1/IF2, IF/ID, ID/EX, EX/MEM, MEM/WB pipeline registers |
-| `forwarding_unit` | `rtl/pipeline/forwarding_unit.sv` | EX/MEM and MEM/WB forwarding to EX stage |
-| `hazard_unit` | `rtl/pipeline/hazard_unit.sv` | Load-use stall detection and control-flow flush |
+| `result_select` | `rtl/core/writeback/` | Writeback result mux (ALU / memory / PC+4 / CSR) |
+
+### CLINT
+
+| Module | Path | Function |
+|---|---|---|
+| `clint` | `rtl/external/` | Core-Local Interruptor — `mtime` / `mtimecmp` |
 
 ### UART Peripheral
 
@@ -104,26 +87,7 @@ After programming the bitstream, connect via a serial terminal at **115 200 baud
 
 ---
 
-# Verification
-
-## UVM (IEEE 1800.2-2020)
-UVM testbench with HDL/HVL separation via split transactor, enabling FPGA-based co-emulation. Synthesizable BFM and DUT on hardware, untimed transaction-level stimulus on the host increasing testing speed x100
-
----
-
-## Restrictions  
-
-Due to verilator being 2 state (1/0) and not 4 state (1/0/x/z) it's not garanteed, every cornercase is verified correctly
-
----  
-
-## Tests
-
-UART Loopback TEST
-LSU TEST
-Lockstep via Spike, inspired by IBEX, using RVFI convetions
-
-# Implementation Status
+## Implementation Status
 
 | Feature | Status |
 |---|---|
@@ -149,43 +113,3 @@ Lockstep via Spike, inspired by IBEX, using RVFI convetions
 
 Clock: 90 MHz (11.1 ns period)  
 WNS: +0.361 ns, 0 timing violations  
-
-# Legacy due to UVM learnings
-
-### Testbenches
-
-| Testbench | Path | Covers |
-|---|---|---|
-| `tb_sc_cpu` | `verify/tb/core/` | Full single-cycle CPU |
-| `tb_pl_cpu` | `verify/tb/pipeline/` | Full pipelined CPU |
-| `tb_fwd_integration` | `verify/tb/pipeline/` | Forwarding unit integration |
-| `tb_hazard_integration` | `verify/tb/pipeline/` | Hazard unit integration |
-| `tb_alu` | `verify/tb/alu/` | ALU top-level |
-| `tb_STR2` | `verify/tb/muldiv/srt2/` | SRT-2 divider end-to-end |
-| `tb_LZD` | `verify/tb/muldiv/srt2/` | Leading-zero detector |
-| `tb_normalize` | `verify/tb/muldiv/srt2/` | Operand normalizer |
-| `tb_DigitSelector` | `verify/tb/muldiv/srt2/` | Digit selector |
-| `tb_RemainderUpdate` | `verify/tb/muldiv/srt2/` | Remainder update |
-| `tb_uart` | `verify/tb/external/` | UART top-level (TX + RX loopback) |
-| `tb_uart_tx` | `verify/tb/external/` | UART transmitter |
-| `tb_uart_baud` | `verify/tb/external/` | Baud rate generator |
-
-Run a specific testbench (with coverage and waveforms):
-
-```bash
-make sim-uart         # UART top
-make sim-uart_tx      # UART transmitter
-make sim-uart_baud    # Baud generator
-make sim-fwd_integration
-make sim-hazard_integration
-```
-
-### SVA (SystemVerilog Assertions)
-
-Formal/simulation assertions are in `verify/assertions/` and attached to the DUT via bind files in `verify/bind/`.
-
-| Assertion Module | Bind File | Covers |
-|---|---|---|
-| `assert_fwd_integration` | `fwd_bind.sv` | Forwarding correctness — correct data selected for EX operands under all hazard combinations |
-| `assert_hazard_integration` | `hazard_bind.sv` | Hazard detection — stall and flush signals asserted at the right cycles for load-use and control hazards |
-| `assert_imm_gen` | *(core/decode)* | Immediate sign-extension for all formats |

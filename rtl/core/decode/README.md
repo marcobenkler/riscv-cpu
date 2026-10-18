@@ -70,3 +70,12 @@ Supports RV32IM. Only opcode bits `[6:2]` are decoded, bits `[1:0]` are not chec
 ## IMM_GEN
 Selects the immediate format based on the opcode and sign extends it.
 For U-Type `imm` is already shifted left by 12, for B- and J-Type the LSB is 0.
+
+<p><br><br></p>
+
+# MODULES
+| Module | Path | Function |
+|---|---|---|
+| `decoder` | `rtl/core/decode/` | Decodes instruction to control signals |
+| `imm_gen` | `rtl/core/decode/` | Sign-extends all immediate formats (I/S/B/U/J) |
+| `register_file` | `rtl/core/decode/` | 32×32-bit integer register file, x0 hardwired to 0 |

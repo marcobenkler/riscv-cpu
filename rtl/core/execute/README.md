@@ -74,3 +74,23 @@ the critical path short, and the quotient is reconstructed at the end from
 | `00`        | Register file| No hazard                                                             |
 | `10`        | EX/MEM       | `rd` of the previous instruction == `rs` (has priority)               |
 | `01`        | MEM/WB       | `rd` of the instruction two before == `rs`, no match in EX/MEM        |
+
+<p><br><br></p>
+
+# MODULES
+| Module | Path | Function |
+|---|---|---|
+| `operand_select` | `rtl/core/execute/` | Mux for ALU operands A and B |
+| `alu_top` | `rtl/core/execute/alu/` | ALU top — dispatches to sub-units |
+| `alu_addsub` | `rtl/core/execute/alu/` | Addition and subtraction |
+| `alu_logic` | `rtl/core/execute/alu/` | Bitwise AND/OR/XOR |
+| `alu_shift` | `rtl/core/execute/alu/` | Logical and arithmetic shifts |
+| `alu_compare` | `rtl/core/execute/alu/` | SLT / SLTU comparisons |
+| `multiply` | `rtl/core/execute/muldiv/` | Combinational 32×32 multiplier (MUL/MULH/MULHSU/MULHU) |
+| `srt_top` | `rtl/core/execute/muldiv/srt2/` | SRT-2 radix-2 divider top |
+| `normalize` | `rtl/core/execute/muldiv/srt2/` | Operand normalization |
+| `LZD` | `rtl/core/execute/muldiv/srt2/` | Leading-zero detector |
+| `DigitSelector` | `rtl/core/execute/muldiv/srt2/` | SRT-2 digit selection |
+| `RemainderUpdate` | `rtl/core/execute/muldiv/srt2/` | Partial remainder update |
+| `branch_unit` | `rtl/core/execute/` | Branch condition evaluation (BEQ/BNE/BLT/BGE/BLTU/BGEU + JAL/JALR) |
+| `misaligned_detection` | `rtl/core/execute/` | Detects misaligned load/store/fetch — raises exception cause |

@@ -145,3 +145,12 @@ On trap:
 6. PC     ← mtvec
 
 On mret: MIE ← MPIE, MPIE ← 1, MPP ← 11, PC ← mepc
+
+<p><br><br></p>
+
+# MODULES
+| Module | Path | Function |
+|---|---|---|
+| `csr_regfile` | `rtl/core/memory/` | Machine-Mode CSR registers and trap handler |
+| `data_memory` | `rtl/core/memory/` | Data RAM with byte/half/word access |
+| `bus_interconnect` | `rtl/core/memory/` | Memory-mapped I/O bus mux (RAM ↔ CLINT ↔ UART) |

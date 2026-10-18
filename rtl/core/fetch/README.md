@@ -46,3 +46,12 @@ so WB can use it for JAL / JALR without an additional adder.
 | Init      | `$readmemh("program.hex")` |
 
 IF stage is split, so the instruction and it's corosponting pc sit together in the same space
+
+<p><br><br></p>
+
+# MODULES
+| Module | Path | Function |
+|---|---|---|
+| `instruction_memory` | `rtl/core/fetch/` | Instruction ROM, synchronous read |
+| `next_pc` | `rtl/core/fetch/` | Computes next PC (sequential / branch / jump / trap) |
+| `update_pc` | `rtl/core/fetch/` | PC register |

@@ -138,6 +138,8 @@ clean:
 	rm -rf build obj_dir annotated coverage.dat coverage.info *.fst *.log
 
 ### FREERTOS ###
+CC := riscv64-unknown-elf
+BUILD_OS :=
 
 FREERTOS = freertos/kernel
 PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
@@ -145,7 +147,7 @@ PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
 CFLAGS += -I$(FREERTOS)/include
 CFLAGS += -I$(PORT)
 CFLAGS += -I$(PORT)/chip_specific_extension/RV32I_CLINT_no_extensions
-CFLAGS += -Iconfig
+CFLAGS += -Ifreertos/app
 
 SRCS += $(FREERTOS)/tasks.c
 SRCS += $(FREERTOS)/list.c
@@ -153,3 +155,8 @@ SRCS += $(FREERTOS)/queue.c
 SRCS += $(FREERTOS)/portable/MemMang/heap_1.c
 SRCS += $(PORT)/port.c
 SRCS += $(PORT)/portASM.S
+SRCS += $(wildcard freertos/app/*.c)
+
+os:
+
+clean_os:
