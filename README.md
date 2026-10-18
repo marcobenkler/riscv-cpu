@@ -20,55 +20,6 @@ Left out trivial connections, i.e. instruction_memory -> decoder for improved ov
 
 ---
 
-## Module Descriptions
-
-### Top Level
-
-| Module | Path | Function |
-|---|---|---|
-| `sc_cpu` | `rtl/core/sc_cpu.sv` | Top-level single-cycle CPU |
-| `pl_cpu` | `rtl/pl_cpu.sv` | Top-level pipelined CPU (FPGA top, exposes UART pins) |
-
-### Writeback
-
-| Module | Path | Function |
-|---|---|---|
-| `result_select` | `rtl/core/writeback/` | Writeback result mux (ALU / memory / PC+4 / CSR) |
-
-### CLINT
-
-| Module | Path | Function |
-|---|---|---|
-| `clint` | `rtl/external/` | Core-Local Interruptor — `mtime` / `mtimecmp` |
-
-### UART Peripheral
-
-| Module | Path | Function |
-|---|---|---|
-| `uart_top` | `rtl/external/uart/` | UART top — instantiates TX, RX, and baud generators; exposes MMIO interface |
-| `uart_tx` | `rtl/external/uart/` | Transmitter FSM (IDLE → START → DATA → STOP) |
-| `uart_rx` | `rtl/external/uart/` | Receiver FSM with 16× oversampling for noise rejection |
-| `uart_baud` | `rtl/external/uart/` | Baud rate tick generator (115 200 baud TX, 16× for RX) |
-
-UART MMIO map (base `0x1000_0000`):
-
-| Offset | Register | Description |
-|---|---|---|
-| `+0x00` | `UART_TX` | Write byte to transmit |
-| `+0x04` | `UART_STATUS` | `[1]` rx_valid, `[0]` tx_ready |
-| `+0x08` | `UART_RX` | Last received byte |
-
-### Packages
-
-| Package | Path | Contents |
-|---|---|---|
-| `alu_pkg` | `rtl/common/alu_pkg.sv` | ALU opcode enum |
-| `clint_pkg` | `rtl/common/clint_pkg.sv` | CLINT MMIO address constants |
-| `uart_pkg` | `rtl/common/uart_pkg.sv` | UART MMIO address constants and state enum |
-| `pipeline_pkg` | `rtl/common/pipeline_pkg.sv` | Pipeline register structs |
-
----
-
 ## Toolchain
 
 | Tool | Purpose |
