@@ -154,7 +154,7 @@ FREERTOS := freertos/kernel
 BSP := freertos/bsp
 PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
 
-SRCS += $(wildcard $(FREERTOS)/portable/*.c)
+SRCS += $(wildcard $(FREERTOS)/*.c)
 SRCS += $(BSP)/start.S
 SRCS += $(FREERTOS)/portable/MemMang/heap_1.c
 SRCS += $(PORT)/port.c
@@ -205,7 +205,7 @@ $(BUILD_OS)/$(TARGET).bin: $(BUILD_OS)/$(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
 
 $(BUILD_OS)/$(TARGET).mem: $(BUILD_OS)/$(TARGET).bin
-	od -An -v -tx4 -w4 $< | tr -d ' ' > $@
+	god -An -v -tx4 -w4 $< | tr -d ' ' > $@
 
 $(BUILD_OS)/$(TARGET).dis: $(BUILD_OS)/$(TARGET).elf
 	$(OBJDUMP) -d $< > $@
