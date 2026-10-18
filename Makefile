@@ -101,6 +101,8 @@ sim-%:
 	verilator_coverage --annotate logs/coverage_$* coverage.dat
 	mv coverage.dat logs/coverage_$*.dat
 
+### UVM ###
+
 UVM_TOP := tb_uart_loopback
 TEST := uart_loopback_test
 OBJ := ./obj_dir/$(UVM_TOP)
@@ -134,3 +136,20 @@ uvm: clean uvm_build
 
 clean:
 	rm -rf build obj_dir annotated coverage.dat coverage.info *.fst *.log
+
+### FREERTOS ###
+
+FREERTOS = freertos/kernel
+PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
+
+CFLAGS += -I$(FREERTOS)/include
+CFLAGS += -I$(PORT)
+CFLAGS += -I$(PORT)/chip_specific_extension/RV32I_CLINT_no_extensions
+CFLAGS += -Iconfig
+
+SRCS += $(FREERTOS)/tasks.c
+SRCS += $(FREERTOS)/list.c
+SRCS += $(FREERTOS)/queue.c
+SRCS += $(FREERTOS)/portable/MemMang/heap_1.c
+SRCS += $(PORT)/port.c
+SRCS += $(PORT)/portASM.S

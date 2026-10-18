@@ -262,7 +262,7 @@
     }
 /* *INDENT-ON* */
 
-//Kernel allocates static memory itself
+//Kernel allocates memory itself
 #define configKERNEL_PROVIDED_STATIC_MEMORY    1
 
 /* Set configENABLE_FPU to 1 to enable the Floating Point Unit (FPU), or 0
