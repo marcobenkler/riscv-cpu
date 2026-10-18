@@ -1,5 +1,11 @@
 # OVERVIEW
-![EXECUTE DIAGRAM](../../../images/svg/ex_stage.svg)
+<p align="center">
+    <img src="../../../images/svg/ex_stage.svg" alt="EXECUTE DIAGRAM">
+    <br>
+    <br>
+    <br>
+</p>
+
 
 # COMPONENTS
 ## MISALIGNED_DET
