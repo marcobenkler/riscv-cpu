@@ -21,7 +21,7 @@ read_verilog -sv [list \
     ${project_dir}/rtl/common/uart_pkg.sv \
     ${project_dir}/rtl/core/fetch/next_pc.sv \
     ${project_dir}/rtl/core/fetch/update_pc.sv \
-    ${project_dir}/rtl/core/csr/csr_regfile.sv \
+    ${project_dir}/rtl/core/memory/csr_regfile.sv \
     ${project_dir}/rtl/core/decode/decoder.sv \
     ${project_dir}/rtl/core/decode/imm_gen.sv \
     ${project_dir}/rtl/core/decode/register_file.sv \

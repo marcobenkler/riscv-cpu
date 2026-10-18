@@ -41,9 +41,9 @@ Left out trivial connections, i.e. instruction_memory -> decoder for improved ov
 | `RemainderUpdate` | `rtl/core/execute/muldiv/srt2/` | Partial remainder update |
 | `branch_unit` | `rtl/core/execute/` | Branch condition evaluation (BEQ/BNE/BLT/BGE/BLTU/BGEU + JAL/JALR) |
 | `misaligned_detection` | `rtl/core/execute/` | Detects misaligned load/store/fetch — raises exception cause |
-| `next_pc` | `rtl/core/branch/` | Computes next PC (sequential / branch / jump / trap) |
-| `update_pc` | `rtl/core/branch/` | PC register |
-| `csr_regfile` | `rtl/core/csr/` | Machine-Mode CSR registers and trap handler |
+| `next_pc` | `rtl/core/fetch/` | Computes next PC (sequential / branch / jump / trap) |
+| `update_pc` | `rtl/core/fetch/` | PC register |
+| `csr_regfile` | `rtl/core/memory/` | Machine-Mode CSR registers and trap handler |
 | `data_memory` | `rtl/core/memory/` | Data RAM with byte/half/word access |
 | `bus_interconnect` | `rtl/core/memory/` | Memory-mapped I/O bus mux (RAM ↔ CLINT ↔ UART) |
 | `result_select` | `rtl/core/writeback/` | Writeback result mux (ALU / memory / PC+4 / CSR) |

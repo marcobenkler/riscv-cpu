@@ -4,8 +4,8 @@ _stack_size = 1K;
 
 MEMORY
 {
-    IMEM (x)     : ORIGIN = 0x0000_0000, LENGTH = 16K
-    DMEM (rwa!x) : ORIGIN = 0x8000_0000, LENGTH = 32K
+    IMEM (x)     : ORIGIN = 0x00000000, LENGTH = 16K
+    DMEM (rwa!x) : ORIGIN = 0x80000000, LENGTH = 32K
 }
 
 SECTIONS                    /* Each section allocates an area*/
