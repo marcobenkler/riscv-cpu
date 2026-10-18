@@ -3,7 +3,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-
+/*
 static void vBlinkTask( void * pvParameters );
-
+*/
 #endif

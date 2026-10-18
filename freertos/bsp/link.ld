@@ -53,6 +53,6 @@ SECTIONS                    /* Each section allocates an area*/
         . = ALIGN(16);      /* just jumps on the next aligning address (inserts padding) */
         . += _stack_size;   /* add the stack size on top of the heap */
         _stack_top = .;     /* declare stack_top on top after moving . up too _stack_size */
-        __freertos_irq_stack_top= .; /* Copied from freertos page */
+        __freertos_irq_stack_top = .; /* Copied from freertos page */
     } >DMEM
 }

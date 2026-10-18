@@ -173,14 +173,14 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -MMD -MP
 CFLAGS += -I$(FREERTOS)/include
 CFLAGS += -I$(PORT)
-CFLAGS += -I$(PORT)/chip_specific_extension/RISCV_MTIME_CLINT_no_extensions
+CFLAGS += -I$(PORT)/chip_specific_extensions/RISCV_MTIME_CLINT_no_extensions
 CFLAGS += -Ifreertos/app
 
 #-T link.ld: Use this link script. nostartfiles: Exclude default start.S file, got my own
-LDFLAGS += $(ARCH) -T $(BSP)/link.ld -nostartfiles
+LDFLAGS += $(AARCH) -T $(BSP)/link.ld -nostartfiles
 #gc-section: garbage collect unused sections, Map: Build map file that is a great overview
 #Wl: GCC doesnt know all linker options, so don't throw error, just pass to linker
-LDFLAGS += -Wl,--gc-sections -Wl,-Map=$(BUILD)/$(TARGET).map
+LDFLAGS += -Wl,--gc-sections -Wl,-Map=$(BUILD_OS)/$(TARGET).map
 
 # Define Goal: make sees this and walks recursively mem -> bin -> elf -> .o -> .c
 os: $(BUILD_OS)/$(TARGET).mem $(BUILD_OS)/$(TARGET).dis
