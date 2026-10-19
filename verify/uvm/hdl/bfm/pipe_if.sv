@@ -8,7 +8,7 @@ interface pipe_if(
         // Transaction
         input req_vld, addr, store_data, store_type, load_data, out_vld, is_store,
         // Control
-        input stall, flush, lsu_stall,
+        input stall, flush, //lsu_stall,
         // Except information
         input lsu_exception, mcause, mtval
     );
@@ -20,7 +20,7 @@ interface pipe_if(
         output load_data, out_vld,
         // Control
         input  stall, flush,
-        output lsu_stall,
+        //output lsu_stall,
         // Except information
         output lsu_exception, mcause, mtval
     );

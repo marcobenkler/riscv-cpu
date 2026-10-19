@@ -183,7 +183,7 @@ LDFLAGS += $(AARCH) -T $(BSP)/link.ld -nostartfiles
 LDFLAGS += -Wl,--gc-sections -Wl,-Map=$(BUILD_OS)/$(TARGET).map
 
 # Define Goal: make sees this and walks recursively mem -> bin -> elf -> .o -> .c
-os: $(BUILD_OS)/$(TARGET).mem $(BUILD_OS)/$(TARGET).dis
+os: $(BUILD_OS)/imem.mem $(BUILD_OS)/dmem.mem $(BUILD_OS)/$(TARGET).dis
 
 $(BUILD_OS)/%.o: %.c
 # @ before terminal command just makes it invisible for better overview
@@ -201,10 +201,15 @@ $(BUILD_OS)/$(TARGET).elf: $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 	$(SIZE) $@
 
-$(BUILD_OS)/$(TARGET).bin: $(BUILD_OS)/$(TARGET).elf
-	$(OBJCOPY) -O binary $< $@
+# j: only copy these sections => one image per memory, no gap between IMEM and DMEM
+$(BUILD_OS)/imem.bin: $(BUILD_OS)/$(TARGET).elf
+	$(OBJCOPY) -O binary -j .init -j .text $< $@
 
-$(BUILD_OS)/$(TARGET).mem: $(BUILD_OS)/$(TARGET).bin
+$(BUILD_OS)/dmem.bin: $(BUILD_OS)/$(TARGET).elf
+	$(OBJCOPY) -O binary -j .rodata -j .data $< $@
+
+# % matches imem and dmem, so one rule for both
+$(BUILD_OS)/%.mem: $(BUILD_OS)/%.bin
 	god -An -v -tx4 -w4 $< | tr -d ' ' > $@
 
 $(BUILD_OS)/$(TARGET).dis: $(BUILD_OS)/$(TARGET).elf

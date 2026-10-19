@@ -3,7 +3,7 @@ package pipeline_pkg;
         logic [31:0] pc_current;
         logic [31:0] pc_default;
     } if1_if2_t;
-    
+
     typedef struct packed {
         // Data
         logic [31:0] pc_current;
@@ -11,8 +11,10 @@ package pipeline_pkg;
         logic [31:0] instruction;
         logic [4:0]  rs1;
         logic [4:0]  rs2;
+        // RVFI only for offset lockstep against Spike
+        rvfi_t       rvfi;
     } if_id_t;
-    
+
     typedef struct packed {
         // Data
         logic [31:0] rs1_data;
@@ -51,6 +53,9 @@ package pipeline_pkg;
         logic        id_ebreak;
         logic        id_mret;
         logic        id_illegal_instr;
+
+        // RVFI only for offset lockstep against Spike
+        rvfi_t       rvfi;
     } id_ex_t;
 
     typedef struct packed {
@@ -87,6 +92,9 @@ package pipeline_pkg;
         logic        misaligned_load;
         logic        misaligned_store;
         logic        misaligned_fetch;
+
+        // RVFI only for offset lockstep against Spike
+        rvfi_t       rvfi;
     } ex_mem_t;
 
     typedef struct packed {
@@ -105,5 +113,33 @@ package pipeline_pkg;
         // Alu control
         logic [1:0]  ex_src;
         logic [2:0]  res_src;
+
+        // RVFI only for offset lockstep against Spike
+        rvfi_t       rvfi;
     } mem_wb_t;
+
+    typedef struct packed {
+        //valid is set to 0 whenever it's flushed
+
+        //items are put in the rvfi struct, whenever the datapath uses them
+        //essential
+        logic        valid;     //if1_stage set's it to 1, get's set to 0, when flushed or reset
+        logic [31:0] pc;        //if_stage
+        logic [31:0] instr;     //if_stage
+        logic [31:0] rd_addr;   //wb_stage
+        logic [31:0] rd_data;   //wb_stage
+        //In current mem design not possible this way, LSU and mem meshed up, so just take before and after mem block
+        logic [31:0] mem_addr;  //mem_stage after LSU, before interconnect
+        logic [31:0] mem_wdata; //mem_stage after LSU, before interconnect
+        logic [4:0]  mem_wmask; //mem_stage after LSU, before interconnect
+        logic [31:0] mem_rmask; //mem_stage after mem, before LSU
+        logic [31:0] mem_rdata; //mem_stage after mem, before LSU
+        logic [63:0] counter;   //in UVM_MONITOR
+
+        //debugging
+        logic [31:0] rs1_addr;   //id_stage
+        logic [31:0] rs2_addr;   //id_stage
+        logic [31:0] rs1_data;   //ex_stage after operand_sel: after forwarding
+        logic [31:0] rs2_data;   //ex_stage after operand_sel: after forwarding
+    } rvfi_t;
 endpackage

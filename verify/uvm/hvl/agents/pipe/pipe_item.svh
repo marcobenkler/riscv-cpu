@@ -37,6 +37,7 @@ class pipe_item extends uvm_sequence_item;
     `uvm_field_int(mtval, UVM_ALL_ON)
     `uvm_field_int(req_vld_at, UVM_ALL_ON | UVM_NOCOMPARE)
     `uvm_object_utils_end
+    `uvm_object_new
 
     function pipe_trans_t to_struct();
         pipe_trans_t t;
@@ -46,10 +47,10 @@ class pipe_item extends uvm_sequence_item;
         t.stall_do           = stall_do;
         t.flush_do           = flush_do;
         t.load_data          = load_data;
-        t.lsu_exception      = lsu_exceptopn;
+        t.lsu_exception      = lsu_exception;
         t.mcause             = mcause;
         t.mtval              = mtval;
-        t.stall_at           = stall_at
+        t.stall_at           = stall_at;
         t.stall_duration     = stall_duration;
         t.flush_at           = flush_at;
         t.req_vld_at         = req_vld_at;
@@ -86,10 +87,10 @@ class pipe_item extends uvm_sequence_item;
             SW  := 10,
             LB  := 10,
             LH  := 10,
-            LW  := 10;
-            LBU := 20;
-            LHU := 20;
-        }
+            LW  := 10,
+            LBU := 20,
+            LHU := 20
+        };
     }
 
     constraint interrupt_c {
@@ -118,8 +119,8 @@ class pipe_item extends uvm_sequence_item;
             [32'h5555_5556:32'hAAAA_AAA9] :/ 40,
             // Offsets by 2n + 1 are visible instantly
             32'hAAAA_AAAA                 := 5,
-            '1                            := 5,
-        }
+            '1                            := 5
+        };
     }
 
     constraint timing_c {
@@ -133,19 +134,19 @@ class pipe_item extends uvm_sequence_item;
             0     := 20,
             [1:2] :/ 30,
             [3:8] :/ 50
-        }
+        };
 
         soft stall_duration dist {
             1     := 20,
             [1:3] :/ 50,
             [4:6] :/ 30
-        }
+        };
 
         soft req_vld_at dist {
             0     := 50,
             [1:2] :/ 40,
             [3:4] :/ 10
-        }
+        };
     }
 
 endclass

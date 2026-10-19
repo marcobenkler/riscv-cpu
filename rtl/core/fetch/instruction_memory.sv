@@ -15,7 +15,7 @@ module instruction_memory #(
     (* rom_style = "block" *) logic [31:0] memo [0:MEM_DEPTH-1];
     /* Synthesis*/
     initial begin
-        $readmemh("program.hex", memo);
+        $readmemh("imem.mem", memo);
     end
     /**/
 

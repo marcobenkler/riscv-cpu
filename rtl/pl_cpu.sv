@@ -77,6 +77,9 @@ module pl_cpu
 
     logic        if_id_flush_delayed;
 
+    //RVFI only for lockstep with spike
+    rvfi_t       rvfi_res;
+
     // ---- SIMULATION (2/2) ----
     logic uart_rx_bit;
     logic uart_tx_bit;
@@ -102,6 +105,9 @@ module pl_cpu
         .pc_default(if1_if2_in.pc_default) //utput
     );
 
+    assign if1_if2_in.rvfi.valid = 1'b1;
+    assign if1_if2_in.rvfi.pc    = if1_if2_in.pc_current;
+
     pipeline_reg #(.T(if1_if2_t)) if1_if2_reg (
         .clk(clk),
         .reset_n(reset_n),
@@ -121,6 +127,11 @@ module pl_cpu
     assign if_id_in.pc_default = if1_if2_out.pc_default;
     assign if_id_in.rs1 = if_id_in.instruction[19:15];
     assign if_id_in.rs2 = if_id_in.instruction[24:20];
+
+    always_comb begin
+        if_id_in.rvfi       = if1_if_out.rvfi;
+        if_id_in.rvfi.instr = if_id_in.instruction;
+    end
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) if_id_flush_delayed <= '0;
@@ -182,6 +193,12 @@ module pl_cpu
     assign id_ex_in.rs1 = if_id_out.rs1;
     assign id_ex_in.rs2 = if_id_out.rs2;
 
+    always_comb begin
+        id_ex_in.rvfi          = if_ex_out.rvfi;
+        id_ex_in.rvfi.rs1_addr = if_id_out.rs1;
+        id_ex_in.rvfi.rs2_addr = if_id_out.rs2;
+    end
+
     pipeline_reg #(.T(id_ex_t)) id_ex_reg (
         .clk(clk),
         .reset_n(reset_n),
@@ -210,7 +227,7 @@ module pl_cpu
         .a(a), //output
         .b(b) //output
         );
-        
+
     alu_top alu_top(
         .a(a),
         .b(b),
@@ -219,14 +236,14 @@ module pl_cpu
         .zero(zero), //output
         .lt(lt) //output
         );
-        
+
     multiply multiply(
         .rs1_data(a),
         .rs2_data(b),
         .mul_op(id_ex_out.mul_op),
         .mul_res(mul_res) //output
         );
-    
+
     // Div handling
     assign is_div = id_ex_out.ex_src == 2'b10;
     always_ff @(posedge clk or negedge reset_n) begin
@@ -236,7 +253,7 @@ module pl_cpu
     end
 
     assign srt_en = is_div && !div_activate; // might be error, additional !srt_done required
-                
+
     srt2 srt2(
         .clk(clk),
         .reset_n(reset_n),
@@ -305,6 +322,12 @@ module pl_cpu
     assign ex_mem_in.id_ebreak = id_ex_out.id_ebreak;
     assign ex_mem_in.id_mret = id_ex_out.id_mret;
     assign ex_mem_in.id_illegal_instr = id_ex_out.id_illegal_instr;
+
+    always_comb begin
+        ex_mem_in.rvfi = id_ex_out.rvfi;
+        ex_mem_in.rvfi.rs1_data = ex_mem_in.rs1_data;
+        ex_mem_in.rvfi.rs2_data = ex_mem_in.rs2_data;
+    end
 
     pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
         .clk(clk),
@@ -384,6 +407,17 @@ module pl_cpu
     assign mem_wb_in.rd = ex_mem_out.rd;
     assign mem_wb_in.res_src = ex_mem_out.res_src;
 
+    always_comb begin
+        mem_wb_in.rvfi = ex_mem_out.rvfi;
+        // currently a bit useless, will become relevant with LSU
+        mem_wb_in.rvfi.mem_addr = ex_mem_out.ex_res;
+        mem_wb_in.rvfi.mem_wdata = ex_mem_out.rs2_data;
+        // masks cur in the mem file => No access
+        mem_wb_in.rvfi.mem_wmask = 4'b0000;
+        mem_wb_in.rvfi.mem_rmask = 4'b0000;
+        mem_wb_in.rvfi.mem_rdata = mem_wb_in.rdata;
+    end
+
     pipeline_reg #(.T(mem_wb_t)) mem_wb_reg (
         .clk(clk),
         .reset_n(reset_n),
@@ -403,6 +437,12 @@ module pl_cpu
         .res_src(mem_wb_out.res_src),
         .result(result) //output
     );
+
+    always_comb begin
+        rvfi_res = mem_wb_out.rvfi;
+        rvfi_res.rd_data = result;
+        rvfi_res.rd_addr = mem_wb_out.rd;
+    end
 
     // EXTERNAL
     clint clint(

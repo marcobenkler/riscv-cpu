@@ -22,11 +22,30 @@ Due to verilator being 2 state (1/0) and not 4 state (1/0/x/z) it's not garantee
 
 ---  
 
-## Tests
+## Spike Cosim  
 
-UART Loopback TEST
-LSU TEST
-Lockstep via Spike, inspired by IBEX, using RVFI convetions
+### How it works
+
+A package is sent through the stages together with the instruction, following the `RVFI` convention from formal verification. Each valid instruction gets monitored after being commited in the WB stage.   
+After the entire run the result gets compared with a result created by Spike, the software reference model, build by the founders of RISC-V  
+
+
+### Agents
+| Name   | Purpose |
+|--------|---------|
+| retire | Monitor what happend per instruction, sits at the WB stage |
+| arch   | Monitor each tick how anything happend via binds to the `pl_cpu` to enable coverage |
+
+### Specs
+
+To enable HDL/HVL seperation, the items use batching and store 1k actions each  
+
+retire agnt monitors, whenever valid_instr is high
+
+### Tests
+---
+
+
 
 ## Legacy due to UVM learnings
 

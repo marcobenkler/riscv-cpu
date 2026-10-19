@@ -34,11 +34,22 @@ module hazard_unit(
         pc_stall     = div_stall || load_use_hazard;
         if_id_stall  = div_stall || load_use_hazard;
         id_ex_stall  = div_stall;
-        ex_mem_stall = div_stall;
+        // ex_mem_stall = div_stall; legacy
+
+        //IMPORTANT with flushes. Only flush caused by stall, if the following stages are not stalling themselfes
+        //else valid data is deleted
+        //Following common convention stall all what's left of your stall source and flush only the right neighbr reg
+        //Flushes flush all whats left (before) their stage like trap and mret are located in mem stage
 
         if_id_flush  = pc_src != 2'b00 || trap_taken || mret_taken; //pc_src != 0 means branch taken
-        id_ex_flush  = pc_src != 2'b00 || trap_taken || mret_taken || (load_use_hazard && !div_stall);
-        ex_mem_flush = trap_taken || mret_taken;
+
+        // load_use_hazard && !div_stall: l_u_h is pulled by LSU, but div can compute further
+        id_ex_flush  = pc_src != 2'b00 || trap_taken || mret_taken|| (load_use_hazard && !div_stall);
+        //(load_use_hazard && !div_stall && !lsu_stal);
+
+        //div_stall: Without bubble the older instr before div is handed several times
+        //from ex/mem to mem/wb and retired several times
+        ex_mem_flush = trap_taken || mret_taken || div_stall; //(div_stall && !lsu_stall);
 
         if (if_id_flush) if_id_stall = 1'b0;
         if (id_ex_flush) id_ex_stall = 1'b0;

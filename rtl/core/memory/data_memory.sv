@@ -15,6 +15,10 @@ module data_memory #(
 
     (* ram_style = "block" *) logic [31:0] mem [0:MEM_DEPTH-1];
 
+    initial begin
+        $readmemh("dmem.mem", mem);
+    end
+
     logic [31:0] raw_read;
     logic [1:0]  addr_lsb_reg;
     logic [2:0]  s_type_reg;
