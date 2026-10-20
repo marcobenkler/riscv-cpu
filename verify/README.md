@@ -6,7 +6,8 @@
 The BFM is spereated in 3 parts. Depending on the AXI-Lite mode 2 of them are activated:  
 Manager-Mode: `axil_mon_bf` + `axil_mgr_bfm`  
 Subordinate-Mode: `axil_mon_bf` + `axil_sub_bfm`  
-
+### Lockstep architecture
+![LOCKSTECP ARCHITECTURE](../images/svg/lockstep.svg)
 ---
 
 ## Verification
@@ -45,7 +46,10 @@ retire agnt monitors, whenever valid_instr is high
 ### Tests
 ---
 
+### Strategy for debbuging til FreeRTOS
 
+- Offline lockstep for complete core, with synchronous traps => FreeRTOS running without context switch
+- Cooperative FreeRTOS without ticks in lockstep
 
 ## Legacy due to UVM learnings
 
