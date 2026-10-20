@@ -137,7 +137,13 @@ uvm: clean uvm_build
 clean:
 	rm -rf build obj_dir annotated coverage.dat coverage.info *.fst *.log
 
+
+################
 ### FREERTOS ###
+################
+# Build mem and elf files for freertos boot
+################
+
 CROSS := riscv64-unknown-elf-
 CC := $(CROSS)gcc
 OBJCOPY := $(CROSS)objcopy
@@ -146,7 +152,7 @@ SIZE := $(CROSS)size
 
 #In official GNU, march for the machine architecture,
 #mabi for machine application binary interface (how big are datatypes, pointer etc)
-AARCH := -march=rv32i_zicsr -mabi=ilp32
+AARCH := -march=rv32im_zicsr -mabi=ilp32
 
 TARGET   := firmware
 BUILD_OS := build_os
@@ -167,7 +173,7 @@ OBJS := $(addprefix $(BUILD_OS)/, $(addsuffix .o, $(basename $(SRCS))))
 # Og: optimize, but keep it readable for debugging. g: debug infos in the .elf file
 # Wall: Enable All Warnings
 CFLAGS += $(AARCH) -Og -g -Wall
-#sections: Each function and data gehts own section => Linker can throw away unused
+#sections: Each function and data gets own section => Linker can throw away unused
 CFLAGS += -ffunction-sections -fdata-sections
 #MMD MP: Create .d file so make builds again, if header changes
 CFLAGS += -MMD -MP
@@ -221,3 +227,91 @@ clean_os:
 	rm -rf $(BUILD_OS)
 
 .PHONY: os, clean_os
+
+
+############################
+########## COSIM ###########
+############################
+# Build mem and elf file for offline lockstep with spike
+############################
+
+CROSS_COSIM 	:= riscv64-unknown-elf-
+CC_COSIM 	:= $(CROSS)gcc
+OBJCOPY_COSIM 	:= $(CROSS)objcopy
+OBJDUMP_COSIM	:= $(CROSS)objdump
+SIZE_COSIM 	:= $(CROSS)size
+
+AARCH_COSIM 	:= -march=rv32im_zicsr -mabi=ilp32
+
+TARGET_COSIM 	:= cosim
+BUILD_COSIM 	:= build_cosim
+COSIM_SRC	:= verify/cosim
+SW_SRC		:= $(COSIM_SRC)/code
+SPIKE		:= $(COSIM_SRC)/spike
+
+SRCS_COSIM += $(wildcard $(SW_SRC)/*.c)
+SRCS_COSIM += $(SPIKE)/start.S
+
+OBJS_COSIM := $(addprefix $(BUILD_COSIM)/, $(addsuffix .o, $(basename $(SRCS_COSIM))))
+
+CFLAGS_COSIM += $(AARCH_COSIM) -Og -g -Wall
+CFLAGS_COSIM += -ffunction-sections -fdata-sections
+CFLAGS_COSIM += -MMD -MP
+CFLAGS_COSIM += -I$(SW_SRC)
+
+LDFLAGS_COSIM += $(AARCH_COSIM) -T $(SPIKE)/link.ld -nostartfiles
+
+LDFLAGS_COSIM += -Wl,--gc-sections,-Map=$(BUILD_COSIM)/$(TARGET_COSIM).map
+
+cosim_build: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem $(BUILD_COSIM)
+
+$(BUILD_COSIM)/%.o : %.c
+	@mkdir -p $(dir $@)
+	$(CC_COSIM) $(CFLAGS_COSIM) -c $< -o $@
+
+$(BUILD_COSIM)/%.o : %.S
+	@mkdir -p $(dir $@)
+	$(CC_COSIM) $(CFLAGS_COSIM) -c $< -o $@
+
+$(BUILD_COSIM)/$(TARGET_COSIM).elf: $(OBJS_COSIM)
+	$(CC_COSIM) $(LDFLAGS_COSIM) $^ -o $@
+	$(SIZE_COSIM) $@
+
+$(BUILD_COSIM)/imem.bin: $(BUILD_COSIM)/$(TARGET_COSIM).elf
+	$(OBJCOPY_COSIM) -O binary -j .init -j .text $< $@
+
+$(BUILD_COSIM)/dmem.bin: $(BUILD_COSIM)/$(TARGET_COSIM).elf
+	$(OBJCOPY_COSIM) -O binary -j .rodata -j .data $< $@
+
+$(BUILD_COSIM)/%.mem: $(BUILD_COSIM)/%.bin
+	god -An -v -tx4 -w4 $< | tr -d ' ' > $@
+
+$(BUILD_COSIM)/$(TARGET_COSIM).dis: $(BUILD_COSIM)/$(TARGET_COSIM).elf
+	$(OBJDUMP_COSIM) -d $< > $@
+
+-include $(OBJS_COSIM:.o=.d)
+
+clean_cosim_build:
+	rm -rf $(BUILD_COSIM)
+
+.PHONY: cosim_build, clean_cosim_build
+
+
+#####################################
+
+### Execute spike with built elf, execute uvm run, compare with python
+
+#####################################
+
+#### Execute Spike ####
+
+COSIM_RES := cosim
+SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
+SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG)
+
+#$(COSIM_RES)/commits.log:
+
+cosim: $(BUILD_COSIM)/$(TARGET_COSIM).elf
+	spike $(SPIKE_CMD) $< 2> $(COSIM_RES)/commits.log
+
+.PHONY: cosim

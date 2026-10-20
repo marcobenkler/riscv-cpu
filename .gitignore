@@ -62,6 +62,7 @@ __pycache__/
 .env
 .venv
 build_os
+build_cosim
 
 ###############################################################################
 # Coverage / Debug / Misc
@@ -70,6 +71,7 @@ coverage/
 *.gcda
 *.gcno
 *.gcov
+temp/
 
 ###############################################################################
 # Explicitly keep RTL, TB, Scripts, Docs

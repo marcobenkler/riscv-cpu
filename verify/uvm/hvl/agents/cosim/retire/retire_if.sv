@@ -4,7 +4,6 @@ interface retire_if(
     input rvfi rvfi_res
 );
 
-
     modport MONITOR (
         input clk, rst_n, rvfi_res
     );
