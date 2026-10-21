@@ -30,6 +30,36 @@ Due to verilator being 2 state (1/0) and not 4 state (1/0/x/z) it's not garantee
 A package is sent through the stages together with the instruction, following the `RVFI` convention from formal verification. Each valid instruction gets monitored after being commited in the WB stage.   
 After the entire run the result gets compared with a result created by Spike, the software reference model, build by the founders of RISC-V  
 
+### log to jsonl translator  
+
+log structure
+```log
+core 0: <mode> <pc> (<instr>) [rd_addr] [rd_data]
+```
+
+jsonl structure
+```jsonl
+{"pc": "<pc>", "instr": "<instr>", "rd_addr": "<rd_addr>", "rd_data": "<rd_data>", "mem_addr": "<mem_addr>", "mem_data": "<mem_data>", "csr_addr": "<csr_addr>", "csr_data": "<csr_data>"}
+```
+
+- no_reg_write is stored as `"null": null""`
+- no_reg_data is stored as `"null": null""`
+- adress are stored as `0xNNNNNNNN`
+- registers are stored as `N`
+
+There are 8 cases what the log row consists of after the `(<instr>)`
+
+| Format                               | Instructions        |
+|--------------------------------------|---------------------|
+| `xN value`                           | ALU, LUI, MUL, AUIPC|
+| `xN return_address `                 | JAL/JALR            |
+| `xN value mem address`               | Load                |
+| `mem address value`                  | Store               |
+| `xN old_csr_val cNNN_name new_value` | Reading from csr    |
+| `xNNN new_value`                     | Writing to csr      |
+| `nothing`                            | Branches, Jumps, ...|
+
+
 
 ### Agents
 | Name   | Purpose |
@@ -49,7 +79,8 @@ retire agnt monitors, whenever valid_instr is high
 ### Strategy for debbuging til FreeRTOS
 
 - Offline lockstep for complete core, with synchronous traps => FreeRTOS running without context switch
-- Cooperative FreeRTOS without ticks in lockstep
+- Cooperative FreeRTOS: Automatic context switches from CLINT are turned off, each is set explicitly with `taskYIELD()` or implicit if a task is blocking
+- Debug asynchronious interrups from CLINT, but errors are local and almost any should be eliminated to this point, User jsonl from retire and debug with assertions and python
 
 ## Legacy due to UVM learnings
 
