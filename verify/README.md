@@ -56,7 +56,7 @@ There are 8 cases what the log row consists of after the `(<instr>)`
 | `xN value mem address`               | Load                |
 | `mem address value`                  | Store               |
 | `xN old_csr_val cNNN_name new_value` | Reading from csr    |
-| `xNNN new_value`                     | Writing to csr      |
+| `cNNN new_value`                     | Writing to csr      |
 | `nothing`                            | Branches, Jumps, ...|
 
 
