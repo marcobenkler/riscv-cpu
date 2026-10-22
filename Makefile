@@ -309,21 +309,59 @@ COSIM_RES := cosim
 SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
 SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG)
 
-$(COSIM_RES)/commits.log: $(BUILD_COSIM)/$(TARGET_COSIM).elf
+$(COSIM_RES)/spike_commits.log: $(BUILD_COSIM)/$(TARGET_COSIM).elf
 	@mkdir -p $(COSIM_RES)
 	spike $(SPIKE_CMD) $< 2> $@
 
+
 # add python script as requirement, so it checks spike.jsonl against logtojsonl.py, if .py is newer, jsonl should be created again
 # tldr: make recognises changes in source
-$(COSIM_RES)/spike.jsonl: $(COSIM_RES)/commits.log $(COSIM_SRC)/scripts/logtojsonl.py
-	python $(COSIM_SRC)/scripts/logtojsonl.py
+$(COSIM_RES)/spike.jsonl: $(COSIM_RES)/spike_commits.log $(COSIM_SRC)/scripts/spike_logtojsonl.py
+	python $(COSIM_SRC)/scripts/spike_logtojsonl.py
 
-cosim: $(COSIM_RES)/spike.jsonl
+
+
+#### Execute UVM RTL ####
+
+UVM_TOP_LOCKSTEP := tb_lockstep
+TEST_LOCKSTEP := lockstep_test
+OBJ_LOCKSTEP := $(COSIM_RES)/$(UVM_TOP_LOCKSTEP)
+FILES_LOCKSTEP := verify/uvm/hvl/tests/cosim/files_lockstep.f
+
+VFLAGS_LOCKSTEP := --binary \
+	  --timing \
+	  --top-module $(UVM_TOP_LOCKSTEP) \
+          --Mdir $(OBJ_LOCKSTEP) \
+          --timescale 1ns/1ps \
+          -j 6 \
+          +incdir+$(UVM_HOME) \
+          +incdir+$(CURDIR) \
+          +define+UVM_NO_DPI \
+          --coverage-user \
+          --coverage-line \
+          --coverage-toggle \
+          -Wno-fatal \
+          --error-limit 500 \
+	  -f $(FILES_LOCKSTEP)
+
+$(COSIM_RES)/rtl_commits.log: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
+	@mkdir -p $(OBJ_LOCKSTEP)
+	verilator $(VFLAGS_LOCKSTEP)
+#+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
+	$(OBJ_LOCKSTEP)/V$(UVM_TOP_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) \
+	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
+	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
+
+$(COSIM_RES)/rtl.jsonl: $(COSIM_RES)/rtl_commits.log $(COSIM_SRC)/scripts/rtl_logtojsonl.py
+	python $(COSIM_SRC)/scripts/rtl_logtojsonl.py
+
+
+cosim: $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl
 
 clean_cosim:
 	rm -rf $(COSIM_RES)
 
-.PHONY: cosim
+.PHONY: cosim clean_cosim
 
 #Delete the target, if a part fails, like spike exits wrong, commit.log is deleted
-.DELET_ON_ERROR:
+.DELETE_ON_ERROR:

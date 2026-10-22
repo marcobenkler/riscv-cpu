@@ -6,7 +6,7 @@ COSIM_PATH = 'cosim'
 
 def get_log() -> TextIO:
     try:
-        return open(f'{COSIM_PATH}/commits.log', 'r')
+        return open(f'{COSIM_PATH}/spike_commits.log', 'r')
     except FileNotFoundError:
         print('Log file not found, simulate with spike first')
 
