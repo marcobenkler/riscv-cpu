@@ -126,9 +126,15 @@ package pipeline_pkg;
         logic        valid;     //if1_stage set's it to 1, get's set to 0, when flushed or reset
         logic [31:0] pc;        //if_stage
         logic [31:0] instr;     //if_stage
-        logic [31:0] rd_addr;   //wb_stage
+        logic        reg_write;
+        logic [4:0]  rd_addr;   //wb_stage
         logic [31:0] rd_data;   //wb_stage
         //In current mem design not possible this way, LSU and mem meshed up, so just take before and after mem block
+        logic        wr_en;
+        logic        rd_en;
+        logic        csr_wr;
+        logic [31:0] csr_data;
+        logic [11:0] csr_addr;
         logic [31:0] mem_addr;  //mem_stage after LSU, before interconnect
         logic [31:0] mem_wdata; //mem_stage after LSU, before interconnect
         logic [4:0]  mem_wmask; //mem_stage after LSU, before interconnect

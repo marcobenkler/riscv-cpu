@@ -352,6 +352,11 @@ module pl_cpu
     // MEM Stage
     data_memory data_memory(
         .clk(clk),
+
+
+        // !!!POTENTIAL BUG SOURCE FOR LOCKSTEP
+
+
         // Read: EX-stage (BRAM-pipelined)
         .read_address(ex_mem_in.ex_res),
         .read_mem_s_type(ex_mem_in.mem_s_type),
@@ -409,6 +414,10 @@ module pl_cpu
 
     always_comb begin
         mem_wb_in.rvfi = ex_mem_out.rvfi;
+        mem_wb_in.rvfi.wr_en = mem_write_en;
+        mem_wb_in.rvfi.csr_write = ex_mem_out.csr_write;
+        mem_wb_in.rvfi.csr_data = ex_mem_out.rs1_data;
+        mem_wb_in.rvfi.csr_addr = ex_mem_out.instruction[31:20];
         // currently a bit useless, will become relevant with LSU
         mem_wb_in.rvfi.mem_addr = ex_mem_out.ex_res;
         mem_wb_in.rvfi.mem_wdata = ex_mem_out.rs2_data;
@@ -440,8 +449,10 @@ module pl_cpu
 
     always_comb begin
         rvfi_res = mem_wb_out.rvfi;
+        rvfi_res.rd_en = (mem_wb_out.res_src == 3'b001) ? 1'b1 : 0;
         rvfi_res.rd_data = result;
         rvfi_res.rd_addr = mem_wb_out.rd;
+        rvfi_res.reg_write = mem_wb_out.reg_write;
     end
 
     // EXTERNAL

@@ -344,17 +344,13 @@ VFLAGS_LOCKSTEP := --binary \
           --error-limit 500 \
 	  -f $(FILES_LOCKSTEP)
 
-$(COSIM_RES)/rtl_commits.log: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
+$(COSIM_RES)/rtl.jsonl: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
 	@mkdir -p $(OBJ_LOCKSTEP)
 	verilator $(VFLAGS_LOCKSTEP)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 	$(OBJ_LOCKSTEP)/V$(UVM_TOP_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) \
 	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
-
-$(COSIM_RES)/rtl.jsonl: $(COSIM_RES)/rtl_commits.log $(COSIM_SRC)/scripts/rtl_logtojsonl.py
-	python $(COSIM_SRC)/scripts/rtl_logtojsonl.py
-
 
 cosim: $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl
 

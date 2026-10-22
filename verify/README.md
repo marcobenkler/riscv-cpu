@@ -59,9 +59,11 @@ There are 8 cases what the log row consists of after the `(<instr>)`
 | `cNNN new_value`                     | Writing to csr      |
 | `nothing`                            | Branches, Jumps, ...|
 
+### Restrictions
 
+- HDL/HVL split is not enabled. Requires ILA and bypassing over ARM core with bandwidthissues and so on
 
-### Agents
+## Agents
 | Name   | Purpose |
 |--------|---------|
 | retire | Monitor what happend per instruction, sits at the WB stage |
