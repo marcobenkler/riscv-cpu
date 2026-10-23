@@ -129,7 +129,7 @@ module pl_cpu
     assign if_id_in.rs2 = if_id_in.instruction[24:20];
 
     always_comb begin
-        if_id_in.rvfi       = if1_if_out.rvfi;
+        if_id_in.rvfi       = if1_if2_out.rvfi;
         if_id_in.rvfi.instr = if_id_in.instruction;
     end
 
@@ -194,7 +194,7 @@ module pl_cpu
     assign id_ex_in.rs2 = if_id_out.rs2;
 
     always_comb begin
-        id_ex_in.rvfi          = if_ex_out.rvfi;
+        id_ex_in.rvfi          = if_id_out.rvfi;
         id_ex_in.rvfi.rs1_addr = if_id_out.rs1;
         id_ex_in.rvfi.rs2_addr = if_id_out.rs2;
     end
@@ -415,7 +415,7 @@ module pl_cpu
     always_comb begin
         mem_wb_in.rvfi = ex_mem_out.rvfi;
         mem_wb_in.rvfi.wr_en = mem_write_en;
-        mem_wb_in.rvfi.csr_write = ex_mem_out.csr_write;
+        mem_wb_in.rvfi.csr_wr = ex_mem_out.csr_write;
         mem_wb_in.rvfi.csr_data = ex_mem_out.rs1_data;
         mem_wb_in.rvfi.csr_addr = ex_mem_out.instruction[31:20];
         // currently a bit useless, will become relevant with LSU

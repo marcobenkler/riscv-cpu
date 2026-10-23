@@ -1,7 +1,9 @@
-interface retire_if(
-    input logic clk,
-    input logic rst_n,
-    input rvfi rvfi_res
+interface retire_if
+    import pipeline_pkg::rvfi_t;
+(
+    input logic  clk,
+    input logic  rst_n,
+    input rvfi_t rvfi_res
 );
 
     modport MONITOR (

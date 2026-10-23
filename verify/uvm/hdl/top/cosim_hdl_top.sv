@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 
 module cosim_hdl_top;
+    import uvm_pkg::*;
 
     logic clk;
     logic rst_n;
@@ -13,7 +14,7 @@ module cosim_hdl_top;
 
     pl_cpu pl_cpu_u(
         .clk(clk),
-        .rst_n(rst_n)
+        .reset_n(rst_n)
     );
 
     initial clk = 0;

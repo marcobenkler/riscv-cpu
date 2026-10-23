@@ -4,7 +4,7 @@ package cosim_env_pkg;
     `include "dv_macros.svh"
 
     import retire_agent_pkg::*;
-    `include "cosim_env_config"
-    `include "cosim_coverage"
-    `include "cosim_env"
+    `include "cosim_env_config.svh"
+    `include "cosim_coverage.svh"
+    `include "cosim_env.svh"
 endpackage

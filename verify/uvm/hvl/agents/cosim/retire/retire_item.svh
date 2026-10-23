@@ -1,10 +1,13 @@
-class retire_item extends uvm_sequencer_item;
+class retire_item extends uvm_sequence_item;
     rvfi_t     rvfi;
-    bit [63:0] order;
-    bit [63:0] cycle;
+    bit [31:0] order;
+    bit [31:0] cycle;
 
     `uvm_object_utils(retire_item)
-    `uvm_object_new
+
+    function new(string name = "retire_item");
+        super.new(name);
+    endfunction
 
 
 endclass

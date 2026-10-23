@@ -1,7 +1,10 @@
 package pipeline_pkg;
+    typedef rvfi_t;
+
     typedef struct packed {
         logic [31:0] pc_current;
         logic [31:0] pc_default;
+        rvfi_t       rvfi;
     } if1_if2_t;
 
     typedef struct packed {
@@ -137,14 +140,14 @@ package pipeline_pkg;
         logic [11:0] csr_addr;
         logic [31:0] mem_addr;  //mem_stage after LSU, before interconnect
         logic [31:0] mem_wdata; //mem_stage after LSU, before interconnect
-        logic [4:0]  mem_wmask; //mem_stage after LSU, before interconnect
-        logic [31:0] mem_rmask; //mem_stage after mem, before LSU
+        logic [3:0]  mem_wmask; //mem_stage after LSU, before interconnect
+        logic [3:0] mem_rmask; //mem_stage after mem, before LSU
         logic [31:0] mem_rdata; //mem_stage after mem, before LSU
         //logic [63:0] counter;   //in UVM_MONITOR
 
         //debugging
-        logic [31:0] rs1_addr;   //id_stage
-        logic [31:0] rs2_addr;   //id_stage
+        logic [4:0] rs1_addr;   //id_stage
+        logic [4:0] rs2_addr;   //id_stage
         logic [31:0] rs1_data;   //ex_stage after operand_sel: after forwarding
         logic [31:0] rs2_data;   //ex_stage after operand_sel: after forwarding
     } rvfi_t;

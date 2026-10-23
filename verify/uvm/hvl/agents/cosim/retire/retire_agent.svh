@@ -8,7 +8,7 @@ class retire_agent extends uvm_agent;
     retire_monitor      mntr;
     retire_trace_writer trc_wr;
 
-    retired_config cfg;
+    retire_config cfg;
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);

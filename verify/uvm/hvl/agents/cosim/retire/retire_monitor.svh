@@ -2,8 +2,7 @@ class retire_monitor extends uvm_monitor;
     `uvm_component_utils(retire_monitor)
     `uvm_component_new
 
-    uvm_analysis_port#(uart_item) ap;
-    retire_config cfg;
+    uvm_analysis_port#(retire_item) ap;
 
     virtual retire_if.MONITOR mon;
     retire_config cfg;
@@ -18,13 +17,13 @@ class retire_monitor extends uvm_monitor;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
-        mon = cfg.vif;
         retire_item trans_collected;
+        mon = cfg.vif;
         forever begin
             @(posedge mon.clk)
             if (mon.rvfi_res.valid) begin
                 trans_collected = retire_item::type_id::create("trans_collected");
-                trans_collected.cycle = gbl_cycle;
+                trans_collected.cycle = glb_cycle;
                 trans_collected.rvfi = mon.rvfi_res;
                 trans_collected.order = glb_order;
                 ap.write(trans_collected);

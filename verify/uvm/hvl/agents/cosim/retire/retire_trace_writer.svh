@@ -38,7 +38,7 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
             jsonl_mem_raddr = (item.rvfi.rd_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
             jsonl_mem_rdata = (item.rvfi.rd_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_rdata) : "null";
             jsonl_csr_addr  = (item.rvfi.csr_wr)    ? $sformatf("\"0x%0d\"",    item.rvfi.csr_addr)  : "null";
-            jsonl_csr_data  = (item.rvfi.csr_wr)    ? $ssformatf("\"0x%08h\"",  item.rvfi.csr_data)  : "null";
+            jsonl_csr_data  = (item.rvfi.csr_wr)    ? $sformatf("\"0x%08h\"",  item.rvfi.csr_data)  : "null";
 
             line =        $sformatf("{\"pc\": \"0x%08h\", ", jsonl_pc);
             line = {line, $sformatf("\"instr\": \"0x%08h\", ", jsonl_instr)};
@@ -50,7 +50,7 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
             line = {line, $sformatf("\"mem_rdata\": %s, ", jsonl_mem_rdata)};
             line = {line, $sformatf("\"csr_addr\": %s, ", jsonl_csr_addr)};
             line = {line, $sformatf("\"csr_data\": %s, ", jsonl_csr_data)};
-            line = {line, $sformatf("\"cycle\": %0d, \"order\": %0d", item.rvfi.cycle, item.rvfi.order)};
+            line = {line, $sformatf("\"cycle\": %0d, \"order\": %0d", item.cycle, item.order)};
 
 
             $fdisplay(fd, "%s" ,line);
