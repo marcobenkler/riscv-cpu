@@ -54,6 +54,26 @@ Requires the `riscv64-unknown-elf-gcc` to compile c -> .mem file
 
 ---
 
+## Debugging
+
+This repo uses Offline-Cosim for efficient debugging. 
+
+After choosing if bare-metal or freeRTOS suits the test better, you can choose between them with  
+
+```bash
+make cosim_tb # for bare-metal
+make cosim_os # for freeRTOS
+```
+
+It will then run the following chain  
+- Compile .c and .S file and link them via .ld
+- Simulate the cpu with it's memories filled with the `.mem`
+- Run spike with the corresponding `.elf` file
+- Take both retire-traces and compares them line by lin
+- If an error occures it copy the area of the error instruction from the `.dis` asm file from -50 to +10 lines, inserts the block and marks the error instruction
+
+---
+
 ## Implementation Status
 
 | Feature                                            | Status |
@@ -71,7 +91,7 @@ Requires the `riscv64-unknown-elf-gcc` to compile c -> .mem file
 | SVA assertion coverage                             | ✅ |
 | RISC-V ISA test suite (rv32ui / rv32um / rv32mi)   | ✅ |
 | Bare-Metal on FPGA with UART                       | ✅ |
-| FreeRTOS bring-up                                  | 🟨 |
+| FreeRTOS bring-up                                  | ✅ |
 | FreeRTOS on FPGA                                   | 🟥 |
 
 ---

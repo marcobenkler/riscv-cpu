@@ -412,6 +412,8 @@ cosim_os:
 
 clean_cosim:
 	rm -rf $(COSIM_RES)
+	rm -rf build_os
+	rm -rf build_cosim
 
 # Forces a full rebuild of the model
 clean_verilator:
