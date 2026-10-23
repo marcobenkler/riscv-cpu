@@ -324,7 +324,7 @@ $(COSIM_RES)/spike.jsonl: $(COSIM_RES)/spike_commits.log $(COSIM_SRC)/scripts/sp
 #### Execute UVM RTL ####
 
 UVM_TOP_LOCKSTEP := tb_cosim
-TEST_LOCKSTEP := lockstep_test
+TEST_LOCKSTEP := cosim_test
 OBJ_LOCKSTEP := $(COSIM_RES)/$(UVM_TOP_LOCKSTEP)
 FILES_LOCKSTEP := verify/uvm/hvl/tests/cosim/files_cosim.f
 
