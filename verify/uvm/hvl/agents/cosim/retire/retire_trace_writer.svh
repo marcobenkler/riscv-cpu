@@ -30,26 +30,28 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
         forever begin
             jsonl_pc = item.rvfi.pc;
             jsonl_instr = item.rvfi.instr;
-            //abused sformats as casting operator
-            jsonl_rd_addr   = (item.rvfi.reg_write) ? $sformats("%0d",     item.rvfi.rd_addr)   : "null";
-            jsonl_rd_addr   = (item.rvfi.reg_write) ? $sformats("0x%08h",  item.rvfi.rd_data)   : "null";
-            jsonl_mem_waddr = (item.rvfi.wr_en)     ? $sformats("0x%08h",  item.rvfi.mem_addr)  : "null";
-            jsonl_mem_wdata = (item.rvfi.wr_en)     ? $sformats("0x%08h",  item.rvfi.mem_wdata) : "null";
-            jsonl_mem_raddr = (item.rvfi.rd_en)     ? $sformats("0x%08h",  item.rvfi.mem_addr)  : "null";
-            jsonl_mem_rdata = (item.rvfi.rd_en)     ? $sformats("0x%08h",  item.rvfi.mem_rdata) : "null";
-            jsonl_csr_addr  = (item.rvfi.csr_wr)    ? $sformats("0x%d",    item.rvfi.csr_addr)  : "null";
-            jsonl_csr_data  = (item.rvfi.csr_wr)    ? $sformats("0x%08h",  item.rvfi.csr_data)  : "null";
+            //abused sformatf as casting operator
+            jsonl_rd_addr   = (item.rvfi.reg_write) ? $sformatf("%0d",         item.rvfi.rd_addr)   : "null";
+            jsonl_rd_data   = (item.rvfi.reg_write) ? $sformatf("\"0x%08h\"",  item.rvfi.rd_data)   : "null";
+            jsonl_mem_waddr = (item.rvfi.wr_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
+            jsonl_mem_wdata = (item.rvfi.wr_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_wdata) : "null";
+            jsonl_mem_raddr = (item.rvfi.rd_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
+            jsonl_mem_rdata = (item.rvfi.rd_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_rdata) : "null";
+            jsonl_csr_addr  = (item.rvfi.csr_wr)    ? $sformatf("\"0x%0d\"",    item.rvfi.csr_addr)  : "null";
+            jsonl_csr_data  = (item.rvfi.csr_wr)    ? $ssformatf("\"0x%08h\"",  item.rvfi.csr_data)  : "null";
 
-            line =        $sformats("{\"pc\": \"0x%08h\", ", jsonl_pc);
-            line = {line, $sformats("\"instr\": \"0x%08h\", ", jsonl_instr)};
-            line = {line, $sformats("\"rd_addr\": %s, ", jsonl_rd_addr)};
-            line = {line, $sformats("\"rd_data\": \%s\", ", jsonl_rd_data)};
-            line = {line, $sformats("\"mem_waddr\": \"%s\", ", json_mem_waddr)};
-            line = {line, $sformats("\"mem_wdata\": \"%s\", ", json_mem_wdata)};
-            line = {line, $sformats("\"mem_raddr\": \"%s\", ", json_mem_raddr)};
-            line = {line, $sformats("\"mem_rdata\": \"%s\", ", json_mem_rdata)};
-            line = {line, $sformats("\"csr_addr\": \"%s\", ", json_csr_addr)};
-            line = {line, $sformats("\"csr_data\": \"%s\", ", json_csr_data)};
+            line =        $sformatf("{\"pc\": \"0x%08h\", ", jsonl_pc);
+            line = {line, $sformatf("\"instr\": \"0x%08h\", ", jsonl_instr)};
+            line = {line, $sformatf("\"rd_addr\": %s, ", jsonl_rd_addr)};
+            line = {line, $sformatf("\"rd_data\": %s, ", jsonl_rd_data)};
+            line = {line, $sformatf("\"mem_waddr\": %s, ", jsonl_mem_waddr)};
+            line = {line, $sformatf("\"mem_wdata\": %s, ", jsonl_mem_wdata)};
+            line = {line, $sformatf("\"mem_raddr\": %s, ", jsonl_mem_raddr)};
+            line = {line, $sformatf("\"mem_rdata\": %s, ", jsonl_mem_rdata)};
+            line = {line, $sformatf("\"csr_addr\": %s, ", jsonl_csr_addr)};
+            line = {line, $sformatf("\"csr_data\": %s, ", jsonl_csr_data)};
+            line = {line, $sformatf("\"cycle\": %0d, \"order\": %0d", item.rvfi.cycle, item.rvfi.order)};
+
 
             $fdisplay(fd, "%s" ,line);
 

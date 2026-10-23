@@ -22,7 +22,6 @@ class retire_monitor extends uvm_monitor;
         retire_item trans_collected;
         forever begin
             @(posedge mon.clk)
-            glb_cycle++;
             if (mon.rvfi_res.valid) begin
                 trans_collected = retire_item::type_id::create("trans_collected");
                 trans_collected.cycle = gbl_cycle;
@@ -31,6 +30,7 @@ class retire_monitor extends uvm_monitor;
                 ap.write(trans_collected);
                 glb_order++;
             end
+            glb_cycle++;
         end
     endtask
 
