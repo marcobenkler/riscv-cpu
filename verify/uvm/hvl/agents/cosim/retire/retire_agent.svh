@@ -2,6 +2,9 @@ class retire_agent extends uvm_agent;
     `uvm_component_utils(retire_agent)
     `uvm_component_new
 
+    //Doesn't need = new() in new function, it's just handle
+    uvm_analysis_port#(retire_item) ap;
+
     retire_monitor      mntr;
     retire_trace_writer trc_wr;
 
@@ -18,5 +21,6 @@ class retire_agent extends uvm_agent;
         super.connect_phase(phase);
         //subscribers imp is named analysis_export
         mntr.ap.connect(trc_wr.analysis_export);
+        ap = mntr.ap;
     endfunction
 endclass
