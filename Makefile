@@ -273,6 +273,8 @@ $(BUILD_COSIM)/%.o : %.S
 	@mkdir -p $(dir $@)
 	$(CC_COSIM) $(CFLAGS_COSIM) -c $< -o $@
 
+LINK_START := freertos/bsp/link.ld freertos/bsp/start.S verify/cosim/spike/link.ld verify/cosim/spike/start.S 
+
 $(BUILD_COSIM)/$(TARGET_COSIM).elf: $(OBJS_COSIM)
 	$(CC_COSIM) $(LDFLAGS_COSIM) $^ -o $@
 	$(SIZE_COSIM) $@
@@ -306,10 +308,25 @@ clean_cosim_build:
 #### Execute Spike ####
 
 COSIM_RES := cosim
-SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
-SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG)
 
-$(COSIM_RES)/spike_commits.log: $(BUILD_COSIM)/$(TARGET_COSIM).elf
+# Which program is compared: SW=tb (own test code, default) or SW=os (FreeRTOS)
+# Use the targets cosim_tb / cosim_os, they set SW and clean old results
+SW ?= tb
+
+ifeq ($(SW),os)
+	COSIM_ELF := $(BUILD_OS)/$(TARGET).elf
+	COSIM_DIS := $(BUILD_OS)/$(TARGET).dis
+	COSIM_MEM := $(BUILD_OS)/imem.mem $(BUILD_OS)/dmem.mem
+else
+	COSIM_ELF := $(BUILD_COSIM)/$(TARGET_COSIM).elf
+	COSIM_DIS := $(BUILD_COSIM)/$(TARGET_COSIM).dis
+	COSIM_MEM := $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
+endif
+
+SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
+SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG) --instructions=10000
+
+$(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 	@mkdir -p $(COSIM_RES)
 	spike $(SPIKE_CMD) $< 2> $@
 
@@ -347,13 +364,15 @@ VFLAGS_LOCKSTEP := --binary \
 	  --top-module $(UVM_TOP_LOCKSTEP) \
           --Mdir $(OBJ_LOCKSTEP) \
           --timescale 1ns/1ps \
-          -j 6 \
+          -j 8 \
           +incdir+$(UVM_HOME) \
           +incdir+$(CURDIR) \
           +define+UVM_NO_DPI \
           -Wno-fatal \
           --error-limit 500 \
-	  -f $(FILES_LOCKSTEP)
+	  -f $(FILES_LOCKSTEP) \
+	  -MAKEFLAGS "OPT_FAST=-O1 OPT_SLOW=-O0"
+
 
 ifeq ($(COV),1)
 	VFLAGS_LOCKSTEP += --coverage-user --coverage-line --coverage-toggle
@@ -365,7 +384,7 @@ $(BIN_LOCKSTEP): $(SRCS_LOCKSTEP)
 	verilator $(VFLAGS_LOCKSTEP)
 
 # Step 2: run the model (fast, whenever the program changed)
-$(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem $(BUILD_COSIM)/$(TARGET_COSIM).dis
+$(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(COSIM_MEM) $(COSIM_DIS)
 	@mkdir -p $(COSIM_RES)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 #currently mem are read directly in the mem module and plusargs are not used for first testing
@@ -376,10 +395,20 @@ ifeq ($(COV),1)
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
 endif
 
-$(COSIM_RES)/report.log: $(COSIM_SRC)/scripts/comp.py $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(BUILD_COSIM)/$(TARGET_COSIM).dis
-	python $(COSIM_SRC)/scripts/comp.py
+$(COSIM_RES)/report.log: $(COSIM_SRC)/scripts/comp.py $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(COSIM_DIS)
+	python $(COSIM_SRC)/scripts/comp.py $(COSIM_DIS)
 
 cosim: $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(COSIM_RES)/report.log
+
+# Results of both programs share COSIM_RES, so old results are deleted first,
+# otherwise make would think they are up to date after switching the program
+cosim_tb:
+	$(MAKE) clean_cosim
+	$(MAKE) cosim SW=tb
+
+cosim_os:
+	$(MAKE) clean_cosim
+	$(MAKE) cosim SW=os
 
 clean_cosim:
 	rm -rf $(COSIM_RES)
@@ -388,11 +417,23 @@ clean_cosim:
 clean_verilator:
 	rm -rf $(VERILATOR_BUILD)
 
-.PHONY: cosim clean_cosim clean_verilator
+.PHONY: cosim cosim_tb cosim_os clean_cosim clean_verilator
 
 #Delete the target, if a part fails, like spike exits wrong, commit.log is deleted
-.DELETE_ON_ERROR:
+#.DELETE_ON_ERROR:
 
 .PRECIOUS: $(COSIM_RES)/report.log
 
+clean_all:
+	rm -rf annotated build_os build_verilator build_cosim cosim
+
+## CCACHE FOR IMPROVED SIMULATING
 export OBJCACHE := ccache
+# pch_defines: Precompiled header possible => Important for UVM
+# time_macros: Times are ignored, current time changes continously, though has no impact here
+# include_file_mtime: really new changes on headers are cachable
+# include_file_ctime: really new creations headers are cachable
+export CCACHE_SLOPPINESS := pch_defines,time_macros,include_file_mtime,include_file_ctime
+export CCACHE_MAXSIZE := 20G
+
+# Für freertos statt selber geschriebenen code einfach die beiden mem in cpu packen, die elf in spike rein

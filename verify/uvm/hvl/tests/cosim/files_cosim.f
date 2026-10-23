@@ -13,6 +13,7 @@ verilator.vlt
 -f rtl/cpu.f
 
 // PKG
+verify/instr_pkg.sv
 verify/uvm/hvl/agents/cosim/retire/retire_agent_pkg.sv
 verify/uvm/hvl/envs/cosim_env/cosim_env_pkg.sv
 verify/uvm/hvl/tests/cosim/cosim_test_pkg.sv

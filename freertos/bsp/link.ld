@@ -4,7 +4,7 @@ _stack_size = 1K;
 
 MEMORY
 {
-    IMEM (x)     : ORIGIN = 0x00000000, LENGTH = 16K
+    IMEM (x)     : ORIGIN = 0x00010000, LENGTH = 16K
     DMEM (rwa!x) : ORIGIN = 0x80000000, LENGTH = 32K
 }
 
@@ -54,5 +54,8 @@ SECTIONS                    /* Each section allocates an area*/
         . += _stack_size;   /* add the stack size on top of the heap */
         _stack_top = .;     /* declare stack_top on top after moving . up too _stack_size */
         __freertos_irq_stack_top = .; /* Copied from freertos page */
+        tohost = .; /*messages from program to spike*/
+        . += 8;
+        fromhost = .; /*message from spike to program*/
     } >DMEM
 }

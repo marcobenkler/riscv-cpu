@@ -10,9 +10,9 @@ def get_jsonl(kind: str):
         print(f'{kind}.jsonl file not found')
         sys.exit(1)
 
-def get_dis():
+def get_dis(dis_path):
     try:
-        return open('build_cosim/cosim.dis', 'r')
+        return open(dis_path, 'r')
     except FileNotFoundError:
         print('.dis file not found')
         sys.exit(1)
@@ -25,9 +25,11 @@ def get_rep():
         sys.exit(1)
 
 def main():
+    # sys.argv [0]: script name, [1,...] arguments
+    dis_path = sys.argv[1]
     rtl = get_jsonl('rtl')
     spike = get_jsonl('spike')
-    dis = get_dis()
+    dis = get_dis(dis_path)
     report = get_rep()
 
     spike_items = [json.loads(line) for line in spike if line.strip()]

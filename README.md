@@ -80,3 +80,8 @@ Requires the `riscv64-unknown-elf-gcc` to compile c -> .mem file
 
 Clock: 90 MHz (11.1 ns period)  
 WNS: +0.361 ns, 0 timing violations  
+
+## Third Party Usage
+
+### riscv-opcode  
+The official library to create instruction bit vectors. Used to create all instruction-bins in the checkpoint

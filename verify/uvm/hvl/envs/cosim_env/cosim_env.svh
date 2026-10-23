@@ -18,7 +18,7 @@ class cosim_env extends uvm_env;
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        agnt.ap.connect(cov.imp);
+        agnt.ap.connect(cov.analysis_export);
     endfunction
 
 endclass

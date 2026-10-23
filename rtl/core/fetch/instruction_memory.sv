@@ -15,7 +15,7 @@ module instruction_memory #(
     (* rom_style = "block" *) logic [31:0] memo [0:MEM_DEPTH-1];
     /* Synthesis*/
     initial begin
-        $readmemh("build_cosim/imem.mem", memo);
+        $readmemh("build_os/imem.mem", memo);
     end
     /**/
 

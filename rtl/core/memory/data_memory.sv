@@ -16,7 +16,7 @@ module data_memory #(
     (* ram_style = "block" *) logic [31:0] mem [0:MEM_DEPTH-1];
 
     initial begin
-        $readmemh("build_cosim/dmem.mem", mem);
+        $readmemh("build_os/dmem.mem", mem);
     end
 
     logic [31:0] raw_read;
