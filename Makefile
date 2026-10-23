@@ -348,6 +348,7 @@ $(COSIM_RES)/rtl.jsonl: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
 	@mkdir -p $(OBJ_LOCKSTEP)
 	verilator $(VFLAGS_LOCKSTEP)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
+#currently mem are read directly in the mem module and plusargs are not used for first testing
 	$(OBJ_LOCKSTEP)/V$(UVM_TOP_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) \
 	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
