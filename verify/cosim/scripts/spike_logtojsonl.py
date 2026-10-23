@@ -22,7 +22,7 @@ def convert(log: TextIO, jsonl: TextIO):
         length = len(ops)
         instr = ops[4][1:11]
         pc = ops[3]
-        if (int(pc, 16) <= 0x00010000): continue
+        if (int(pc, 16) < 0x00010000): continue
         rd_addr = None
         rd_data = None
         mem_waddr = None

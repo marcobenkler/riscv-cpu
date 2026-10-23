@@ -1,3 +1,4 @@
+{"pc": "0x00010000", "instr": "0x7fff1197", "rd_addr": 3, "rd_data": "0x80001000", "mem_waddr": null, "mem_wdata": null, "mem_raddr": null, "mem_rdata": null, "csr_addr": null, "csr_data": null}
 {"pc": "0x00010004", "instr": "0x80018193", "rd_addr": 3, "rd_data": "0x80000800", "mem_waddr": null, "mem_wdata": null, "mem_raddr": null, "mem_rdata": null, "csr_addr": null, "csr_data": null}
 {"pc": "0x00010008", "instr": "0x7fff0117", "rd_addr": 2, "rd_data": "0x80000008", "mem_waddr": null, "mem_wdata": null, "mem_raddr": null, "mem_rdata": null, "csr_addr": null, "csr_data": null}
 {"pc": "0x0001000c", "instr": "0x3f810113", "rd_addr": 2, "rd_data": "0x80000400", "mem_waddr": null, "mem_wdata": null, "mem_raddr": null, "mem_rdata": null, "csr_addr": null, "csr_data": null}

@@ -16,7 +16,7 @@ This causes an extra cycle penalty, when flushed
 ## UPDATE_PC
 | Parameter    | Value                                          |
 |--------------|------------------------------------------------|
-| Reset vector | `0x0000_0000`, asynchronous reset              |
+| Reset vector | `0x0001_0000`, asynchronous reset              |
 | Stall        | `pc_stall` (load-use hazard, division)         |
 
 On trap / mret the PC is never stalled, `pc_stall` is overridden by the hazard unit.

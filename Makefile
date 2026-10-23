@@ -353,7 +353,7 @@ $(COSIM_RES)/rtl.jsonl: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
 	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
 
-cosim: $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl
+cosim: clean_cosim $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl
 
 clean_cosim:
 	rm -rf $(COSIM_RES)
