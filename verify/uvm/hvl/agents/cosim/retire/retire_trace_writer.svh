@@ -28,14 +28,14 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
             //abused sformatf as casting operator
             // && rd_addr != 0: spike doesn't tracks writes on x0
             jsonl_rd_addr   = (item.rvfi.reg_write && item.rvfi.rd_addr != 0) ?
-                $sformatf("%0d",         item.rvfi.rd_addr) : "null";
+                $sformatf("%0d", item.rvfi.rd_addr) : "null";
             jsonl_rd_data   = (item.rvfi.reg_write && item.rvfi.rd_addr != 0) ?
-                $sformatf("\"0x%08h\"",  item.rvfi.rd_data) : "null";
+                $sformatf("\"0x%08h\"", item.rvfi.rd_data) : "null";
             jsonl_mem_waddr = (item.rvfi.wr_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
             jsonl_mem_wdata = (item.rvfi.wr_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_wdata) : "null";
             jsonl_mem_raddr = (item.rvfi.rd_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
             jsonl_mem_rdata = (item.rvfi.rd_en)     ? $sformatf("\"0x%08h\"",  item.rvfi.mem_rdata) : "null";
-            jsonl_csr_addr  = (item.rvfi.csr_wr)    ? $sformatf("\"0x%0d\"",   item.rvfi.csr_addr)  : "null";
+            jsonl_csr_addr  = (item.rvfi.csr_wr)    ? $sformatf("%0d",   item.rvfi.csr_addr)  : "null";
             jsonl_csr_data  = (item.rvfi.csr_wr)    ? $sformatf("\"0x%08h\"",  item.rvfi.csr_data)  : "null";
 
             line =        $sformatf("{\"pc\": \"0x%08h\", ", item.rvfi.pc);

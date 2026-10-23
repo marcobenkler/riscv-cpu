@@ -394,3 +394,5 @@ clean_verilator:
 .DELETE_ON_ERROR:
 
 .PRECIOUS: $(COSIM_RES)/report.log
+
+export OBJCACHE := ccache

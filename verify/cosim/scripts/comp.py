@@ -43,7 +43,7 @@ def main():
                     if line.strip().startswith(pc):
                         break
                 res = lines[max(0, i - 50) : i + 12]
-                res.insert(0, f'Error at pc: {pc}')
+                res.insert(0, f'Error at pc: {pc}, {tag} did not match')
                 print(res)
                 report.writelines(res)
                 sys.exit(1) #make knows if test worked 
