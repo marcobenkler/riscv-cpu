@@ -40,7 +40,7 @@ synth/**/*.rpt
 logs
 annotated
 coverage.dat
-cosim/tb_cosim
+cosim
 build_verilator
 
 ###############################################################################
