@@ -41,6 +41,7 @@ logs
 annotated
 coverage.dat
 cosim/tb_cosim
+build_verilator
 
 ###############################################################################
 # Editor / IDE

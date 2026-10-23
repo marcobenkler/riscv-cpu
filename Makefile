@@ -263,7 +263,7 @@ LDFLAGS_COSIM += $(AARCH_COSIM) -T $(SPIKE)/link.ld -nostartfiles
 
 LDFLAGS_COSIM += -Wl,--gc-sections,-Map=$(BUILD_COSIM)/$(TARGET_COSIM).map
 
-cosim_build: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem $(BUILD_COSIM)
+cosim_build: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem $(BUILD_COSIM)/$(TARGET_COSIM).dis
 
 $(BUILD_COSIM)/%.o : %.c
 	@mkdir -p $(dir $@)
@@ -325,8 +325,22 @@ $(COSIM_RES)/spike.jsonl: $(COSIM_RES)/spike_commits.log $(COSIM_SRC)/scripts/sp
 
 UVM_TOP_LOCKSTEP := tb_cosim
 TEST_LOCKSTEP := cosim_test
-OBJ_LOCKSTEP := $(COSIM_RES)/$(UVM_TOP_LOCKSTEP)
 FILES_LOCKSTEP := verify/uvm/hvl/tests/cosim/files_cosim.f
+COV ?= 0
+
+# Verilator build lives outside of COSIM_RES, so clean_cosim only deletes results, not the compiled model
+VERILATOR_BUILD := build_verilator
+
+ifeq ($(COV),1)
+	OBJ_LOCKSTEP := $(VERILATOR_BUILD)/$(UVM_TOP_LOCKSTEP)_cov
+else
+	OBJ_LOCKSTEP := $(VERILATOR_BUILD)/$(UVM_TOP_LOCKSTEP)
+endif
+
+BIN_LOCKSTEP := $(OBJ_LOCKSTEP)/V$(UVM_TOP_LOCKSTEP)
+
+# Everything the model is built from => model is only rebuilt if RTL or TB changed, not for a new program
+SRCS_LOCKSTEP := $(shell find rtl verify -name '*.sv' -o -name '*.svh' -o -name '*.f')
 
 VFLAGS_LOCKSTEP := --binary \
 	  --timing \
@@ -337,28 +351,46 @@ VFLAGS_LOCKSTEP := --binary \
           +incdir+$(UVM_HOME) \
           +incdir+$(CURDIR) \
           +define+UVM_NO_DPI \
-          --coverage-user \
-          --coverage-line \
-          --coverage-toggle \
           -Wno-fatal \
           --error-limit 500 \
 	  -f $(FILES_LOCKSTEP)
 
-$(COSIM_RES)/rtl.jsonl: $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
+ifeq ($(COV),1)
+	VFLAGS_LOCKSTEP += --coverage-user --coverage-line --coverage-toggle
+endif
+
+# Step 1: build the model (slow, only when RTL/TB changed)
+$(BIN_LOCKSTEP): $(SRCS_LOCKSTEP)
 	@mkdir -p $(OBJ_LOCKSTEP)
 	verilator $(VFLAGS_LOCKSTEP)
+
+# Step 2: run the model (fast, whenever the program changed)
+$(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem $(BUILD_COSIM)/$(TARGET_COSIM).dis
+	@mkdir -p $(COSIM_RES)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 #currently mem are read directly in the mem module and plusargs are not used for first testing
-	$(OBJ_LOCKSTEP)/V$(UVM_TOP_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) \
+	$(BIN_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) \
 	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
+# coverage.dat only exists if the model was built with coverage
+ifeq ($(COV),1)
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
+endif
 
-cosim: clean_cosim $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl
+$(COSIM_RES)/report.log: $(COSIM_SRC)/scripts/comp.py $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(BUILD_COSIM)/$(TARGET_COSIM).dis
+	python $(COSIM_SRC)/scripts/comp.py
+
+cosim: $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(COSIM_RES)/report.log
 
 clean_cosim:
 	rm -rf $(COSIM_RES)
 
-.PHONY: cosim clean_cosim
+# Forces a full rebuild of the model
+clean_verilator:
+	rm -rf $(VERILATOR_BUILD)
+
+.PHONY: cosim clean_cosim clean_verilator
 
 #Delete the target, if a part fails, like spike exits wrong, commit.log is deleted
 .DELETE_ON_ERROR:
+
+.PRECIOUS: $(COSIM_RES)/report.log
