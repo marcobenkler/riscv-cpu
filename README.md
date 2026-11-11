@@ -40,7 +40,7 @@ After programming the bitstream, connect via a serial terminal at **115 200 baud
 
 ## Software
 
-This CPU is going to run FreeRTOS. If you want to use it, you do not have to implement anything manually. All ports and Board Support Packages are configured and the kernel is loaded in the project already.  
+This CPU runs FreeRTOS. If you want to use it, you do not have to implement anything manually. All ports and Board Support Packages are configured and the kernel is loaded in the project already.  
   
 Just run the command `make os` while being in the root dir. It will put the `.elf` and `.dis` file for debugging and `.mem` file that's read in the bram via `$readmemh` in the `build_os` folder
 
@@ -72,6 +72,10 @@ It will then run the following chain
 - Take both retire-traces and compares them line by lin
 - If an error occures it copy the area of the error instruction from the `.dis` asm file from -50 to +10 lines, inserts the block and marks the error instruction
 
+<!--[BOTH JSONL FILES](/images/jsonls.png)-->
+
+Note that although this CPU implements Havard memory architecture, the address-spaces are still separated, to enable gcc and
+
 ---
 
 ## Implementation Status
@@ -91,8 +95,8 @@ It will then run the following chain
 | SVA assertion coverage                             | ✅ |
 | RISC-V ISA test suite (rv32ui / rv32um / rv32mi)   | ✅ |
 | Bare-Metal on FPGA with UART                       | ✅ |
-| FreeRTOS bring-up                                  | ✅ |
-| FreeRTOS on FPGA                                   | 🟥 |
+| FreeRTOS in simulation                             | ✅ |
+| FreeRTOS on FPGA                                   | -- |
 
 ---
 
