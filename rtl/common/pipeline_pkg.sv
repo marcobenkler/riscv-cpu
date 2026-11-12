@@ -34,7 +34,7 @@ package pipeline_pkg;
 
         // Memory control
         logic        mem_write;
-        logic [2:0]  mem_s_type;
+        logic [2:0]  mem_op_type;
 
         // ALU control
         logic        alu_src_a;
@@ -79,7 +79,7 @@ package pipeline_pkg;
 
         // Memory control
         logic        mem_write;
-        logic [2:0]  mem_s_type;
+        logic [2:0]  mem_op_type;
 
         // Alu control
         logic [2:0]  res_src;

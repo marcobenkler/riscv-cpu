@@ -3,20 +3,20 @@ import lsu_pkg::*;
 import axi_pkg::*;
 (
     // pipeline_part (thick arrows in mem_stage.svg)
-    input  logic        clk,
-    input  logic        rst_n,
-    input  logic [31:0] address,
-    input  logic [31:0] input_data,
-    input  mem_type_e   op,
-    input  logic        mem_req,
-    input  logic        pipe_stall,
-    output logic [31:0] output_data,
-    output logic        lsu_stall,
-    output lsu_excep_e  lsu_except,
+    input  logic         clk,
+    input  logic         rst_n,
+    input  logic [31:0]  address,
+    input  logic [31:0]  input_data,
+    input  mem_op_type_e op,
+    input  logic         mem_req,
+    input  logic         pipe_stall,
+    output logic [31:0]  output_data,
+    output logic         lsu_stall,
+    output lsu_excep_e   lsu_except,
 
     // axi part (thin arrow in mem_stage.svg)
-    output axi_req_t    axi_req,
-    input  axi_rsp_t    axi_rsp
+    output axi_req_t    axi_req_lsu,
+    input  axi_rsp_t    axi_rsp_lsu
 );
 
 logic       is_store;
@@ -31,16 +31,16 @@ assign is_store = (op == SB || op == SH || op == SW);
 always_comb begin
     lsu_except = NONE;
     if (is_store) begin
-        if      (axi_rsp.bresp == OKAY)   lsu_except = NONE;
-        else if (axi_rsp.bresp == EXOKAY) lsu_except = STORE_ACC_FLT;
-        else if (axi_rsp.bresp == SLVERR) lsu_except = STORE_ACC_FLT;
-        else if (axi_rsp.bresp == DECERR) lsu_except = STORE_ADDR_MIS;
+        if      (axi_rsp_lsu.bresp == OKAY)   lsu_except = NONE;
+        else if (axi_rsp_lsu.bresp == EXOKAY) lsu_except = STORE_ACC_FLT;
+        else if (axi_rsp_lsu.bresp == SLVERR) lsu_except = STORE_ACC_FLT;
+        else if (axi_rsp_lsu.bresp == DECERR) lsu_except = STORE_ADDR_MIS;
     end
     else begin
-        if      (axi_rsp.rresp == OKAY)   lsu_except = NONE;
-        else if (axi_rsp.rresp == EXOKAY) lsu_except = LOAD_ACC_FLT;
-        else if (axi_rsp.rresp == SLVERR) lsu_except = LOAD_ACC_FLT;
-        else if (axi_rsp.rresp == DECERR) lsu_except = LOAD_ADDR_MIS;
+        if      (axi_rsp_lsu.rresp == OKAY)   lsu_except = NONE;
+        else if (axi_rsp_lsu.rresp == EXOKAY) lsu_except = LOAD_ACC_FLT;
+        else if (axi_rsp_lsu.rresp == SLVERR) lsu_except = LOAD_ACC_FLT;
+        else if (axi_rsp_lsu.rresp == DECERR) lsu_except = LOAD_ADDR_MIS;
     end
 end
 
@@ -59,21 +59,21 @@ always_ff@(posedge clk) begin
 end
 
 always_comb begin
-    axi_req.awaddr = address;
-    axi_req.awprot = 3'b001;
-    axi_req.wdata  = input_data;
-    axi_req.wstrb  = comp_strb;
-    axi_req.araddr = address;
-    axi_req.arprot = 3'b001;
+    axi_req_lsu.awaddr = address;
+    axi_req_lsu.awprot = 3'b001;
+    axi_req_lsu.wdata  = input_data;
+    axi_req_lsu.wstrb  = comp_strb;
+    axi_req_lsu.araddr = address;
+    axi_req_lsu.arprot = 3'b001;
 end
 
 // sign/zero extension
 always_comb begin
-    if      (op == LB)  output_data = {{24{axi_rsp.rdata[23]}} ,axi_rsp.rdata[23:0]};
-    else if (op == LH)  output_data = {{24{axi_rsp.rdata[23]}} ,axi_rsp.rdata[15:0]};
-    else if (op == LH)  output_data = axi_rsp.rdata;
-    else if (op == LBU) output_data = {24'0 ,axi_rsp.rdata[23:0]};
-    else if (op == LHU) output_data = {16'0 ,axi_rsp.rdata[15:0]};
+    if      (op == LB)  output_data = {{24{axi_rsp_lsu.rdata[23]}} ,axi_rsp_lsu.rdata[23:0]};
+    else if (op == LH)  output_data = {{24{axi_rsp_lsu.rdata[23]}} ,axi_rsp_lsu.rdata[15:0]};
+    else if (op == LH)  output_data = axi_rsp_lsu.rdata;
+    else if (op == LBU) output_data = {24'0 ,axi_rsp_lsu.rdata[23:0]};
+    else if (op == LHU) output_data = {16'0 ,axi_rsp_lsu.rdata[15:0]};
     else output_data = 32'hAAAA_AAAA;
 end
 
@@ -90,15 +90,15 @@ always_comb begin
         end
         STORE_AW_W: begin
             lsu_stall       = 1'b1;
-            axi_req.awvalid = 1'b1;
-            axi_req.wvalid  = 1'b1;
-            if (axi_rsp.awready && axi_rsp.wready) state_d = STORE_B;
+            axi_req_lsu.awvalid = 1'b1;
+            axi_req_lsu.wvalid  = 1'b1;
+            if (axi_rsp_lsu.awready && axi_rsp_lsu.wready) state_d = STORE_B;
         end
         STORE_B: begin
             lsu_stall = 1'b1;
-            axi_req.bready = 1'b1;
+            axi_req_lsu.bready = 1'b1;
             // if pipe is stalled an state set to IDLE bresp is thrown away
-            if (axi_rsp.bvalid && !pipe_stall) begin
+            if (axi_rsp_lsu.bvalid && !pipe_stall) begin
                 state_d = IDLE;
                 // resp_b_vld = 1'b1; not needed. If err occurs output except occurs
                 // else lsu_stall is just set to 0
@@ -106,13 +106,13 @@ always_comb begin
         end
         LOAD_AR: begin
             lsu_stall = 1'b1;
-            axi_req.arvalid = 1'b1;
-            if (axi_rsp.arready) state_d = LOAD_R;
+            axi_req_lsu.arvalid = 1'b1;
+            if (axi_rsp_lsu.arready) state_d = LOAD_R;
         end
         LOAD_R: begin
             lsu_stall = 1'b1;
-            axi_req.rready = 1'b1;
-            if (axi_rsp.rvalid) state_d = IDLE;
+            axi_req_lsu.rready = 1'b1;
+            if (axi_rsp_lsu.rvalid) state_d = IDLE;
         end
         default: state_d = IDLE;
     endcase

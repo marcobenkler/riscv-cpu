@@ -56,6 +56,8 @@ module pl_cpu
     logic        trap_taken;
     logic        mret_taken;
     logic        mem_write_en;
+    axi_req_t    axi_req_lsu;
+    axi_rsp_t    axi_rsp_lsu;
 
     // WB Stage
     logic [31:0] result;
@@ -74,6 +76,12 @@ module pl_cpu
     logic        id_ex_flush;
     logic        ex_mem_stall;
     logic        ex_mem_flush;
+    axi_req_t    axi_req_mem;
+    axi_rsp_t    axi_rsp_mem;
+    axi_req_t    axi_req_uart;
+    axi_rsp_t    axi_rsp_uart;
+    axi_req_t    axi_req_clint;
+    axi_rsp_t    axi_rsp_clint;
 
     logic        if_id_flush_delayed;
 
@@ -87,8 +95,8 @@ module pl_cpu
     // IF Stage
     update_pc update_pc(
         .clk(clk),
-        .reset_n(reset_n), 
-        .pc_next(pc_next), 
+        .reset_n(reset_n),
+        .pc_next(pc_next),
         .pc_stall(pc_stall),
         .pc_current(if1_if2_in.pc_current) //output
     );
@@ -176,7 +184,7 @@ module pl_cpu
         .alu_op(id_ex_in.alu_op), //output
         .mul_op(id_ex_in.mul_op), //output
         .div_op(id_ex_in.div_op), //output
-        .mem_s_type(id_ex_in.mem_s_type), //output
+        .mem_op_type(id_ex_in.mem_op_type), //output
         .ex_src(id_ex_in.ex_src), //output
         .csr_op(id_ex_in.csr_op), //output
         .id_ecall(id_ex_in.id_ecall), //output
@@ -293,7 +301,7 @@ module pl_cpu
             default: ex_mem_in.ex_res = alu_res;
         endcase
     end
-    
+
     always_comb begin
         case (forward_b)
             2'b00: ex_mem_in.rs2_data = id_ex_out.rs2_data;
@@ -312,7 +320,7 @@ module pl_cpu
     assign ex_mem_in.imm = id_ex_out.imm;
     assign ex_mem_in.reg_write = id_ex_out.reg_write;
     assign ex_mem_in.mem_write = id_ex_out.mem_write;
-    assign ex_mem_in.mem_s_type = id_ex_out.mem_s_type;
+    assign ex_mem_in.mem_op_type = id_ex_out.mem_op_type;
     assign ex_mem_in.res_src = id_ex_out.res_src;
     assign ex_mem_in.csr_write = id_ex_out.csr_write;
     assign ex_mem_in.csr_op = id_ex_out.csr_op;
@@ -349,6 +357,7 @@ module pl_cpu
         endcase
     end
 
+    /*
     // MEM Stage
     data_memory data_memory(
         .clk(clk),
@@ -366,6 +375,42 @@ module pl_cpu
         .write_address(ex_mem_out.ex_res),
         .write_mem_s_type(ex_mem_out.mem_s_type),
         .mem_write_data(ex_mem_out.rs2_data)
+    );
+    */
+    lsu lsu_u(
+        .clk(clk),
+        .rst_n(rst_n),
+        .address(ex_mem_out.ex_res),
+        .input_data(ex_mem_out.rs2_data),
+        .op(ex_mem_out.mem_op_type),
+        .mem_req(ex_mem_out.mem_req), //TODO
+        .pipe_stall(mem_wb_stall), //TODO
+        .output_data(mem_wb_in.rdata),
+        .lsu_stall(lsu_stall), //TODO
+        .lsu_except(lsu_except), //TODO
+        // AXI
+        .axi_req_lsu(axi_req_lsu),
+        .axi_rsp_lsu(axi_rsp_lsu)
+    );
+
+    axi_interconnect axi_interconnect_u(
+        .clk(clk),
+        .rst_n(rst_n),
+        .axi_req_lsu(axi_req_lsu), //output
+        .axi_rsp_lsu(axi_rsp_lsu),
+        .axi_req_mem(axi_req_mem), //output
+        .axi_rsp_mem(axi_rsp_mem),
+        .axi_req_uart(axi_req_uart), //output
+        .axi_rsp_uart(axi_rsp_uart),
+        .axi_req_clint(axi_req_clint), //output
+        .axi_rsp_clint(axi_rsp_clint)
+    );
+
+    mem mem_u(
+        .clk(clk),
+        .rst_n(rst_n),
+        .axi_req_mem(axi_req_mem),
+        .axi_rsp_mem(axi_rsp_mem) //output
     );
 
     //csr
@@ -393,6 +438,7 @@ module pl_cpu
         .csr_pc(csr_pc) //output
     );
 
+    /*
     bus_interconnect bus_interconnect(
         .address(ex_mem_out.ex_res),
         .clint_read_data(clint_read_data),
@@ -404,6 +450,7 @@ module pl_cpu
         .mem_write_en(mem_write_en), //output
         .uart_write_en(uart_write_en) //output
     );
+    */
 
     assign mem_wb_in.reg_write = ex_mem_out.reg_write;
     assign mem_wb_in.ex_res = ex_mem_out.ex_res;

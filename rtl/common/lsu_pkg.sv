@@ -1,15 +1,15 @@
 package lsu_pkg;
 
 typedef enum logic[2:0] {
-        SB,
-        SH,
-        SW,
-        LB,
-        LH,
-        LW,
-        LBU,
-        LHU
-    } mem_type_e;
+    SB,
+    SH,
+    SW,
+    LB,
+    LH,
+    LW,
+    LBU,
+    LHU
+} mem_op_type_e;
 
 typedef enum logic [2:0] {
     NONE,
