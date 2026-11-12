@@ -324,7 +324,7 @@ else
 endif
 
 SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
-SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG) --instructions=10000
+SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG) --instructions=50000
 
 $(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 	@mkdir -p $(COSIM_RES)

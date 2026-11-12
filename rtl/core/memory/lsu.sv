@@ -16,7 +16,7 @@ import axi_pkg::*;
 
     // axi part (thin arrow in mem_stage.svg)
     output axi_req_t    axi_req,
-    input  axi_rsp_t     axi_rsp
+    input  axi_rsp_t    axi_rsp
 );
 
 logic       is_store;
@@ -65,7 +65,16 @@ always_comb begin
     axi_req.wstrb  = comp_strb;
     axi_req.araddr = address;
     axi_req.arprot = 3'b001;
-    output_data    = axi_rsp.rdata;
+end
+
+// sign/zero extension
+always_comb begin
+    if      (op == LB)  output_data = {{24{axi_rsp.rdata[23]}} ,axi_rsp.rdata[23:0]};
+    else if (op == LH)  output_data = {{24{axi_rsp.rdata[23]}} ,axi_rsp.rdata[15:0]};
+    else if (op == LH)  output_data = axi_rsp.rdata;
+    else if (op == LBU) output_data = {24'0 ,axi_rsp.rdata[23:0]};
+    else if (op == LHU) output_data = {16'0 ,axi_rsp.rdata[15:0]};
+    else output_data = 32'hAAAA_AAAA;
 end
 
 always_comb begin

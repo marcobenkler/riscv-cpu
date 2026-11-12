@@ -77,7 +77,7 @@ package pipeline_pkg;
 
         logic [1:0]  pc_src;
 
-        // Memory control   
+        // Memory control
         logic        mem_write;
         logic [2:0]  mem_s_type;
 
@@ -151,4 +151,5 @@ package pipeline_pkg;
         logic [31:0] rs1_data;   //ex_stage after operand_sel: after forwarding
         logic [31:0] rs2_data;   //ex_stage after operand_sel: after forwarding
     } rvfi_t;
+
 endpackage

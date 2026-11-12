@@ -8,43 +8,24 @@ struct Car {
     int year;
 };
 
-struct Person {
-    int age;
-    char name[30];
-};
+void vTask1( void *pvParameters)
+{
+    struct Car car = {"Audi", 500};
+    (void)pvParameters;
+    for (;;){
+        for (int i = 0; i < 20; i++) {
+            car.year += 20;
+        }
+        taskYIELD();
+    }
+}
 
 int main( void )
 {
-    struct Car car = {"Toyota", 2020};
+    TaskHandle_t hTask1;
 
-    
-    int number = 5;
-    if (car.year == 2019 || car.year < 2000) {
-        number += 124;
-    }
-    number -= car.year;
-
-    struct Person me = {42, "Tom"};
-
-    if (me.age >= 40) {
-        me.age += 4;
-    }
-
-    struct Person me1 = {42, "Tom"};
-
-    if (me1.age >= 40) {
-        me1.age += 4;
-    }
-
-    struct Person me2 = {42, "Tom"};
-
-    if (me2.age >= 40) {
-        me2.age += 4;
-    }
-
-    struct Person me3 = {42, "Tom"};
-
-    if (me3.age >= 40) {
-        me3.age += 4;
-    }
+    xTaskCreate(vTask1, "Start", 128, NULL, 2, &hTask1);
+    vTaskPrioritySet(hTask1, 3);
+    vTaskStartScheduler();
+    for (;;);
 }

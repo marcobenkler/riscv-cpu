@@ -31,4 +31,5 @@ package alu_pkg;
         MULHSU,
         MULHU
     } mul_op_e;
+
 endpackage
