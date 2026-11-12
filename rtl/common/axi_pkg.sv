@@ -24,7 +24,7 @@ typedef struct {
     logic        arvalid;
     //R
     logic        rready;
-} axi_out_t;
+} axi_req_t;
 
 typedef struct {
     //AW
@@ -40,6 +40,6 @@ typedef struct {
     logic [31:0] rdata;
     resp_e       rresp;
     logic        rvalid;
-} axi_in_t;
+} axi_rsp_t;
 
 endpackage
