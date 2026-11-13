@@ -13,13 +13,13 @@ module register_file(
     output logic [31:0] rs1_data, rs2_data   ///< data for compute
 );
 
-    logic [31:0] regi [31:0];
+    logic [31:0] regi [32]; // changed form 31:0 to 32, mb err
     always_comb begin
         // Forwarding register file - from Harris & Harris
         rs1_data = (reg_write && rd != 5'b0 && rd == rs1) ? result : regi[rs1];
         rs2_data = (reg_write && rd != 5'b0 && rd == rs2) ? result : regi[rs2];
     end
-    
+
     always_ff @(posedge clk or negedge reset_n) begin
         if(!reset_n) begin
             for (int i = 0; i < 32; i++) begin

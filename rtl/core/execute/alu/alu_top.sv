@@ -12,7 +12,7 @@ module alu_top
     input   logic [31:0] b,                     ///< second input (rs2, imm)
     input   logic [3:0]  alu_op,                ///< op_code from decoder
     output  logic [31:0] result,                ///< operation result
-    output  logic zero, lt                      ///< zero flag for BEQ          
+    output  logic zero, lt                      ///< zero flag for BEQ
 );
 
     logic [31:0] addsub_result;
@@ -25,12 +25,12 @@ module alu_top
     logic [1:0]  logic_op;
     logic [1:0]  shift_op;
 
-    always_comb begin 
+    always_comb begin
         sub      = 1'b0;
         cmp_op   = 2'b00;
         logic_op  = 2'b00;
         shift_op = 2'b00;
-        
+
         unique case (alu_op)
             ALU_ADD: sub = 1'b0;
             ALU_SUB: sub = 1'b1;
@@ -46,7 +46,7 @@ module alu_top
             end
         endcase
     end
-    
+
     alu_addsub  addsub_module(.a(a), .b(b), .result(addsub_result), .sub(sub));                          //sub / add
     alu_compare compare_module(.a(a), .b(b), .result(compare_result), .cmp_op(cmp_op));                  //eq / lt / ltu/ ne
     alu_shift   shift_module(.a(a), .b(b), .result(shift_result), .shift_op(shift_op));                  //sl / srl / sra      

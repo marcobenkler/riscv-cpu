@@ -6,7 +6,7 @@
 **/
 
 module operand_select(
-    input  logic [31:0] rs1_data, 
+    input  logic [31:0] rs1_data,
     input  logic [31:0] rs2_data,    ///< data from storage
     input  logic [31:0] imm,
     input  logic [31:0] pc_current,  ///< immediate from instruction vector

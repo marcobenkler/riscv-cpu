@@ -7,7 +7,7 @@ module misaligned_detection(
     output logic        misaligned_load,
     output logic        misaligned_store,
     output logic        misaligned_fetch
-); 
+);
 
 always_comb begin
     misaligned_load = 1'b0;
@@ -15,7 +15,7 @@ always_comb begin
     misaligned_fetch = 1'b0;
     if(pc_src_ex == 2'b10)
         misaligned_fetch = |alu_res[1:0];
-    
+
     if(mem_read) begin
         case (funct3)
             3'b001: misaligned_load = alu_res[0]; //LH(U)
@@ -23,7 +23,7 @@ always_comb begin
             default: ;
         endcase
     end
-    
+
     if(mem_write) begin
         case (funct3)
             3'b001: misaligned_store = alu_res[0]; //SH(U)

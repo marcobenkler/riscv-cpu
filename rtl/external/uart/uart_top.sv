@@ -11,7 +11,7 @@ module uart_top
     output logic        tx
 );
 
-    localparam baud_rate = 115_200;
+    localparam logic [31:0] baud_rate = 115_200;
     logic baud_tick_tx;
     logic baud_tick_rx;
 

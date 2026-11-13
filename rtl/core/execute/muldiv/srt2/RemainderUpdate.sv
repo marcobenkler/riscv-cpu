@@ -7,7 +7,7 @@ module remainder (
     always_comb begin
         case (Q)
             2'sd1:   RNEW = (R << 1) - ND;
-            2'sd0:   RNEW = (R << 1);      
+            2'sd0:   RNEW = (R << 1);
            -2'sd1:   RNEW = (R << 1) + ND;
             default: RNEW = 'x;
         endcase

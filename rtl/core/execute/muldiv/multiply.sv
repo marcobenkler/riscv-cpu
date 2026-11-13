@@ -2,7 +2,7 @@
 * @brief simple multiplication implementation to get get rs1_data OS running
 **/
 
-module multiply 
+module multiply
     import alu_pkg::*;
 (
     input  logic [31:0] rs1_data, ///< first operand
@@ -22,7 +22,7 @@ module multiply
     end
 
     always_comb begin
-        case (mul_op)
+        unique case (mul_op)
             MUL: mul_res = multi_ss[31:0];
             MULH: mul_res = multi_ss[63:32];
             MULHSU: mul_res = multi_su[63:32];

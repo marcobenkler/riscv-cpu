@@ -11,7 +11,7 @@ module imm_gen(
     output logic [31:0] imm ///< sign extended immediate number
 );
     logic [4:0] op_code;
-    
+
     assign op_code = instruction[6:2];
 
     always_comb begin
@@ -25,7 +25,7 @@ module imm_gen(
             5'b00101: imm = {instruction[31:12], 12'b0}; /// U-Type
             5'b11000: imm = {{19{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0}; /// B-Type
             5'b11011: imm = {{11{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0}; /// J-Type
-            
+
             default: ;
         endcase
     end

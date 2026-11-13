@@ -29,7 +29,7 @@ module branch_unit(
                     pc_src_ex = 2'b01; // JAL always take
             end
             default: pc_src_ex = 2'b00;
-        endcase        
+        endcase
     end
 
 endmodule

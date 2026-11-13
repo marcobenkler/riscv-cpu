@@ -3,7 +3,7 @@
 *
 **/
 
-module update_pc#(parameter RESET_VECTOR = 32'h0001_0000)
+module update_pc#(parameter logic [31:0] RESET_VECTOR = 32'h0001_0000)
 (
     input  logic        clk,
     input  logic        reset_n,

@@ -12,7 +12,7 @@ module alu_addsub (
 );
 
     logic [31:0] b_buf;
-    
+
     assign b_buf = sub ? ~b : b;
     assign result = a + b_buf + sub;
 

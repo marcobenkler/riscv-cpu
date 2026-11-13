@@ -77,7 +77,7 @@ module csr_regfile(
             12'h341: csr_res = mepc;
             12'h342: csr_res = mcause;
             12'h343: csr_res = mtval;
-            12'h344: csr_res = mip;
+            12'h344: csr_res = mip; // TODO error
             12'hF11: csr_res = mvendorid;
             12'hF12: csr_res = marchid;
             12'hF13: csr_res = mimpid;

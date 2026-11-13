@@ -7,7 +7,7 @@ module digitSelect (
 logic signed [35:0] R3;
 logic signed [35:0] D;
 
-// 3R >= D  <=>  R >= 1/3·D 
+// 3R >= D  <=>  R >= 1/3·D
 assign R3 = {{3{R[32]}}, R} + ({{3{R[32]}}, R} <<< 1);
 assign D  = {{3{ND[32]}}, ND};
 

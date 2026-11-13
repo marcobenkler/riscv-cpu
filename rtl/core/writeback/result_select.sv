@@ -13,7 +13,7 @@ module result_select (
 );
 
     always_comb begin
-        case (res_src) 
+        case (res_src)
             3'b000: result = ex_res;
             3'b001: result = mem_res;
             3'b010: result = imm_res;
@@ -22,5 +22,5 @@ module result_select (
             default: result = 'x;
         endcase
     end
-    
+
 endmodule

@@ -1,16 +1,16 @@
 module uart_baud #(
-    parameter clk_freq = 90_000_000,
-    parameter baud_rate = 115_200
+    parameter logic [31:0] clk_freq = 90_000_000,
+    parameter logic [31:0] baud_rate = 115_200
 )(
     input  logic clk,
     input  logic reset_n,
     output logic baud_tick
 );
 
-    localparam BAUD_DIV = clk_freq / baud_rate;
+    localparam logic [31:0] BAUD_DIV = clk_freq / baud_rate;
 
     logic [10:0] counter;
-    
+
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n || counter == BAUD_DIV[10:0] -1) counter <= '0;
         else counter <= counter + 1;
@@ -25,7 +25,7 @@ module uart_baud #(
 
     property  baud_tick_only_once;
         @(posedge clk) disable iff (!reset_n)
-        $rose(baud_tick) |=> $fell(baud_tick); 
+        $rose(baud_tick) |=> $fell(baud_tick);
     endproperty
 
     property reset_correct;

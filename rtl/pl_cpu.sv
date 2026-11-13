@@ -1,4 +1,4 @@
-module pl_cpu 
+module pl_cpu
     import pipeline_pkg::*;
 (
     input logic clk,
@@ -386,11 +386,11 @@ module pl_cpu
         .op(ex_mem_out.mem_op_type),
         .mem_req(ex_mem_out.mem_req),
         .pipe_stall(1'b0), //mem_wb_reg is never stalled currently
-        .output_data(mem_wb_in.rdata),
-        .lsu_stall(lsu_stall),
-        .lsu_except(lsu_except),
+        .output_data(mem_wb_in.rdata), //output
+        .lsu_stall(lsu_stall), //output
+        .lsu_except(lsu_except), //output
         // AXI
-        .axi_req_lsu(axi_req_lsu),
+        .axi_req_lsu(axi_req_lsu), //output
         .axi_rsp_lsu(axi_rsp_lsu)
     );
 
@@ -508,11 +508,9 @@ module pl_cpu
     clint clint(
         .clk(clk),
         .reset_n(reset_n),
-        .clint_write_en(clint_write_en),
-        .address(ex_mem_out.ex_res),
-        .clint_write_data(ex_mem_out.rs2_data),
-        .mtip(mtip), //output
-        .clint_read_data(clint_read_data) //output
+        .axi_req_clint(axi_req_clint),
+        .axi_rsp_clint(axi_rsp_clint), //output
+        .mtip(mtip) //output
     );
 
     // Hazard handling

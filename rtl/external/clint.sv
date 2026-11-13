@@ -5,13 +5,18 @@
 module clint
     import clint_pkg::*;
 (
-    input  logic        clk,
-    input  logic        reset_n,
+    input  logic     clk,
+    input  logic     reset_n,
+    input  axi_req_t axi_req_clint,
+    output axi_rsp_t axi_rsp_clint,
+    output logic     mtip //TODO
+    /*
     input  logic        clint_write_en, ///< enable override of mtimecmp and msip register
     input  logic [31:0] address, ///< address if lower or upper mtimecmp is written to
     input  logic [31:0] clint_write_data, ///< set new mtimecmp value via software
     output logic        mtip, ///< interrupt flag
     output logic [31:0] clint_read_data ///< read data from mtime and mtimecmp
+    */
 );
 
 logic [31:0] mtimecmp_lo;
@@ -38,7 +43,7 @@ always_ff @(posedge clk or negedge reset_n) begin
         mtimecmp_hi <= '0;
         mtime_lo <= '0;
         mtime_hi <= '0;
-    end 
+    end
     else if (clint_write_en) begin
         case (address - CLINT_BASE)
             CLINT_MSIP: msip <= clint_write_data;

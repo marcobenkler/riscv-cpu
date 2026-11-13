@@ -4,7 +4,7 @@
 * By using the pc combine 4 byte into 1 instruction vector via comb
 **/
 module instruction_memory #(
-    parameter MEM_DEPTH = 4096 // might be too big for BRAM
+    parameter logic [31:0] MEM_DEPTH = 4096 // might be too big for BRAM
 )(
     input  logic        clk,
     input  logic        stall,
@@ -12,7 +12,7 @@ module instruction_memory #(
     output logic [31:0] instruction ///< instruction vector
 );
 
-    (* rom_style = "block" *) logic [31:0] memo [0:MEM_DEPTH-1];
+    (* rom_style = "block" *) logic [31:0] memo [MEM_DEPTH];
     /* Synthesis*/
     initial begin
         $readmemh("build_os/imem.mem", memo);
