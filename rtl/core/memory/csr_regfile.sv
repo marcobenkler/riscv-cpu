@@ -13,16 +13,17 @@ module csr_regfile(
     //input  logic [3:0] exc_cause, // decoder tells exception was recognized
 
     //Exception
-    input  logic        id_ecall,  
-    input  logic        id_ebreak,  
-    input  logic        id_mret,  
-    input  logic        id_illegal_instr,  
-    input  logic        misaligned_load,  
-    input  logic        misaligned_store,  
-    input  logic        misaligned_fetch,  
-    input  logic [31:0] fault_address, 
+    input  logic        id_ecall,
+    input  logic        id_ebreak,
+    input  logic        id_mret,
+    input  logic        id_illegal_instr,
+    input  logic        misaligned_load,
+    input  logic        misaligned_store,
+    input  logic        misaligned_fetch,
+    input  logic [31:0] fault_address,
+    input  logic        lsu_except, //TODO
 
-    //Interrput 
+    //Interrput
     input  logic        time_itr, // from CLINT, timer interrupt is required
 
     output logic        trap_taken, // override next pc, if trap was taken
@@ -65,11 +66,11 @@ module csr_regfile(
 
     // mip is no real register in this simple cpu, directly wired
     assign mip = {24'b0, time_itr, 7'b0};
-    
-    always_comb begin 
+
+    always_comb begin
         csr_res = '0;
         csr_write_val = '0;
-        case (csr_addr) 
+        case (csr_addr)
             12'h300: csr_res = mstatus;
             12'h304: csr_res = mie;
             12'h305: csr_res = mtvec;
@@ -85,7 +86,7 @@ module csr_regfile(
             12'h340: csr_res = mscratch;
             default: ;
         endcase
-        case (csr_op[1:0]) 
+        case (csr_op[1:0])
             2'b01: csr_write_val = csr_data;
             2'b10: csr_write_val = csr_res | csr_data;
             2'b11: csr_write_val = csr_res & ~csr_data;

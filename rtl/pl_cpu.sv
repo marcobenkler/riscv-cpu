@@ -76,6 +76,7 @@ module pl_cpu
     logic        id_ex_flush;
     logic        ex_mem_stall;
     logic        ex_mem_flush;
+    logic        mem_wb_flush;
     axi_req_t    axi_req_mem;
     axi_rsp_t    axi_rsp_mem;
     axi_req_t    axi_req_uart;
@@ -383,11 +384,11 @@ module pl_cpu
         .address(ex_mem_out.ex_res),
         .input_data(ex_mem_out.rs2_data),
         .op(ex_mem_out.mem_op_type),
-        .mem_req(ex_mem_out.mem_req), //TODO
-        .pipe_stall(mem_wb_stall), //TODO
+        .mem_req(ex_mem_out.mem_req),
+        .pipe_stall(1'b0), //mem_wb_reg is never stalled currently
         .output_data(mem_wb_in.rdata),
-        .lsu_stall(lsu_stall), //TODO
-        .lsu_except(lsu_except), //TODO
+        .lsu_stall(lsu_stall),
+        .lsu_except(lsu_except),
         // AXI
         .axi_req_lsu(axi_req_lsu),
         .axi_rsp_lsu(axi_rsp_lsu)
@@ -432,6 +433,7 @@ module pl_cpu
         .misaligned_fetch(ex_mem_out.misaligned_fetch),
         .fault_address(ex_mem_out.ex_res),
         .time_itr(mtip),
+        .lsu_except(lsu_except),
         .trap_taken(trap_taken), //output
         .mret_taken(mret_taken), //output
         .csr_res(mem_wb_in.csr_res), //output
@@ -477,7 +479,7 @@ module pl_cpu
     pipeline_reg #(.T(mem_wb_t)) mem_wb_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush('0),
+        .flush(mem_wb_flush),
         .stall(1'b0),
         .in(mem_wb_in),
         .out(mem_wb_out)
@@ -536,13 +538,15 @@ module pl_cpu
         .reg_write(id_ex_out.reg_write),
         .trap_taken(trap_taken),
         .mret_taken(mret_taken),
+        .lsu_stall(lsu_stall),
         .pc_stall(pc_stall), //output
         .if_id_stall(if_id_stall), //output
         .if_id_flush(if_id_flush), //output
         .id_ex_flush(id_ex_flush), //output
         .id_ex_stall(id_ex_stall), //output
         .ex_mem_stall(ex_mem_stall), //output
-        .ex_mem_flush(ex_mem_flush) //output
+        .ex_mem_flush(ex_mem_flush), //output
+        .mem_wb_flush(mem_wb_flush) //output
     );
 
     uart_top uart_top(

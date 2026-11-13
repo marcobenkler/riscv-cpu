@@ -1,5 +1,5 @@
 module mem#(
-    parameter logic[32:0] MEM_DEPTH = 8192
+    parameter logic[31:0] MEM_DEPTH = 8192
 )
 (
     input  logic     clk,

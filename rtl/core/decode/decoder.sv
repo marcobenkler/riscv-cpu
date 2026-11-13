@@ -5,18 +5,23 @@
 
 module decoder
     import alu_pkg::*;
+    import lsu_pkg::*;
 (
-    input  logic [31:0] instruction, ///< entire instruction vector
-    output logic reg_write, alu_src_a, alu_src_b, mem_write,///< single bit controls
-    output logic [1:0] pc_src, ///< 00 = default +4, 01 = pc = imm, 10 = rs1 + imm
-    output logic [2:0] res_src, ///< 000 = alu, 001 = mem, 010 = imm, 011 = pc + 4, 100 = csr
-    output logic [3:0] alu_op, ///< alu controller
-    output logic [1:0] mul_op, ///< mul controller
-    output logic [1:0] div_op, ///< div controller
-    output logic [2:0] mem_s_type, ///< tell data_memory which S-Type is used
-    output logic [1:0] ex_src, ///< alu, mul or div result
+    input  logic [31:0]  instruction, ///< entire instruction vector
+    output logic         reg_write,
+    output logic         alu_src_a,
+    output logic         alu_src_b,
+    output logic         mem_write,
+    output logic [1:0]   pc_src, ///< 00 = default +4, 01 = pc = imm, 10 = rs1 + imm
+    output logic [2:0]   res_src, ///< 000 = alu, 001 = mem, 010 = imm, 011 = pc + 4, 100 = csr
+    output logic [3:0]   alu_op, ///< alu controller
+    output logic [1:0]   mul_op, ///< mul controller
+    output logic [1:0]   div_op, ///< div controller
+    output mem_op_type_e mem_op_type, ///< tell data_memory which op is used TODO
+    output logic         mem_req,
+    output logic [1:0]   ex_src, ///< alu, mul or div result
     //CSR
-    output logic [2:0] csr_op, ///< op code for csr module
+    output logic [2:0]   csr_op, ///< op code for csr module
     //output logic [3:0] exc_cause,
     output logic id_ecall,
     output logic id_ebreak,
@@ -31,20 +36,20 @@ module decoder
 
     assign op_code = instruction[6:2];
     assign funct3 = instruction[14:12];
-    assign funct7 = instruction[31:25];   
+    assign funct7 = instruction[31:25];
 
-    assign id_mret = (instruction == 32'h30200073); 
+    assign id_mret = (instruction == 32'h30200073);
 
     always_comb begin
         alu_op = 'x;
-        mem_s_type = 'x;
         res_src = 'x;
         reg_write = 'x;
         alu_src_b = 'x;
         pc_src = 2'b00;
         mem_write = 1'b0;
         alu_src_a = 1'b0;
-        mem_s_type = funct3;
+        mem_op_type = LB;
+        mem_req = 1'b1;
         mul_op = 'x;
         div_op = 'x;
         ex_src = 2'b00;
@@ -59,7 +64,7 @@ module decoder
                 reg_write = 1'b1; // Single bit controlls are Type specific
                 alu_src_b = 1'b0;
                 res_src = 3'b000;
-                case (funct3) 
+                case (funct3)
                     3'b000: case (funct7)
                         7'b0000000: alu_op = ALU_ADD;
                         7'b0100000: alu_op = ALU_SUB;
@@ -81,7 +86,7 @@ module decoder
                         7'b0000000: alu_op = ALU_SLT;
                         7'b0000001: begin
                             mul_op = MULHSU;
-                            ex_src = 2'b01; 
+                            ex_src = 2'b01;
                         end
                         default: ;
                     endcase
@@ -115,7 +120,7 @@ module decoder
                         7'b0000001: begin
                             div_op = REM;
                             ex_src = 2'b10;
-                        end 
+                        end
                         default: ;
                     endcase
                     3'b111: case(funct7)
@@ -157,6 +162,14 @@ module decoder
                 alu_src_b = 1'b1;
                 res_src = 3'b001;
                 alu_op = ALU_ADD;
+                mem_req = 1'b1;
+                unique case (funct3)
+                    3'b000: mem_op_type = LB;
+                    3'b001: mem_op_type = LH;
+                    3'b010: mem_op_type = LW;
+                    3'b100: mem_op_type = LBU;
+                    3'b101: mem_op_type = LHU;
+                endcase
             end
             5'b11000: begin //B-Type
                 reg_write = 1'b0;
@@ -191,6 +204,12 @@ module decoder
                 mem_write = 1'b1;
                 res_src = 'x;
                 alu_op = ALU_ADD;
+                mem_req = 1'b1;
+                unique case (funct3)
+                    3'b000: mem_op_type = SB;
+                    3'b001: mem_op_type = SH;
+                    3'b010: mem_op_type = SW;
+                endcase
             end
             5'b11011: begin //J-Type
                 reg_write = 1'b1;
@@ -209,7 +228,7 @@ module decoder
                 mem_write = 1'b0;
             end
             5'b11100: begin // CSR
-                case (funct3) 
+                case (funct3)
                     3'b000: begin
                         if      (instruction[29]) ;
                         else if (instruction[20]) id_ebreak = 1'b1;
@@ -226,7 +245,7 @@ module decoder
             default: begin
                 id_illegal_instr = 1'b1; ///< Illegal instruction
             end
-        endcase        
+        endcase
     end
 
 endmodule
