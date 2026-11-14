@@ -359,18 +359,22 @@ BIN_LOCKSTEP := $(OBJ_LOCKSTEP)/V$(UVM_TOP_LOCKSTEP)
 # Everything the model is built from => model is only rebuilt if RTL or TB changed, not for a new program
 SRCS_LOCKSTEP := $(shell find rtl verify -name '*.sv' -o -name '*.svh' -o -name '*.f')
 
+UVM_DPI_SRC := verify/uvm/uvm_dpi_verilator/uvm_dpi.cc
+
 VFLAGS_LOCKSTEP := --binary \
 	  --timing \
+	  --vpi \
 	  --top-module $(UVM_TOP_LOCKSTEP) \
           --Mdir $(OBJ_LOCKSTEP) \
           --timescale 1ns/1ps \
           -j 8 \
           +incdir+$(UVM_HOME) \
           +incdir+$(CURDIR) \
-          +define+UVM_NO_DPI \
           -Wno-fatal \
           --error-limit 500 \
 	  -f $(FILES_LOCKSTEP) \
+	  $(UVM_DPI_SRC) \
+	  -CFLAGS "-Wno-deprecated-declarations" \
 	  -MAKEFLAGS "OPT_FAST=-O1 OPT_SLOW=-O0"
 
 
@@ -388,7 +392,7 @@ $(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(COSIM_MEM) $(COSIM_DIS)
 	@mkdir -p $(COSIM_RES)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 #currently mem are read directly in the mem module and plusargs are not used for first testing
-	$(BIN_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) \
+	$(BIN_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) +UVM_NO_RELNOTES \
 	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
 # coverage.dat only exists if the model was built with coverage
 ifeq ($(COV),1)
