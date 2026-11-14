@@ -3,7 +3,7 @@ module axi_interconnect
     import uart_pkg::*;
     import axi_pkg::*;
     //no mem pkg, pkges are not parametrizable
-    #(parameter logic [31:0] MEM_HIGHT = 32'h0000_20000)
+    #(parameter logic [31:0] MEM_HIGHT = 32'h0000_2000)
 (
     input logic clk,
     input logic rst_n,

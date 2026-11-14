@@ -80,11 +80,16 @@ end
 always_comb begin
     state_d    = state_q;
     lsu_stall  = 1'b0;
-    lsu_except = NONE;
+    axi_req_lsu.awvalid = 1'b0;
+    axi_req_lsu.wvalid  = 1'b0;
+    axi_req_lsu.bready  = 1'b0;
+    axi_req_lsu.rready  = 1'b0;
+    axi_req_lsu.arvalid = 1'b0;
+    // lsu_except = NONE;
     case (state_q)
         IDLE: begin
             if (mem_req) begin
-                lsu_stall = 1'b1;
+                lsu_stall = 1'b0;
                 state_d = (is_store) ? STORE_AW_W : LOAD_AR;
             end
         end

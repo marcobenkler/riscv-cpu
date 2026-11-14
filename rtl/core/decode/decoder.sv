@@ -49,7 +49,7 @@ module decoder
         mem_write = 1'b0;
         alu_src_a = 1'b0;
         mem_op_type = LB;
-        mem_req = 1'b1;
+        mem_req = 1'b0;
         mul_op = 'x;
         div_op = 'x;
         ex_src = 2'b00;
@@ -163,12 +163,13 @@ module decoder
                 res_src = 3'b001;
                 alu_op = ALU_ADD;
                 mem_req = 1'b1;
-                unique case (funct3)
+                case (funct3)
                     3'b000: mem_op_type = LB;
                     3'b001: mem_op_type = LH;
                     3'b010: mem_op_type = LW;
                     3'b100: mem_op_type = LBU;
                     3'b101: mem_op_type = LHU;
+                    default: mem_op_type = LB;
                 endcase
             end
             5'b11000: begin //B-Type
@@ -205,10 +206,11 @@ module decoder
                 res_src = 'x;
                 alu_op = ALU_ADD;
                 mem_req = 1'b1;
-                unique case (funct3)
+                case (funct3)
                     3'b000: mem_op_type = SB;
                     3'b001: mem_op_type = SH;
                     3'b010: mem_op_type = SW;
+                    default: mem_op_type = SB;
                 endcase
             end
             5'b11011: begin //J-Type

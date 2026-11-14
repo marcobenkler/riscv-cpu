@@ -39,6 +39,8 @@ module uart_top
     assign axi_rsp_uart.rvalid  = 1'b1;
 
     always_comb begin
+        axi_rsp_uart.awready = 1'b0;
+        axi_rsp_uart.wready =  1'b0;
         if (tx_ready) begin
             axi_rsp_uart.awready = 1'b1;
             axi_rsp_uart.wready =  1'b1;

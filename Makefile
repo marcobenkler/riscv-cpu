@@ -344,12 +344,16 @@ UVM_TOP_LOCKSTEP := tb_cosim
 TEST_LOCKSTEP := cosim_test
 FILES_LOCKSTEP := verify/uvm/hvl/tests/cosim/files_cosim.f
 COV ?= 0
+WAVE ?= 1
+LZ4_PREFIX := $(shell brew --prefix lz4)
 
 # Verilator build lives outside of COSIM_RES, so clean_cosim only deletes results, not the compiled model
 VERILATOR_BUILD := build_verilator
 
 ifeq ($(COV),1)
 	OBJ_LOCKSTEP := $(VERILATOR_BUILD)/$(UVM_TOP_LOCKSTEP)_cov
+else ifeq ($(WAVE),1)
+	OBJ_LOCKSTEP := $(VERILATOR_BUILD)/$(UVM_TOP_LOCKSTEP)_wave
 else
 	OBJ_LOCKSTEP := $(VERILATOR_BUILD)/$(UVM_TOP_LOCKSTEP)
 endif
@@ -382,6 +386,12 @@ ifeq ($(COV),1)
 	VFLAGS_LOCKSTEP += --coverage-user --coverage-line --coverage-toggle
 endif
 
+ifeq ($(WAVE),1)
+	VFLAGS_LOCKSTEP += --trace-fst --trace-structs \
+	                   -CFLAGS "-I$(LZ4_PREFIX)/include" \
+	                   -LDFLAGS "-L$(LZ4_PREFIX)/lib -llz4"
+endif
+
 # Step 1: build the model (slow, only when RTL/TB changed)
 $(BIN_LOCKSTEP): $(SRCS_LOCKSTEP)
 	@mkdir -p $(OBJ_LOCKSTEP)
@@ -393,7 +403,7 @@ $(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(COSIM_MEM) $(COSIM_DIS)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 #currently mem are read directly in the mem module and plusargs are not used for first testing
 	$(BIN_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) +UVM_NO_RELNOTES \
-	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem
+	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem +WAVE=$(WAVE)
 # coverage.dat only exists if the model was built with coverage
 ifeq ($(COV),1)
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat

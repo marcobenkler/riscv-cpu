@@ -191,7 +191,7 @@ module pl_cpu
         .mul_op(id_ex_in.mul_op), //output
         .div_op(id_ex_in.div_op), //output
         .mem_op_type(id_ex_in.mem_op_type), //output
-        .mem_req(id_ex_in.mem_req),
+        .mem_req(id_ex_in.mem_req), //output
         .ex_src(id_ex_in.ex_src), //output
         .csr_op(id_ex_in.csr_op), //output
         .id_ecall(id_ex_in.id_ecall), //output
@@ -328,6 +328,7 @@ module pl_cpu
     assign ex_mem_in.reg_write = id_ex_out.reg_write;
     assign ex_mem_in.mem_write = id_ex_out.mem_write;
     assign ex_mem_in.mem_op_type = id_ex_out.mem_op_type;
+    assign ex_mem_in.mem_req = id_ex_out.mem_req;
     assign ex_mem_in.res_src = id_ex_out.res_src;
     assign ex_mem_in.csr_write = id_ex_out.csr_write;
     assign ex_mem_in.csr_op = id_ex_out.csr_op;
@@ -403,8 +404,8 @@ module pl_cpu
     axi_interconnect axi_interconnect_u(
         .clk(clk),
         .rst_n(reset_n),
-        .axi_req_lsu(axi_req_lsu), //output
-        .axi_rsp_lsu(axi_rsp_lsu),
+        .axi_req_lsu(axi_req_lsu),
+        .axi_rsp_lsu(axi_rsp_lsu), //output
         .axi_req_mem(axi_req_mem), //output
         .axi_rsp_mem(axi_rsp_mem),
         .axi_req_uart(axi_req_uart), //output
@@ -470,7 +471,7 @@ module pl_cpu
 
     always_comb begin
         mem_wb_in.rvfi = ex_mem_out.rvfi;
-        mem_wb_in.rvfi.wr_en = mem_write_en;
+        mem_wb_in.rvfi.wr_en = ex_mem_out.mem_req; //mem_write_en;
         mem_wb_in.rvfi.csr_wr = ex_mem_out.csr_write;
         mem_wb_in.rvfi.csr_data = ex_mem_out.rs1_data;
         mem_wb_in.rvfi.csr_addr = ex_mem_out.instruction[31:20];

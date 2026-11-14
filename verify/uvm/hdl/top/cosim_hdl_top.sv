@@ -30,4 +30,13 @@ module cosim_hdl_top;
         rst_n <= 1'b1;
     end
 
+    initial begin
+        static int wave = 0;
+        void'($value$plusargs("WAVE=%d", wave));
+        if (wave == 1) begin
+            $dumpfile("cosim/wave.fst");
+            $dumpvars(0);
+        end
+    end
+
 endmodule

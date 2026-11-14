@@ -14,9 +14,9 @@ module pipeline_reg#(
 );
 
     always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n || flush) 
+        if (!reset_n || flush)
             out <= '0;
-        else if (!stall) 
+        else if (!stall)
             out <= in;
     end
 
