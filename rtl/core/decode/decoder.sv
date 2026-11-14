@@ -17,7 +17,7 @@ module decoder
     output logic [3:0]   alu_op, ///< alu controller
     output logic [1:0]   mul_op, ///< mul controller
     output logic [1:0]   div_op, ///< div controller
-    output mem_op_type_e mem_op_type, ///< tell data_memory which op is used TODO
+    output mem_op_type_e mem_op_type, ///< tell data_memory which op is used
     output logic         mem_req,
     output logic [1:0]   ex_src, ///< alu, mul or div result
     //CSR

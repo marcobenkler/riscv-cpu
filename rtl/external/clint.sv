@@ -44,8 +44,8 @@ module clint
 
     // Strobe handling
     always_comb begin
-        if      (axi_req_clint.wstrb == 4'b0001) clint_write_data = {24'0, axi_req_clint.wdata[7:0]};
-        else if (axi_req_clint.wstrb == 4'b0011) clint_write_data = {12'0, axi_req_clint.wdata[15:0]};
+        if      (axi_req_clint.wstrb == 4'b0001) clint_write_data = {24'b0, axi_req_clint.wdata[7:0]};
+        else if (axi_req_clint.wstrb == 4'b0011) clint_write_data = {16'b0, axi_req_clint.wdata[15:0]};
         else if (axi_req_clint.wstrb == 4'b1111) clint_write_data = axi_req_clint.wdata;
         // Maybe implement exception here
         else                                     clint_write_data = 32'hAAAA_AAAA;

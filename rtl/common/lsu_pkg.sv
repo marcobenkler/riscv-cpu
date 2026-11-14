@@ -21,7 +21,7 @@ typedef enum logic [2:0] {
 
 typedef enum logic [2:0] {
     IDLE,
-    STORE_AW_A,
+    STORE_AW_W,
     STORE_B,
     LOAD_AR,
     LOAD_R

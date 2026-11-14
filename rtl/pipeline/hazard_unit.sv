@@ -59,7 +59,7 @@ module hazard_unit(
         if (if_id_flush) if_id_stall = 1'b0;
         if (id_ex_flush) id_ex_stall = 1'b0;
         if (ex_mem_flush) ex_mem_stall = 1'b0;
-        if (mem_wb_flush) mem_wb_stall = 1'b0;
+        // if (mem_wb_flush) mem_wb_stall = 1'b0;
         if (trap_taken || mret_taken) pc_stall = 1'b0;
     end
 

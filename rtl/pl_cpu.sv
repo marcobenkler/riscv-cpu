@@ -1,5 +1,7 @@
 module pl_cpu
     import pipeline_pkg::*;
+    import axi_pkg::*;
+    import lsu_pkg::*;
 (
     input logic clk,
     // ---- SIMULATION (1/2) ----
@@ -56,6 +58,8 @@ module pl_cpu
     logic        trap_taken;
     logic        mret_taken;
     logic        mem_write_en;
+    logic        lsu_stall;
+    lsu_excep_e  lsu_except;
     axi_req_t    axi_req_lsu;
     axi_rsp_t    axi_rsp_lsu;
 
@@ -63,10 +67,11 @@ module pl_cpu
     logic [31:0] result;
 
     // EXTERNAL
-    logic        clint_write_en;
-    logic        uart_write_en;
-    logic [31:0] uart_read_data;
-    logic [31:0] clint_read_data;
+    // logic        clint_write_en;
+    // logic        uart_write_en;
+    // logic [31:0] uart_read_data;
+    // logic [31:0] clint_read_data;
+    logic        uart_rx_valid;
     logic [1:0]  forward_a;
     logic [1:0]  forward_b;
     logic        pc_stall;
@@ -186,6 +191,7 @@ module pl_cpu
         .mul_op(id_ex_in.mul_op), //output
         .div_op(id_ex_in.div_op), //output
         .mem_op_type(id_ex_in.mem_op_type), //output
+        .mem_req(id_ex_in.mem_req),
         .ex_src(id_ex_in.ex_src), //output
         .csr_op(id_ex_in.csr_op), //output
         .id_ecall(id_ex_in.id_ecall), //output
@@ -380,7 +386,7 @@ module pl_cpu
     */
     lsu lsu_u(
         .clk(clk),
-        .rst_n(rst_n),
+        .rst_n(reset_n),
         .address(ex_mem_out.ex_res),
         .input_data(ex_mem_out.rs2_data),
         .op(ex_mem_out.mem_op_type),
@@ -396,7 +402,7 @@ module pl_cpu
 
     axi_interconnect axi_interconnect_u(
         .clk(clk),
-        .rst_n(rst_n),
+        .rst_n(reset_n),
         .axi_req_lsu(axi_req_lsu), //output
         .axi_rsp_lsu(axi_rsp_lsu),
         .axi_req_mem(axi_req_mem), //output
@@ -409,7 +415,7 @@ module pl_cpu
 
     mem mem_u(
         .clk(clk),
-        .rst_n(rst_n),
+        .rst_n(reset_n),
         .axi_req_mem(axi_req_mem),
         .axi_rsp_mem(axi_rsp_mem) //output
     );
@@ -433,6 +439,7 @@ module pl_cpu
         .misaligned_fetch(ex_mem_out.misaligned_fetch),
         .fault_address(ex_mem_out.ex_res),
         .time_itr(mtip),
+        .uart_itr(uart_rx_valid),
         .lsu_except(lsu_except),
         .trap_taken(trap_taken), //output
         .mret_taken(mret_taken), //output
@@ -552,7 +559,8 @@ module pl_cpu
         .clk(clk),
         .reset_n(reset_n),
         .axi_req_uart(axi_req_uart),
-        .axi_rsp_uart(axi_rsp_uart),
+        .axi_rsp_uart(axi_rsp_uart), //output
+        .rx_valid(uart_rx_valid), // output
         .rx(uart_rx_bit), //peripherie
         .tx(uart_tx_bit) //output peripherie
     );

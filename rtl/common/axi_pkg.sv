@@ -7,26 +7,26 @@ typedef enum logic[1:0] {
         DECERR  //No slave under address
     } resp_e;
 
-typedef struct {
+typedef struct packed {
     //AW
     logic [31:0] awaddr;
     logic [2:0]  awprot;
     logic        awvalid;
     //W
     logic [31:0] wdata;
-    logic [2:0]  wstrb;
+    logic [3:0]  wstrb;
     logic        wvalid;
     //B
     logic        bready;
     //AR
     logic [31:0] araddr;
-    logic [3:0]  arprot;
+    logic [2:0]  arprot;
     logic        arvalid;
     //R
     logic        rready;
 } axi_req_t;
 
-typedef struct {
+typedef struct packed {
     //AW
     logic        awready;
     //w

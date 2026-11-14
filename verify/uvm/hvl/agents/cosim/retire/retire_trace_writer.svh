@@ -21,7 +21,7 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
         super.build_phase(phase);
         $value$plusargs("TRACE=%s", path);
         fd = $fopen(path, "w");
-        if (!fd) `uvm_fatal("NOJSONL", {"Could not oepn jsonl file in: ", get_full_name()})
+        if (fd == 0) `uvm_fatal("NOJSONL", {"Could not oepn jsonl file in: ", get_full_name()})
     endfunction
 
     function void write(retire_item item);

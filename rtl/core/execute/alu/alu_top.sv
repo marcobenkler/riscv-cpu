@@ -47,10 +47,10 @@ module alu_top
         endcase
     end
 
-    alu_addsub  addsub_module(.a(a), .b(b), .result(addsub_result), .sub(sub));                          //sub / add
-    alu_compare compare_module(.a(a), .b(b), .result(compare_result), .cmp_op(cmp_op));                  //eq / lt / ltu/ ne
-    alu_shift   shift_module(.a(a), .b(b), .result(shift_result), .shift_op(shift_op));                  //sl / srl / sra      
-    alu_logic   logic_module(.a(a), .b(b), .result(logic_result), .logic_op(logic_op));                  //and / or / xor
+    alu_addsub  addsub_module(.a(a), .b(b), .result(addsub_result), .sub(sub));         //sub / add
+    alu_compare compare_module(.a(a), .b(b), .result(compare_result), .cmp_op(cmp_op)); //eq / lt / ltu/ ne
+    alu_shift   shift_module(.a(a), .b(b), .result(shift_result), .shift_op(shift_op)); //sl / srl / sra
+    alu_logic   logic_module(.a(a), .b(b), .result(logic_result), .logic_op(logic_op)); //and / or / xor
 
     always_comb begin
         unique case (alu_op)

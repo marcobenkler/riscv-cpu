@@ -2,7 +2,9 @@
 * @brief Manage entire csr block
 **/
 
-module csr_regfile(
+module csr_regfile
+import lsu_pkg::*;
+(
     input  logic clk, reset_n,
     input  logic [31:0] instruction, // entire instruction vector
     input  logic [31:0] pc_current, // current pc to remember where to jump back after trap
@@ -21,11 +23,11 @@ module csr_regfile(
     input  logic        misaligned_store,
     input  logic        misaligned_fetch,
     input  logic [31:0] fault_address,
-    input  logic        lsu_except, //TODO
+    input  lsu_excep_e  lsu_except, //TODO
 
     //Interrput
     input  logic        time_itr, // from CLINT, timer interrupt is required
-    input  logic        uart_itr, // TODO
+    input  logic        uart_itr,
 
     output logic        trap_taken, // override next pc, if trap was taken
     output logic        mret_taken, // jump back to last pc stored in mret

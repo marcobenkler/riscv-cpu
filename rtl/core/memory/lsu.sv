@@ -69,11 +69,11 @@ end
 
 // sign/zero extension
 always_comb begin
-    if      (op == LB)  output_data = {{24{axi_rsp_lsu.rdata[23]}} ,axi_rsp_lsu.rdata[23:0]};
-    else if (op == LH)  output_data = {{24{axi_rsp_lsu.rdata[23]}} ,axi_rsp_lsu.rdata[15:0]};
+    if      (op == LB)  output_data = {{24{axi_rsp_lsu.rdata[7]}} ,axi_rsp_lsu.rdata[7:0]};
+    else if (op == LH)  output_data = {{16{axi_rsp_lsu.rdata[15]}} ,axi_rsp_lsu.rdata[15:0]};
     else if (op == LH)  output_data = axi_rsp_lsu.rdata;
-    else if (op == LBU) output_data = {24'0 ,axi_rsp_lsu.rdata[23:0]};
-    else if (op == LHU) output_data = {16'0 ,axi_rsp_lsu.rdata[15:0]};
+    else if (op == LBU) output_data = {24'b0 ,axi_rsp_lsu.rdata[7:0]};
+    else if (op == LHU) output_data = {16'b0 ,axi_rsp_lsu.rdata[15:0]};
     else output_data = 32'hAAAA_AAAA;
 end
 

@@ -3,6 +3,8 @@ rtl/common/alu_pkg.sv
 rtl/common/clint_pkg.sv
 rtl/common/uart_pkg.sv
 rtl/common/pipeline_pkg.sv
+rtl/common/lsu_pkg.sv
+rtl/common/axi_pkg.sv
 
 // Pipeline infrastructure
 rtl/pipeline/pipeline_reg.sv
@@ -36,9 +38,12 @@ rtl/core/execute/muldiv/srt2/RemainderUpdate.sv
 rtl/core/execute/muldiv/srt2/srt_top.sv
 
 // MEM
-rtl/core/memory/bus_interconnect.sv
 rtl/core/memory/csr_regfile.sv
-rtl/core/memory/data_memory.sv
+rtl/core/memory/axi_interconnect.sv
+rtl/core/memory/lsu.sv
+rtl/core/memory/mem.sv
+//rtl/core/memory/bus_interconnect.sv
+//rtl/core/memory/data_memory.sv
 
 // WB
 rtl/core/writeback/result_select.sv

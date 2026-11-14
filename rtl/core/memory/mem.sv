@@ -32,8 +32,8 @@ import axi_pkg::*;
 
     // Strobe handling
     always_comb begin
-        if      (axi_req_mem.wstrb == 4'b0001) bram_in_data = {24'0, axi_req_mem.wdata[7:0]};
-        else if (axi_req_mem.wstrb == 4'b0011) bram_in_data = {12'0, axi_req_mem.wdata[15:0]};
+        if      (axi_req_mem.wstrb == 4'b0001) bram_in_data = {24'b0, axi_req_mem.wdata[7:0]};
+        else if (axi_req_mem.wstrb == 4'b0011) bram_in_data = {16'b0, axi_req_mem.wdata[15:0]};
         else if (axi_req_mem.wstrb == 4'b1111) bram_in_data = axi_req_mem.wdata;
         // Maybe implement exception here
         else                                   bram_in_data = 32'hAAAA_AAAA;

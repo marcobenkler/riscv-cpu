@@ -23,7 +23,7 @@ module uart_top
     logic baud_tick_rx;
 
     logic        tx_ready;
-    logic        rx_valid;
+    // logic        rx_valid;
     logic [7:0]  wdata_r;
     logic [31:0] uart_tx_reg;
     logic [31:0] uart_rx_reg;
@@ -90,10 +90,10 @@ module uart_top
     always_comb begin
         axi_rsp_uart.rresp = OKAY;
         case (axi_req_uart.araddr - UART_BASE)
-            UART_STATUS: axi_req_uart.rdata = {30'b0, rx_valid, tx_ready};
-            UART_RX:     axi_req_uart.rdata = uart_rx_reg;
+            UART_STATUS: axi_rsp_uart.rdata = {30'b0, rx_valid, tx_ready};
+            UART_RX:     axi_rsp_uart.rdata = uart_rx_reg;
             default: begin
-                axi_req_uart.rdata = 32'hDEAD_BEEF;
+                axi_rsp_uart.rdata = 32'hDEAD_BEEF;
                 axi_rsp_uart.rresp = SLVERR;
             end
         endcase
