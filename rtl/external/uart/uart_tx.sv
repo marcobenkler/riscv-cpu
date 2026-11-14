@@ -51,9 +51,11 @@ module uart_tx
         end
         else if (state == DATA) begin
             tx = shift_reg[bit_cnt];
+            tx_ready = 1'b0;
         end
         else if (state == STOP) begin
             tx = 1'b1;
+            tx_ready = 1'b0;
         end
         else $error("No state in uart found");
     end
