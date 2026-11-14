@@ -1,4 +1,6 @@
-module mem#(
+module mem
+import axi_pkg::*;
+#(
     parameter logic[31:0] MEM_DEPTH = 8192
 )
 (

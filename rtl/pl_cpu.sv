@@ -505,14 +505,6 @@ module pl_cpu
     end
 
     // EXTERNAL
-    clint clint(
-        .clk(clk),
-        .reset_n(reset_n),
-        .axi_req_clint(axi_req_clint),
-        .axi_rsp_clint(axi_rsp_clint), //output
-        .mtip(mtip) //output
-    );
-
     // Hazard handling
     forwarding_unit forwarding_unit(
         .rs1_id_ex(id_ex_out.rs1),
@@ -547,6 +539,25 @@ module pl_cpu
         .mem_wb_flush(mem_wb_flush) //output
     );
 
+    // Peripherie
+    clint clint(
+        .clk(clk),
+        .reset_n(reset_n),
+        .axi_req_clint(axi_req_clint),
+        .axi_rsp_clint(axi_rsp_clint), //output
+        .mtip(mtip) //output
+    );
+
+    uart_top uart_top(
+        .clk(clk),
+        .reset_n(reset_n),
+        .axi_req_uart(axi_req_uart),
+        .axi_rsp_uart(axi_rsp_uart),
+        .rx(uart_rx_bit), //peripherie
+        .tx(uart_tx_bit) //output peripherie
+    );
+
+    /*
     uart_top uart_top(
         .clk(clk),
         .reset_n(reset_n),
@@ -557,5 +568,5 @@ module pl_cpu
         .uart_read_data(uart_read_data), //output
         .tx(uart_tx_bit) //output peripherie
     );
-
+    */
 endmodule

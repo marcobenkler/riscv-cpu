@@ -4,6 +4,7 @@
 
 module clint
     import clint_pkg::*;
+    import axi_pkg::*;
 (
     input  logic     clk,
     input  logic     reset_n,
@@ -41,12 +42,6 @@ module clint
 
     assign clint_write_en = axi_req_clint.awvalid && axi_req_clint.wvalid;
 
-    // Select address
-    always_comb begin
-        if (axi_req_clint.awvalid) address = axi_req_clint.awaddr;
-        else address = axi_req_clint.araddr;
-    end
-
     // Strobe handling
     always_comb begin
         if      (axi_req_clint.wstrb == 4'b0001) clint_write_data = {24'0, axi_req_clint.wdata[7:0]};
@@ -57,7 +52,7 @@ module clint
     end
 
     always_comb begin
-        case (address - CLINT_BASE)
+        case (axi_req_clint.araddr - CLINT_BASE)
             CLINT_MSIP: axi_rsp_clint.rdata = msip;
             CLINT_MTIMECMP_LO: axi_rsp_clint.rdata = mtimecmp_lo;
             CLINT_MTIMECMP_HI: axi_rsp_clint.rdata = mtimecmp_hi;
@@ -76,7 +71,7 @@ module clint
             mtime_hi <= '0;
         end
         else if (clint_write_en) begin
-            case (address - CLINT_BASE)
+            case (axi_req_clint.awaddr - CLINT_BASE)
                 CLINT_MSIP: msip <= clint_write_data;
                 CLINT_MTIMECMP_LO: mtimecmp_lo <= clint_write_data;
                 CLINT_MTIMECMP_HI: mtimecmp_hi <= clint_write_data;

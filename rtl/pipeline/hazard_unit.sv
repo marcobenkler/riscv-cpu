@@ -13,7 +13,7 @@ module hazard_unit(
     input  logic reg_write,
     input  logic trap_taken,
     input  logic mret_taken,
-    input  logic lsu_stall, // TODO
+    input  logic lsu_stall,
     output logic pc_stall,
     output logic if_id_stall,
     output logic if_id_flush,
