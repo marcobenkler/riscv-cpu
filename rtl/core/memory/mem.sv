@@ -20,10 +20,12 @@ module mem#(
     assign axi_rsp_mem.bresp   = OKAY;
     assign axi_rsp_mem.arready = 1'b1;
     assign axi_rsp_mem.rresp   = OKAY;
-    //valid handling
+    //valid handling (mb useless, TODO check)
     always_ff@(posedge clk) begin
         axi_rsp_mem.rvalid <= 1'b0;
+        axi_rsp_mem.bvalid <= 1'b0;
         if (axi_req_mem.arvalid) axi_rsp_mem.rvalid <= 1'b1;
+        if (axi_req_mem.awvalid && axi_req_mem.wvalid) axi_rsp_mem.bvalid <= 1'b1;
     end
 
     // Strobe handling

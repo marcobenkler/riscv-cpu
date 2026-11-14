@@ -9,36 +9,36 @@ typedef enum logic[1:0] {
 
 typedef struct {
     //AW
-    logic [31:0] awaddr; //
-    logic [2:0]  awprot; //
-    logic        awvalid; //
+    logic [31:0] awaddr;
+    logic [2:0]  awprot;
+    logic        awvalid;
     //W
-    logic [31:0] wdata; //
-    logic [2:0]  wstrb; //
-    logic        wvalid; //
+    logic [31:0] wdata;
+    logic [2:0]  wstrb;
+    logic        wvalid;
     //B
     logic        bready;
     //AR
-    logic [31:0] araddr; //
-    logic [3:0]  arprot; //
-    logic        arvalid; //
+    logic [31:0] araddr;
+    logic [3:0]  arprot;
+    logic        arvalid;
     //R
     logic        rready;
 } axi_req_t;
 
 typedef struct {
     //AW
-    logic        awready; //
+    logic        awready;
     //w
-    logic        wready; //
+    logic        wready;
     //B
-    resp_e       bresp; //
+    resp_e       bresp;
     logic        bvalid;
     //AR
-    logic        arready;//
+    logic        arready;
     //R
-    logic [31:0] rdata; //
-    resp_e       rresp;//
+    logic [31:0] rdata;
+    resp_e       rresp;
     logic        rvalid;
 } axi_rsp_t;
 
