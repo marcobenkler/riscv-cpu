@@ -25,6 +25,7 @@ module csr_regfile(
 
     //Interrput
     input  logic        time_itr, // from CLINT, timer interrupt is required
+    input  logic        uart_itr, // TODO
 
     output logic        trap_taken, // override next pc, if trap was taken
     output logic        mret_taken, // jump back to last pc stored in mret
@@ -65,7 +66,7 @@ module csr_regfile(
     logic [31:0] csr_write_val;
 
     // mip is no real register in this simple cpu, directly wired
-    assign mip = {24'b0, time_itr, 7'b0};
+    assign mip = {20'b0 ,uart_itr , 3'b0, time_itr, 7'b0};
 
     always_comb begin
         csr_res = '0;
@@ -77,7 +78,7 @@ module csr_regfile(
             12'h341: csr_res = mepc;
             12'h342: csr_res = mcause;
             12'h343: csr_res = mtval;
-            12'h344: csr_res = mip; // TODO error
+            12'h344: csr_res = mip;
             12'hF11: csr_res = mvendorid;
             12'hF12: csr_res = marchid;
             12'hF13: csr_res = mimpid;
@@ -99,11 +100,12 @@ module csr_regfile(
         mret_taken = '0;
         csr_pc = '0;
         if(id_ecall || id_ebreak || id_illegal_instr||
-                 misaligned_load || misaligned_store || misaligned_fetch) begin
+                 misaligned_load || misaligned_store || misaligned_fetch) begin // Exception
             trap_taken = 1'b1;
             csr_pc = mtvec;
         end
-        else if(time_itr && mie[7] && mstatus[3]) begin
+        else if(((mip[7] && mie[7]) || (mip[11] && mie[11])) && mstatus[3]) begin // Interrupt
+        // mi.[7]: Clint | mi.[11]: Uart
             trap_taken = 1'b1;
             csr_pc = mtvec;
         end
@@ -147,12 +149,13 @@ module csr_regfile(
             mstatus[3] <= 1'b0;
             mstatus[12:11] <= 2'b11;
         end
-        else if (time_itr && mie[7] && mstatus[3]) begin //Interrupts
-            mepc <= pc_if;
-            mcause <= 32'h80000007;
-            mstatus[7] <= mstatus[3];
-            mstatus[3] <= 1'b0;
-            mstatus[12:11] <= 2'b11;
+        else if (((mip[7] && mie[7]) || (mip[11] && mie[11])) && mstatus[3]) begin //Interrupts
+            mepc               <= pc_if;
+            if (mip[7]) mcause <= 32'h80000007; // Timer
+            else        mcause <= 32'h8000000B; // Uart
+            mstatus[7]         <= mstatus[3];
+            mstatus[3]         <= 1'b0;
+            mstatus[12:11]     <= 2'b11;
         end
         else if (id_mret) begin
             //Exit trap handler
