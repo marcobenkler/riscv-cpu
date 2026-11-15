@@ -19,7 +19,7 @@ class cosim_test extends uvm_test;
 
     task run_phase(uvm_phase phase);
         phase.raise_objection(this);
-        phase.get_objection().set_drain_time(this, 50us);
+        phase.get_objection().set_drain_time(this, 1ms);
         phase.drop_objection(this);
     endtask
 

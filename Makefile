@@ -1,11 +1,11 @@
 TOOLCHAIN := riscv64-unknown-elf
 TESTS_DIR := ../riscv-tools/riscv-tests/isa
 BUILD     := build
-
+LZ4_PREFIX := $(shell brew --prefix lz4)
 RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
 RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv" ! -name "sc_cpu.sv")
 RTL_FILES       := $(RTL_PKG_FILES) $(RTL_OTHER_FILES)
-TB_FILES        := verify/tb/pipeline/tb_pl_cpu.sv
+TB_FILES        := verify/legacy/tb/pipeline/tb_pl_cpu.sv
 
 TEST ?= rv32ui-p-add
 
@@ -31,7 +31,9 @@ verilate:
 	verilator --binary --trace-structs --trace-fst -sv --top-module tb_pl_cpu \
 	    -Wno-TIMESCALEMOD \
 	    -Mdir obj_dir \
-	    $(RTL_FILES) $(TB_FILES)
+	    $(RTL_FILES) $(TB_FILES) \
+	    -CFLAGS "-I$(LZ4_PREFIX)/include" \
+	    -LDFLAGS "-L$(LZ4_PREFIX)/lib -llz4"
 
 $(BUILD)/$(TEST).hex: $(BUILD)/$(TEST).bin | $(BUILD)
 	python3 -c "import sys; d=open('$<','rb').read(); d+=b'\x00'*((-len(d))%4); \
@@ -59,7 +61,8 @@ _run_tests:
 	@pass=0; fail=0; \
 	for test in $(SUITE); do \
 		$(MAKE) -B --no-print-directory "$(BUILD)/$$test.hex" TEST=$$test > /dev/null 2>&1; \
-		result=$$(./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$$test.hex +dtest=$(BUILD)/$$test.hex 2>&1); \
+				result=$$(./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$$test.hex +dtest=$(BUILD)/$$test.hex \
+				+tohost=$$($(TOOLCHAIN)-nm $(TESTS_DIR)/$$test | awk '$$3=="tohost"{print $$1}') 2>&1); \
 		if echo "$$result" | grep -q "^PASS"; then \
 			printf "\033[1;32mPASS\033[0m  $$test\n"; pass=$$((pass+1)); \
 		else \

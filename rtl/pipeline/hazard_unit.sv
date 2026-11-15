@@ -44,11 +44,12 @@ module hazard_unit(
         //Following common convention stall all what's left of your stall source and flush only the right neighbr reg
         //Flushes flush all whats left (before) their stage like trap and mret are located in mem stage
 
-        if_id_flush  = pc_src != 2'b00 || trap_taken || mret_taken; //pc_src != 0 means branch taken
+        if_id_flush  = (pc_src != 2'b00 && !lsu_stall) || trap_taken || mret_taken; //pc_src != 0 means branch taken
 
         // load_use_hazard && !div_stall: l_u_h is pulled by LSU, but div can compute further
-        id_ex_flush  = (pc_src != 2'b00 || trap_taken || mret_taken ||
-                       (load_use_hazard && !div_stall && !lsu_stall)) && !lsu_stall;
+        id_ex_flush  = ((pc_src != 2'b00 && !lsu_stall) || trap_taken || mret_taken ||
+                       (load_use_hazard && !div_stall && !lsu_stall)); //&&
+                       //(!lsu_stall && !trap_taken && !mret_taken); // keep in mind, could be wrong in edge cas
 
         //div_stall: Without bubble the older instr before div is handed several times
         //from ex/mem to mem/wb and retired several times

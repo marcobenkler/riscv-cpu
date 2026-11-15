@@ -126,7 +126,7 @@ module pl_cpu
     pipeline_reg #(.T(if1_if2_t)) if1_if2_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush(1'b0),
+        .flush(if_id_flush),
         .stall(if_id_stall),
         .in(if1_if2_in),
         .out(if1_if2_out)

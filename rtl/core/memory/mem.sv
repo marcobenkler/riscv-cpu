@@ -1,7 +1,7 @@
 module mem
 import axi_pkg::*;
 #(
-    parameter logic[31:0] MEM_DEPTH = 8192
+    parameter logic[31:0] MEM_DEPTH = 32000
 )
 (
     input  logic     clk,

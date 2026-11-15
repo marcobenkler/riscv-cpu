@@ -8,3 +8,10 @@
 
 ## Fixing Commit
 - a880426
+
+# 2 - Dead Instruction after Jump
+## Details
+- After a `jar` the instruction coming 3 cycles later was performed before the jump
+
+## Reason
+- Missing flushing signal in first pipe_reg
