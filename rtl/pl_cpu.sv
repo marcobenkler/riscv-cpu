@@ -104,6 +104,7 @@ module pl_cpu
         .reset_n(reset_n),
         .pc_next(pc_next),
         .pc_stall(pc_stall),
+        .pc_src(pc_src_ex),
         .pc_current(if1_if2_in.pc_current) //output
     );
 
