@@ -10,11 +10,13 @@ import axi_pkg::*;
     output axi_rsp_t axi_rsp_mem
 );
 
-    /* Synthesis */
-    initial begin
-        $readmemh("build_os/dmem.mem", mem);
-    end
-    /**/
+    `ifndef SYNTHESIS
+        initial begin
+            string dmem_file;
+            if ($value$plusargs("DMEM=%s", dmem_file))
+                $readmemh(dmem_file, mem);
+        end
+    `endif
 
     // AXI handling, just raise ready to complete transaction
     // axi bit overcomplicate in current state, no variable wait times,

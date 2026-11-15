@@ -44,4 +44,11 @@
 - Implement the official strobe function from AMD
 
 ## Fixing Commit
-- 
+- 0d77797
+
+# 6 - Wrong SB/SH
+## Details
+- When using sb or sh the wrong address was used in the word
+
+## Fix
+- Add shifting to sb and sh

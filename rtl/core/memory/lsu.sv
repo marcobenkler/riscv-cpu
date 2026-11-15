@@ -30,6 +30,7 @@ assign is_store = (op == SB || op == SH || op == SW);
 
 always_comb begin
     lsu_except = NONE;
+    if (axi_rsp_lsu.rvalid || axi_rsp_lsu.bvalid) begin
     if (is_store) begin
         if      (axi_rsp_lsu.bresp == OKAY)   lsu_except = NONE;
         else if (axi_rsp_lsu.bresp == EXOKAY) lsu_except = STORE_ACC_FLT;
@@ -42,18 +43,29 @@ always_comb begin
         else if (axi_rsp_lsu.rresp == SLVERR) lsu_except = LOAD_ACC_FLT;
         else if (axi_rsp_lsu.rresp == DECERR) lsu_except = LOAD_ADDR_MIS;
     end
-end
-
-// STROBE IS WRONG !!!
-
-// comp strobe
-always_comb begin
-    if      (op == SB) comp_strb = 4'b0001;
-    else if (op == SH) comp_strb = 4'b0011;
-    else               comp_strb = 4'b1111;
+    end
 end
 
 // AXI
+// comp strobe
+always_comb begin
+    if (op == SB) begin
+        unique  case (address[1:0])
+            2'b00: comp_strb = 4'b0001;
+            2'b01: comp_strb = 4'b0010;
+            2'b10: comp_strb = 4'b0100;
+            2'b11: comp_strb = 4'b1000;
+        endcase
+    end
+    else if (op == SH) begin
+        unique case (address[1])
+            1'b0: comp_strb = 4'b0011;
+            1'b1: comp_strb = 4'b1100;
+        endcase
+    end
+    else comp_strb = 4'b1111;
+end
+
 // standard dq states, for stalls to be instant without workarounds
 always_ff@(posedge clk) begin
     if (!rst_n) state_q <= IDLE;
@@ -63,19 +75,22 @@ end
 always_comb begin
     axi_req_lsu.awaddr = address;
     axi_req_lsu.awprot = 3'b001;
-    axi_req_lsu.wdata  = input_data;
+    axi_req_lsu.wdata  = input_data << 8*address[1:0];
     axi_req_lsu.wstrb  = comp_strb;
     axi_req_lsu.araddr = address;
     axi_req_lsu.arprot = 3'b001;
 end
 
 // sign/zero extension
+logic [31:0] shifted_rdata;
+assign shifted_rdata = axi_rsp_lsu.rdata >> (8 * address[1:0]);
+
 always_comb begin
-    if      (op == LB)  output_data = {{24{axi_rsp_lsu.rdata[7]}} ,axi_rsp_lsu.rdata[7:0]};
-    else if (op == LH)  output_data = {{16{axi_rsp_lsu.rdata[15]}} ,axi_rsp_lsu.rdata[15:0]};
-    else if (op == LW)  output_data = axi_rsp_lsu.rdata;
-    else if (op == LBU) output_data = {24'b0 ,axi_rsp_lsu.rdata[7:0]};
-    else if (op == LHU) output_data = {16'b0 ,axi_rsp_lsu.rdata[15:0]};
+    if      (op == LB)  output_data = {{24{shifted_rdata[7]}} , shifted_rdata[7:0]};
+    else if (op == LH)  output_data = {{16{shifted_rdata[15]}} , shifted_rdata[15:0]};
+    else if (op == LW)  output_data = shifted_rdata;
+    else if (op == LBU) output_data = {24'b0 , shifted_rdata[7:0]};
+    else if (op == LHU) output_data = {16'b0 , shifted_rdata[15:0]};
     else output_data = 32'hF00D_D00D;
 end
 
