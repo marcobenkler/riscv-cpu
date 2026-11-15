@@ -5,7 +5,7 @@ LZ4_PREFIX := $(shell brew --prefix lz4)
 RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
 RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv" ! -name "sc_cpu.sv")
 RTL_FILES       := $(RTL_PKG_FILES) $(RTL_OTHER_FILES)
-TB_FILES        := verify/legacy/tb/pipeline/tb_pl_cpu.sv
+TB_FILES        := verify/manual_core_testing/tb/pipeline/tb_pl_cpu.sv
 
 TEST ?= rv32ui-p-add
 
