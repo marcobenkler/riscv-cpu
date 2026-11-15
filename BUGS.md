@@ -1,0 +1,10 @@
+# 1 - PC offset after branch
+## Details
+- After branch pc has offset by N cycles, with N as pipeline stalling duration. Only for 1 cycle then correct branch is taken.
+
+## Reason
+ - If the pipe is stalled while a branch is successfull, the branch itself flushes the id_ex_reg -> The branch operation is gone.
+   - Through the stall the pc_update is delayed
+
+## Fixing Commit
+- a880426
