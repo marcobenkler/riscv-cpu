@@ -44,6 +44,8 @@ always_comb begin
     end
 end
 
+// STROBE IS WRONG !!!
+
 // comp strobe
 always_comb begin
     if      (op == SB) comp_strb = 4'b0001;
@@ -74,7 +76,7 @@ always_comb begin
     else if (op == LW)  output_data = axi_rsp_lsu.rdata;
     else if (op == LBU) output_data = {24'b0 ,axi_rsp_lsu.rdata[7:0]};
     else if (op == LHU) output_data = {16'b0 ,axi_rsp_lsu.rdata[15:0]};
-    else output_data = 32'hAAAA_AAAA;
+    else output_data = 32'hF00D_D00D;
 end
 
 always_comb begin
@@ -89,7 +91,7 @@ always_comb begin
     case (state_q)
         IDLE: begin
             if (mem_req) begin
-                lsu_stall = 1'b0;
+                lsu_stall = 1'b1;
                 state_d = (is_store) ? STORE_AW_W : LOAD_AR;
             end
         end
@@ -105,6 +107,7 @@ always_comb begin
             // if pipe is stalled an state set to IDLE bresp is thrown away
             if (axi_rsp_lsu.bvalid && !pipe_stall) begin
                 state_d = IDLE;
+                lsu_stall = 0;
                 // resp_b_vld = 1'b1; not needed. If err occurs output except occurs
                 // else lsu_stall is just set to 0
             end
@@ -117,7 +120,10 @@ always_comb begin
         LOAD_R: begin
             lsu_stall = 1'b1;
             axi_req_lsu.rready = 1'b1;
-            if (axi_rsp_lsu.rvalid) state_d = IDLE;
+            if (axi_rsp_lsu.rvalid) begin
+                state_d = IDLE;
+                lsu_stall = 1'b0;
+            end
         end
         default: state_d = IDLE;
     endcase

@@ -10,8 +10,11 @@ import axi_pkg::*;
     output axi_rsp_t axi_rsp_mem
 );
 
-    logic [31:0] bram_in_data;
-    logic [31:0] bram_out_data;
+    /* Synthesis */
+    initial begin
+        $readmemh("build_os/dmem.mem", mem);
+    end
+    /**/
 
     // AXI handling, just raise ready to complete transaction
     // axi bit overcomplicate in current state, no variable wait times,
@@ -24,12 +27,17 @@ import axi_pkg::*;
     assign axi_rsp_mem.rresp   = OKAY;
     //valid handling (mb useless, TODO check)
     always_ff@(posedge clk) begin
+        if (!rst_n) begin
+            axi_rsp_mem.rvalid <= 1'b0;
+            axi_rsp_mem.bvalid <= 1'b0;
+        end
         axi_rsp_mem.rvalid <= 1'b0;
         axi_rsp_mem.bvalid <= 1'b0;
         if (axi_req_mem.arvalid) axi_rsp_mem.rvalid <= 1'b1;
         if (axi_req_mem.awvalid && axi_req_mem.wvalid) axi_rsp_mem.bvalid <= 1'b1;
     end
 
+    /*
     // Strobe handling
     always_comb begin
         if      (axi_req_mem.wstrb == 4'b0001) bram_in_data = {24'b0, axi_req_mem.wdata[7:0]};
@@ -38,6 +46,14 @@ import axi_pkg::*;
         // Maybe implement exception here
         else                                   bram_in_data = 32'hDEAD_D00F;
     end
+    */
+
+    // Translate Byte -> Word Index: Just erase the two LSBs
+    localparam int WD = $clog2(MEM_DEPTH);
+    logic [WD-1:0] trans_wr_addr;
+    logic [WD-1:0] trans_rd_addr;
+    assign trans_wr_addr = axi_req_mem.awaddr[WD+1:2];
+    assign trans_rd_addr = axi_req_mem.araddr[WD+1:2];
 
     // BlockRAM
     // Following AMD structure to ensure BRAM use on Xilinx FPGA boards
@@ -47,13 +63,16 @@ import axi_pkg::*;
     // Write
     always_ff@(posedge clk) begin
         if (axi_req_mem.awvalid && axi_req_mem.wvalid)
-            mem[axi_req_mem.awaddr] <= bram_in_data;
+            for (int i = 0; i < 4; i++) begin
+                if (axi_req_mem.wstrb[i])
+                    mem[trans_wr_addr][i*8 +: 8] <= axi_req_mem.wdata[i*8 +: 8];
+            end
     end
 
     // Read
     always_ff@(posedge clk) begin
         if (axi_req_mem.arvalid)
-            axi_rsp_mem.rdata <= mem[axi_req_mem.araddr];
+            axi_rsp_mem.rdata <= mem[trans_rd_addr];
     end
 
     // Sign/Zero extension is done in lsu

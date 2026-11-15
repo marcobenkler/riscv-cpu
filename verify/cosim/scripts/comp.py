@@ -41,12 +41,13 @@ def main():
             if (s[tag] != r[tag]):
                 pc = f'{int(s["pc"], 16):x}:'
                 order = r["order"]
+                cycle = r["cycle"]
                 lines = dis.readlines()
                 for i, line in enumerate(lines):
                     if line.strip().startswith(pc):
                         break
                 res = lines[max(0, i - 50) : i + 12]
-                res.insert(0, f'Error at pc: {pc}, {tag} did not match. Order: {order} ')
+                res.insert(0, f'\nError at pc: {pc}, {tag} did not match. Cycle: {cycle}, Order: {order}.\n \n')
                 print(''.join(res))
                 report.writelines(res)
                 sys.exit(1) #make knows if test worked 

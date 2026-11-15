@@ -32,3 +32,16 @@
 
 ## Fix
 - Adding buffer, which buffers mem_wb: rdata/rd/reg_write and deciding by, whether it's in stall or not
+
+## Fixing Commit
+- 3492bbb
+
+# 5 - Wrong Mem Addr
+- The address that was used by the mem file to access the data and write in register was wrong, strobe was wrong as well
+
+## Fix
+- Translate from byte -> word addresses by removing the 2 LSB bytes
+- Implement the official strobe function from AMD
+
+## Fixing Commit
+- 

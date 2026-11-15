@@ -231,7 +231,7 @@ module pl_cpu
     assign imm_res = id_ex_out.pc_current + id_ex_out.imm;
 
     // buffer mem_wb for forwarding, even after deleting mem_wb_reg through lsu_stall
-
+    // Does not work with multycycle units, if they do not buffer the data itself
     logic [31:0] wb_fwd_buf;
     logic [4:0]  wb_fwd_rd;
     logic        wb_fwd_we;
