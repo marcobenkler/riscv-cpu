@@ -2,6 +2,7 @@ package pipeline_pkg;
     typedef rvfi_t;
 
     typedef struct packed {
+        logic        valid;
         logic [31:0] pc_current;
         logic [31:0] pc_default;
         rvfi_t       rvfi;

@@ -15,3 +15,13 @@
 
 ## Reason
 - Missing flushing signal in first pipe_reg
+
+## Fixing Commit
+- 96f7aa7
+
+# 3 - Like 2 but deeper
+## Details
+- Fix 2 only covered the cosim log. The error occured later as an wrong input in the regfile
+
+## Fixing Commit
+- 

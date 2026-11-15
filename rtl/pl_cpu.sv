@@ -120,6 +120,8 @@ module pl_cpu
         .pc_default(if1_if2_in.pc_default) //utput
     );
 
+    assign if1_if2_in.valid = 1'b1;
+
     assign if1_if2_in.rvfi.valid = 1'b1;
     assign if1_if2_in.rvfi.pc    = if1_if2_in.pc_current;
 
@@ -132,12 +134,17 @@ module pl_cpu
         .out(if1_if2_out)
     );
 
+    logic [31:0] imem_instr;
+
     instruction_memory instruction_memory(
         .clk(clk),
         .stall(if_id_stall),
         .pc(if1_if2_in.pc_current),
-        .instruction(if_id_in.instruction)
+        .instruction(imem_instr)
     );
+
+    assign if_id_in.instruction = if1_if2_out.valid ? imem_instr : 32'h0000_0013;
+
     assign if_id_in.pc_current = if1_if2_out.pc_current;
     assign if_id_in.pc_default = if1_if2_out.pc_default;
     assign if_id_in.rs1 = if_id_in.instruction[19:15];
@@ -148,15 +155,11 @@ module pl_cpu
         if_id_in.rvfi.instr = if_id_in.instruction;
     end
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) if_id_flush_delayed <= '0;
-        else if_id_flush_delayed <= if_id_flush;
-    end
 
     pipeline_reg #(.T(if_id_t)) if_id_reg (
         .clk(clk),
         .reset_n(reset_n),
-        .flush(if_id_flush | if_id_flush_delayed),
+        .flush(if_id_flush),
         .stall(if_id_stall),
         .in(if_id_in),
         .out(if_id_out)
