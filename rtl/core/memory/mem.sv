@@ -1,7 +1,7 @@
 module mem
 import axi_pkg::*;
 #(
-    parameter logic[31:0] MEM_DEPTH = 32000
+    parameter logic[31:0] MEM_DEPTH = 4096
 )
 (
     input  logic     clk,
@@ -36,7 +36,7 @@ import axi_pkg::*;
         else if (axi_req_mem.wstrb == 4'b0011) bram_in_data = {16'b0, axi_req_mem.wdata[15:0]};
         else if (axi_req_mem.wstrb == 4'b1111) bram_in_data = axi_req_mem.wdata;
         // Maybe implement exception here
-        else                                   bram_in_data = 32'hAAAA_AAAA;
+        else                                   bram_in_data = 32'hDEAD_D00F;
     end
 
     // BlockRAM

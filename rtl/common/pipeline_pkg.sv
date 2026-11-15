@@ -136,7 +136,8 @@ package pipeline_pkg;
         logic [4:0]  rd_addr;   //wb_stage
         logic [31:0] rd_data;   //wb_stage
         //In current mem design not possible this way, LSU and mem meshed up, so just take before and after mem block
-        logic        wr_en;
+        logic        mem_req;
+        logic        is_store;
         logic        rd_en;
         logic        csr_wr;
         logic [31:0] csr_data;

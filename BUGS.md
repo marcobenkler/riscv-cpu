@@ -24,4 +24,11 @@
 - Fix 2 only covered the cosim log. The error occured later as an wrong input in the regfile
 
 ## Fixing Commit
-- 
+- eb0caa5
+
+# 4 - Forwarding data deleted
+## Details
+- When the lsu stalled the pipe, it deleted the mem_wb reg which was used by forwarding partially
+
+## Fix
+- Adding buffer, which buffers mem_wb: rdata/rd/reg_write and deciding by, whether it's in stall or not

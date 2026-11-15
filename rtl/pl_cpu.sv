@@ -230,6 +230,34 @@ module pl_cpu
 
     assign imm_res = id_ex_out.pc_current + id_ex_out.imm;
 
+    // buffer mem_wb for forwarding, even after deleting mem_wb_reg through lsu_stall
+
+    logic [31:0] wb_fwd_buf;
+    logic [4:0]  wb_fwd_rd;
+    logic        wb_fwd_we;
+    logic        res_seen;
+    always_ff@(posedge clk) begin
+        if (!reset_n) begin
+            wb_fwd_buf <= '0;
+            res_seen <= 1'b0;
+        end
+        else if (mem_wb_flush) begin
+            if (!res_seen) begin
+                wb_fwd_buf <= result;
+                wb_fwd_rd  <= mem_wb_out.rd;
+                wb_fwd_we  <= mem_wb_out.reg_write;
+            end
+            res_seen <= 1'b1;
+        end else res_seen <= 1'b0;
+    end
+
+    logic [31:0] wb_data;
+    logic [4:0]  wb_rd;
+    logic        wb_we;
+    assign wb_data = res_seen ? wb_fwd_buf : result;
+    assign wb_rd   = res_seen ? wb_fwd_rd  : mem_wb_out.rd;
+    assign wb_we   = res_seen ? wb_fwd_we  : mem_wb_out.reg_write;
+
     operand_select operand_select(
         .rs1_data(id_ex_out.rs1_data),
         .rs2_data(id_ex_out.rs2_data),
@@ -242,7 +270,7 @@ module pl_cpu
         .forward_b(forward_b),
         // parameter from forwarding
         .ex_mem_data(ex_mem_forward_data),
-        .mem_wb_data(result),
+        .mem_wb_data(wb_data),
         .a(a), //output
         .b(b) //output
         );
@@ -473,9 +501,15 @@ module pl_cpu
     assign mem_wb_in.rd = ex_mem_out.rd;
     assign mem_wb_in.res_src = ex_mem_out.res_src;
 
+    logic is_store;
+    assign is_store = (ex_mem_out.mem_op_type == SB ||
+                       ex_mem_out.mem_op_type == SH ||
+                       ex_mem_out.mem_op_type == SW);
+
     always_comb begin
         mem_wb_in.rvfi = ex_mem_out.rvfi;
-        mem_wb_in.rvfi.wr_en = ex_mem_out.mem_req; //mem_write_en;
+        mem_wb_in.rvfi.mem_req = ex_mem_out.mem_req;
+        mem_wb_in.rvfi.is_store = is_store;
         mem_wb_in.rvfi.csr_wr = ex_mem_out.csr_write;
         mem_wb_in.rvfi.csr_data = ex_mem_out.rs1_data;
         mem_wb_in.rvfi.csr_addr = ex_mem_out.instruction[31:20];
@@ -523,8 +557,8 @@ module pl_cpu
         .rs2_id_ex(id_ex_out.rs2),
         .rd_ex_mem(ex_mem_out.rd),
         .reg_write_ex_mem(ex_mem_out.reg_write),
-        .rd_mem_wb(mem_wb_out.rd),
-        .reg_write_mem_wb(mem_wb_out.reg_write),
+        .rd_mem_wb(wb_rd),
+        .reg_write_mem_wb(wb_we),
         .forward_a(forward_a), //output
         .forward_b(forward_b) //output
     );

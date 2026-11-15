@@ -382,8 +382,9 @@ VFLAGS_LOCKSTEP := --binary \
 	  -f $(FILES_LOCKSTEP) \
 	  $(UVM_DPI_SRC) \
 	  -CFLAGS "-Wno-deprecated-declarations" \
-	  -MAKEFLAGS "OPT_FAST=-O1 OPT_SLOW=-O0"
-
+	  -MAKEFLAGS "OPT_FAST=-O1 OPT_SLOW=-O0" \
+	  -trace-max-array 4300 \
+	  -trace-max-width 0
 
 ifeq ($(COV),1)
 	VFLAGS_LOCKSTEP += --coverage-user --coverage-line --coverage-toggle
