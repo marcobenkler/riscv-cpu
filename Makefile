@@ -25,7 +25,7 @@ ALL_TESTS := $(addprefix rv32ui-p-,$(RV32UI)) \
 .PHONY: sim verilate test-all rv32ui rv32um rv32mi _run_tests clean
 
 sim: verilate $(BUILD)/$(TEST).hex
-	./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$(TEST).hex +dtest=$(BUILD)/$(TEST).hex
+	./obj_dir/Vtb_pl_cpu +IMEM=$(BUILD)/$(TEST).hex +DMEM=$(BUILD)/$(TEST).hex
 
 verilate:
 	verilator --binary --trace-structs --trace-fst -sv --top-module tb_pl_cpu \

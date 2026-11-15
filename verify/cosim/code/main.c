@@ -1,6 +1,6 @@
-int main ( void ) {
-    int i = 2;
-    for (int j = 13; j< 26; j++){
-        j = j + i*2;
-    };
+int main(void) {
+    volatile int a = 46;
+    volatile int b = 2;
+    volatile int k = a / b;
+    return 0;
 }

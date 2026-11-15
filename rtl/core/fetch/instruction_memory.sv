@@ -13,11 +13,13 @@ module instruction_memory #(
 );
 
     (* rom_style = "block" *) logic [31:0] memo [MEM_DEPTH];
-    /* Synthesis*/
+    `ifndef SYNTHESIS
     initial begin
-        $readmemh("build_os/imem.mem", memo);
+        string imem_file;
+        if ($value$plusargs("iMEM=%s", imem_file))
+            $readmemh(imem_file, memo);
     end
-    /**/
+    `endif
 
     always_ff @(posedge clk) begin
         if (!stall) instruction <= memo[pc[$clog2(MEM_DEPTH)+1:2]];
