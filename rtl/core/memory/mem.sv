@@ -10,13 +10,6 @@ import axi_pkg::*;
     output axi_rsp_t axi_rsp_mem
 );
 
-    `ifndef SYNTHESIS
-        initial begin
-            string dmem_file;
-            if ($value$plusargs("DMEM=%s", dmem_file))
-                $readmemh(dmem_file, mem);
-        end
-    `endif
 
     // AXI handling, just raise ready to complete transaction
     // axi bit overcomplicate in current state, no variable wait times,
@@ -61,6 +54,14 @@ import axi_pkg::*;
     // Following AMD structure to ensure BRAM use on Xilinx FPGA boards
     (* ram_style = "block" *)
     logic [31:0] mem [MEM_DEPTH];
+
+    `ifndef SYNTHESIS
+        initial begin
+            string dmem_file;
+            if ($value$plusargs("DMEM=%s", dmem_file))
+                $readmemh(dmem_file, mem);
+        end
+    `endif
 
     // Write
     always_ff@(posedge clk) begin

@@ -16,7 +16,7 @@ module instruction_memory #(
     `ifndef SYNTHESIS
     initial begin
         string imem_file;
-        if ($value$plusargs("iMEM=%s", imem_file))
+        if ($value$plusargs("IMEM=%s", imem_file))
             $readmemh(imem_file, memo);
     end
     `endif
