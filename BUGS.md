@@ -52,3 +52,18 @@
 
 ## Fix
 - Add shifting to sb and sh
+
+## Commit
+- ed16b8b
+
+# 7 - Wrong SPIKE Flag | Wrong Trace assumtion
+## Details
+- Spike log was not set to m mode only. It changed mode and returned supervisor as current mode in csr
+- Assumed csr_data was the input value into the csr_module. It is the register value, the cpu is writing to
+
+## Fix
+- Add `--priv=m` flag to spike call.
+- Added register as csr_module output and wired rvfi to it
+
+## Commit
+- 

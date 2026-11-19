@@ -62,6 +62,7 @@ module pl_cpu
     lsu_excep_e  lsu_except;
     axi_req_t    axi_req_lsu;
     axi_rsp_t    axi_rsp_lsu;
+    logic [31:0] mstatus;
 
     // WB Stage
     logic [31:0] result;
@@ -477,7 +478,8 @@ module pl_cpu
         .trap_taken(trap_taken), //output
         .mret_taken(mret_taken), //output
         .csr_res(mem_wb_in.csr_res), //output
-        .csr_pc(csr_pc) //output
+        .csr_pc(csr_pc), //output
+        .mstatus_out(mstatus)
     );
 
     /*
@@ -511,7 +513,7 @@ module pl_cpu
         mem_wb_in.rvfi.mem_req = ex_mem_out.mem_req;
         mem_wb_in.rvfi.is_store = is_store;
         mem_wb_in.rvfi.csr_wr = ex_mem_out.csr_write;
-        mem_wb_in.rvfi.csr_data = ex_mem_out.rs1_data;
+        mem_wb_in.rvfi.csr_data = mstatus;
         mem_wb_in.rvfi.csr_addr = ex_mem_out.instruction[31:20];
         // currently a bit useless, will become relevant with LSU
         mem_wb_in.rvfi.mem_addr = ex_mem_out.ex_res;

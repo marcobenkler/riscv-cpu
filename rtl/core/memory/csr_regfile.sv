@@ -32,8 +32,11 @@ import lsu_pkg::*;
     output logic        trap_taken, // override next pc, if trap was taken
     output logic        mret_taken, // jump back to last pc stored in mret
     output logic [31:0] csr_res, // output for regular register
-    output logic [31:0] csr_pc // pc to jump back after trap handled
+    output logic [31:0] csr_pc, // pc to jump back after trap handled
+    output logic [31:0] mstatus_out
 );
+    // Prevent deeper changes in rtl for lockstep trace
+    assign mstatus_out = csr_write_val;
 
     logic [11:0] csr_addr;
     assign csr_addr = instruction[31:20];

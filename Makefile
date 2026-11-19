@@ -327,7 +327,7 @@ else
 endif
 
 SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
-SPIKE_CMD := --log-commits --isa=rv32im_zicsr $(SPIKE_SRG) --instructions=50000
+SPIKE_CMD := --log-commits --isa=rv32im_zicsr --priv=m $(SPIKE_SRG) --instructions=50000
 
 $(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 	@mkdir -p $(COSIM_RES)
@@ -407,7 +407,7 @@ $(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(COSIM_MEM) $(COSIM_DIS)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 #currently mem are read directly in the mem module and plusargs are not used for first testing
 	$(BIN_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) +UVM_NO_RELNOTES \
-	+TRACE=$@ +IMEM=$(BUILD_COSIM)/imem.mem +DMEM=$(BUILD_COSIM)/dmem.mem +WAVE=$(WAVE)
+	+TRACE=$@ +IMEM=build_os/imem.mem +DMEM=build_os/dmem.mem +WAVE=$(WAVE)
 # coverage.dat only exists if the model was built with coverage
 ifeq ($(COV),1)
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat
