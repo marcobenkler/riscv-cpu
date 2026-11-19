@@ -76,4 +76,14 @@
 - In `spike-log` -> `jsonl` script the data is filled up at the MSB with 0, if the data is shortend
 
 ## Commit
+- f5cbc3d
+
+# 9 - Spike log missasumtion
+## Details
+- Spike does not log the csr_register when nothing is written. I assuemd it logs the accessed register, wheter written or read
+
+## Fix
+- Remove the logging of the rtl part, if nothing is written
+
+## Commit
 - 

@@ -230,18 +230,27 @@ module decoder
                 mem_write = 1'b0;
             end
             5'b11100: begin // CSR
+                csr_write = 1'b0;
+                reg_write = 1'b0;
+                res_src = 3'b100;
                 case (funct3)
-                    3'b000: begin
+                    3'b000: begin // ECALL / EBREAK / MRET
                         if      (instruction[29]) ;
                         else if (instruction[20]) id_ebreak = 1'b1;
                         else                      id_ecall = 1'b1;
-
+                        res_src = 3'b0; // MIGHT BE WRONG
                     end
-                    default: begin
+                    // More for SPIKE log trace, would not be neccessery directly but cleaner anyways
+                    3'b001, 3'b101: begin // CSRRW | CSRRWI
                         csr_write = 1'b1;
-                        reg_write = 1'b1;
-                        res_src = 3'b100;
+                        reg_write = (instruction[11:7] != 0) ? 1'b1 : 1'b0; //11:7 = rd
                     end
+                    3'b010, 3'b011, 3'b110, 3'b111: begin // CSRRS | CSRRC | CSRRSI | CSRRCI
+                        csr_write = (instruction[19:15] != 5'b0) ? 1'b1: 1'b0; // 19:15 = rs1 | uimm
+                        reg_write = 1'b1;
+                    end
+                    default:
+                        id_illegal_instr = 1'b1;
                 endcase
             end
             default: begin
