@@ -66,4 +66,14 @@
 - Added register as csr_module output and wired rvfi to it
 
 ## Commit
+- d019e11
+
+# 8 - Wronge compare in trace
+## Details
+- Spike writs out mem_data as `0x00` if it's a `sb` and `0x0000` if it's a `sh`. I assuemd it was `0x00000000` all the time
+
+## Fix
+- In `spike-log` -> `jsonl` script the data is filled up at the MSB with 0, if the data is shortend
+
+## Commit
 - 

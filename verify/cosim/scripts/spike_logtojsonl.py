@@ -42,6 +42,8 @@ def convert(log: TextIO, jsonl: TextIO):
                     """Store"""
                     mem_waddr = ops[i + 1]
                     mem_wdata = ops[i + 2]
+                    # convert to string -> int then int -> hex
+                    mem_wdata = f'0x{int(ops[i + 2], 16):08x}'
                     i += 3 #Jump out
                 else:
                     """Load"""
