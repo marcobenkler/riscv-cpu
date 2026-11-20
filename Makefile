@@ -25,7 +25,8 @@ ALL_TESTS := $(addprefix rv32ui-p-,$(RV32UI)) \
 .PHONY: sim verilate test-all rv32ui rv32um rv32mi _run_tests clean
 
 sim: verilate $(BUILD)/$(TEST).hex
-	./obj_dir/Vtb_pl_cpu +IMEM=$(BUILD)/$(TEST).hex +DMEM=$(BUILD)/$(TEST).hex
+	./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$(TEST).hex +dtest=$(BUILD)/$(TEST).hex \
+	    +tohost=$$($(TOOLCHAIN)-nm $(TESTS_DIR)/$(TEST) | awk '$$3=="tohost"{print $$1}')
 
 verilate:
 	verilator --binary --trace-structs --trace-fst -sv --top-module tb_pl_cpu \
@@ -109,6 +110,7 @@ sim-%:
 
 ### UVM ###
 
+UVM_HOME := third_party/uvm-core/src
 UVM_TOP := tb_uart_loopback
 TEST := uart_loopback_test
 OBJ := ./obj_dir/$(UVM_TOP)
@@ -458,5 +460,3 @@ export OBJCACHE := ccache
 # include_file_ctime: really new creations headers are cachable
 export CCACHE_SLOPPINESS := pch_defines,time_macros,include_file_mtime,include_file_ctime
 export CCACHE_MAXSIZE := 20G
-
-# Für freertos statt selber geschriebenen code einfach die beiden mem in cpu packen, die elf in spike rein

@@ -114,3 +114,9 @@ WNS: +0.361 ns, 0 timing violations
 
 ### riscv-opcode  
 The official library to create instruction bit vectors. Used to create all instruction-bins in the checkpoint
+
+### ricsv-tests
+The official library to test the core functions of the cpu. For example add/sub/div/...
+
+## uvm-core
+The official uvm environment from Accellera. Used to build scalable verifying
