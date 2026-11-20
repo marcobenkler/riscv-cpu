@@ -86,4 +86,14 @@
 - Remove the logging of the rtl part, if nothing is written
 
 ## Commit
+- a648d08
+
+# 10 - Wrong data in mem_wdata
+## Details
+- Data was wrong in the mem_wdata at the mem, caused by still using the unbuffered result signal
+
+## Fix
+- Use the buffered one from Fix 4
+
+## Commit
 - 
