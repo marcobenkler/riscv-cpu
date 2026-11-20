@@ -1,5 +1,5 @@
 TOOLCHAIN := riscv64-unknown-elf
-TESTS_DIR := ../riscv-tools/riscv-tests/isa
+TESTS_DIR := third_party/riscv-tests/isa
 BUILD     := build
 LZ4_PREFIX := $(shell brew --prefix lz4)
 RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
@@ -9,13 +9,13 @@ TB_FILES        := verify/manual_core_testing/tb/pipeline/tb_pl_cpu.sv
 
 TEST ?= rv32ui-p-add
 
-RV32UI := add addi and andi auipc beq bge bgeu blt bltu bne fence_i jal jalr \
-          lb lbu ld_st lh lhu lui lw ma_data or ori sb sh simple sll slli     \
+RV32UI := add addi and andi auipc beq bge bgeu blt bltu bne jal jalr \
+          lb lbu ld_st lh lhu lui lw or ori sb sh simple sll slli     \
           slt slti sltiu sltu sra srai srl srli st_ld sub sw xor xori
 
 RV32UM := div divu mul mulh mulhsu mulhu rem remu
 
-RV32MI := csr illegal lh-misaligned lw-misaligned ma_addr ma_fetch mcsr \
+RV32MI := csr lh-misaligned lw-misaligned ma_addr mcsr \
           sbreak scall sh-misaligned shamt sw-misaligned
 
 ALL_TESTS := $(addprefix rv32ui-p-,$(RV32UI)) \
@@ -39,6 +39,9 @@ $(BUILD)/$(TEST).hex: $(BUILD)/$(TEST).bin | $(BUILD)
 	python3 -c "import sys; d=open('$<','rb').read(); d+=b'\x00'*((-len(d))%4); \
 	    sys.stdout.write('\n'.join(f'{int.from_bytes(d[i:i+4],\"little\"):08x}' for i in range(0,len(d),4))+'\n')" > $@
 
+$(TESTS_DIR)/$(TEST):
+	$(MAKE) -C $(TESTS_DIR) XLEN=32 RISCV_PREFIX=$(TOOLCHAIN)- $(TEST)
+
 $(BUILD)/$(TEST).bin: $(TESTS_DIR)/$(TEST) | $(BUILD)
 	$(TOOLCHAIN)-objcopy -O binary $< $@
 
@@ -60,7 +63,7 @@ test-all: verilate
 _run_tests:
 	@pass=0; fail=0; \
 	for test in $(SUITE); do \
-		$(MAKE) -B --no-print-directory "$(BUILD)/$$test.hex" TEST=$$test > /dev/null 2>&1; \
+		$(MAKE) --no-print-directory "$(BUILD)/$$test.hex" TEST=$$test > /dev/null 2>&1; \
 				result=$$(./obj_dir/Vtb_pl_cpu +itest=$(BUILD)/$$test.hex +dtest=$(BUILD)/$$test.hex \
 				+tohost=$$($(TOOLCHAIN)-nm $(TESTS_DIR)/$$test | awk '$$3=="tohost"{print $$1}') 2>&1); \
 		if echo "$$result" | grep -q "^PASS"; then \

@@ -29,6 +29,11 @@ Left out trivial connections, i.e. instruction_memory -> decoder for improved ov
 | [Surfer](https://surfer-project.org/) | View `.vcd` / `.fst` waveforms |
 | Vivado | FPGA synthesis, implementation and STA |
 
+
+Install the required packages for verifying via, if you haven't pulled it already
+```zsh
+git submodule update --init --recursive
+```
 ---
 
 ### FPGA (Zybo Z7)
