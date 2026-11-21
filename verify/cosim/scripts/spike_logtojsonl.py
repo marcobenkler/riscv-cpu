@@ -60,6 +60,9 @@ def convert(log: TextIO, jsonl: TextIO):
                 """Write to csr"""
                 csr_addr = int(tok[1:tok.index('_')])
                 csr_data = ops[i + 1]
+                if (1952 <= csr_addr <= 1960):
+                    csr_addr = None
+                    csr_data = None
                 i += 2 #Jump out
             else:
                 print(f'Unknown entry {tok} at pc {pc}')
@@ -70,6 +73,7 @@ def convert(log: TextIO, jsonl: TextIO):
                 "mem_waddr": mem_waddr, "mem_wdata": mem_wdata,
                 "mem_raddr": mem_raddr, "mem_rdata": mem_rdata,
                 "csr_addr": csr_addr, "csr_data": csr_data}
+
         
         jsonl.write(json.dumps(line) + '\n')
 
