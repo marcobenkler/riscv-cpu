@@ -345,7 +345,6 @@ module pl_cpu
     always_comb begin
         case (forward_b)
             2'b00: ex_mem_in.rs2_data = id_ex_out.rs2_data;
-            // 2'b01: ex_mem_in.rs2_data = result;
             2'b01: ex_mem_in.rs2_data = wb_data;
             2'b10: ex_mem_in.rs2_data = ex_mem_forward_data;
             default: ex_mem_in.rs2_data = 'x;

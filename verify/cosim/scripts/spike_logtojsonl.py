@@ -43,7 +43,8 @@ def convert(log: TextIO, jsonl: TextIO):
                     mem_waddr = ops[i + 1]
                     mem_wdata = ops[i + 2]
                     # convert to string -> int then int -> hex
-                    mem_wdata = f'0x{int(ops[i + 2], 16):08x}'
+                    #mem_wdata = f'0x{int(ops[i + 2], 16):08x}' better not, sb and sh are compared wrong with the rtl log
+                    # rtl sees entire word correctly just stores a part
                     i += 3 #Jump out
                 else:
                     """Load"""

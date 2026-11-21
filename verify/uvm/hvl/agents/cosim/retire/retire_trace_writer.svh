@@ -6,6 +6,8 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
 
     string line;
 
+    string mem_wdata_tmp;
+
     // jsonl inputs
     string jsonl_rd_addr;
     string jsonl_rd_data;
@@ -33,8 +35,14 @@ class retire_trace_writer extends uvm_subscriber#(retire_item);
                 $sformatf("\"0x%08h\"", item.rvfi.rd_data) : "null";
             jsonl_mem_waddr = (item.rvfi.mem_req && item.rvfi.is_store)     ?
                                 $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
+            // mem_wdata needs to adjust, if its a sb or sh, cause spike logs with 0 prefix
+            case (item.rvfi.instr[14:12])
+                3'b000:  mem_wdata_tmp = $sformatf("\"0x%02h\"",  item.rvfi.mem_wdata[7:0]);
+                3'b001:  mem_wdata_tmp = $sformatf("\"0x%04h\"",  item.rvfi.mem_wdata[15:0]);
+                default: mem_wdata_tmp = $sformatf("\"0x%08h\"",  item.rvfi.mem_wdata);
+            endcase
             jsonl_mem_wdata = (item.rvfi.mem_req && item.rvfi.is_store)     ?
-                                $sformatf("\"0x%08h\"",  item.rvfi.mem_wdata) : "null";
+                                mem_wdata_tmp : "null";
             jsonl_mem_raddr = (item.rvfi.mem_req && !item.rvfi.is_store && item.rvfi.rd_en)     ?
                                 $sformatf("\"0x%08h\"",  item.rvfi.mem_addr)  : "null";
             jsonl_mem_rdata = (item.rvfi.mem_req && !item.rvfi.is_store && item.rvfi.rd_en)     ?

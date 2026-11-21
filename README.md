@@ -61,6 +61,11 @@ Requires the `riscv64-unknown-elf-gcc` to compile c -> .mem file
 
 ## Debugging
 
+Note: For the commands to run the third_party libs are required in addition to `Verilator` and the compiler. Get the via
+```zsh
+git submodule update --init --recursive
+```
+
 This repo uses Offline-Cosim for efficient debugging. 
 
 After choosing if bare-metal or freeRTOS suits the test better, you can choose between them with  
@@ -76,6 +81,12 @@ It will then run the following chain
 - Run spike with the corresponding `.elf` file
 - Take both retire-traces and compares them line by lin
 - If an error occures it copy the area of the error instruction from the `.dis` asm file from -50 to +10 lines, inserts the block and marks the error instruction
+
+It is as well possible to just test the core functions like add/div etc by using
+
+```zsh
+make test-all
+```
 
 <!--[BOTH JSONL FILES](/images/jsonls.png)-->
 

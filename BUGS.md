@@ -96,4 +96,14 @@
 - Use the buffered one from Fix 4
 
 ## Commit
+- e2a95b0
+
+# 11 - Wrong mem_wdata
+## Details
+- mem_wdata was originally extended with 0 prefix as fix for bug 6. If mem_wdata was not 0 it compared spikes 0 prefix with the full 32 bit r2_data vecotr
+
+## Fix
+- Remove prefix in spike log, remove the first bits in the rtl log
+
+## Commit
 - 
