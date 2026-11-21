@@ -102,7 +102,7 @@ foreach mem {imem.mem dmem.mem} {
 }
 
 # Constraints
-add_files -norecurse -fileset constrs_1 ${project_dir}/Zybo-Z7-Master.xdc
+add_files -norecurse -fileset constrs_1 ${project_dir}/synth/Zybo-Z7-Master.xdc
 
 set_property top          ${top_module}        [get_filesets sources_1]
 set_property include_dirs [list ${project_dir}] [get_filesets sources_1]
