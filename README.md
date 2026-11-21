@@ -28,6 +28,7 @@ Left out trivial connections, i.e. instruction_memory -> decoder for improved ov
 | `riscv64-unknown-elf-gcc` | Compile assembly test programs |
 | [Surfer](https://surfer-project.org/) | View `.vcd` / `.fst` waveforms |
 | Vivado | FPGA synthesis, implementation and STA |
+| Spike | Functional ISS of riscv for reference|
 
 
 Install the required packages for verifying via, if you haven't pulled it already
