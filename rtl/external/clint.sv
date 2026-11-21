@@ -83,6 +83,9 @@ module clint
         else {mtime_hi, mtime_lo} <= {mtime_hi, mtime_lo} + 1;
     end
 
-    assign mtip = ({mtime_hi, mtime_lo} >= {mtimecmp_hi, mtimecmp_lo});
+    always_ff@(posedge clk) begin
+        if (!reset_n) mtip <= '0;
+        else        mtip <= ({mtime_hi, mtime_lo} >= {mtimecmp_hi, mtimecmp_lo});
+    end
 
 endmodule

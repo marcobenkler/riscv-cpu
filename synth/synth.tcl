@@ -96,7 +96,7 @@ file mkdir ${mem_dir}
 foreach mem {imem.mem dmem.mem} {
     set mem_path ${mem_dir}/${mem}
     if {![file exists ${mem_path}]} {
-        puts "WARNING: ${mem_path} not found – creating empty placeholder. Run 'make os' first."
+        puts "WARNING: ${mem_path} not found - creating empty placeholder. Run 'make os' first."
         close [open ${mem_path} w]
     }
     add_files -norecurse -fileset sources_1 ${mem_path}
