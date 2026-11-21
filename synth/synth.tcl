@@ -1,10 +1,10 @@
 # =============================================================================
-# RISC-V CPU — Vivado Project Build (Synth + Impl + Bitstream)
+# RISC-V CPU — Vivado Project synth (Synth + Impl + Bitstream)
 # Target: Zybo Z7-10 (xc7z010clg400-1)
 #
-# Location: <repo>/synth/build.tcl
-# Usage:  vivado -mode batch -source synth/build.tcl                 (full build)
-#         vivado -mode batch -source synth/build.tcl -tclargs setup  (project only)
+# Location: <repo>/synth/synth.tcl
+# Usage:  vivado -mode batch -source synth/synth.tcl                 (full synth)
+#         vivado -mode batch -source synth/synth.tcl -tclargs setup  (project only)
 # Then:   open synth/vivado/riscv_cpu.xpr in the Vivado GUI
 #
 # Expects imem.hex and dmem.hex in the repo root (empty placeholders are
@@ -99,7 +99,7 @@ foreach hex {imem.hex dmem.hex} {
 }
 
 # Constraints
-add_files -norecurse -fileset constrs_1 ${project_dir}/Zybo-Z7-Master.xdc
+add_files -norecurse -fileset constrs_1 ${project_dir}/synth/Zybo-Z7-Master.xdc
 
 set_property top          ${top_module}        [get_filesets sources_1]
 set_property include_dirs [list ${project_dir}] [get_filesets sources_1]
@@ -114,7 +114,7 @@ set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED          true    [get_runs impl_1]
 # "setup" mode: only create the project, skip synthesis/implementation
 if {[lsearch -exact ${argv} setup] >= 0} {
     puts "============================================"
-    puts " PROJECT CREATED (setup only, no build)"
+    puts " PROJECT CREATED (setup only, no synth)"
     puts " GUI: ${proj_dir}/${proj_name}.xpr"
     puts "============================================"
     close_project
@@ -161,7 +161,7 @@ file copy -force ${impl_dir}/${top_module}.bit ${output_dir}/pl_cpu.bit
 
 set wns [get_property STATS.WNS [get_runs impl_1]]
 puts "============================================"
-puts " BUILD DONE: ${output_dir}/pl_cpu.bit"
+puts " synth DONE: ${output_dir}/pl_cpu.bit"
 puts " WNS: ${wns} ns"
 if {${wns} < 0} {
     puts " WARNING: Timing not met (negative WNS)!"
