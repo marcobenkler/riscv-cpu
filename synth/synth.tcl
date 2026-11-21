@@ -3,8 +3,12 @@
 # Target: Zybo Z7-10 (xc7z010clg400-1)
 #
 # Location: <repo>/synth/build.tcl
-# Usage:  vivado -mode batch -source synth/synth.tcl
+# Usage:  vivado -mode batch -source synth/build.tcl                 (full build)
+#         vivado -mode batch -source synth/build.tcl -tclargs setup  (project only)
 # Then:   open synth/vivado/riscv_cpu.xpr in the Vivado GUI
+#
+# Expects imem.hex and dmem.hex in the repo root (empty placeholders are
+# created if they are missing).
 #
 # The project in vivado/ is recreated on every run (-force).
 # Permanent changes (new files, settings) belong in this script.
@@ -80,9 +84,19 @@ set sources [list \
 
 add_files -norecurse -fileset sources_1 ${sources}
 
-# HEX file for BRAM initialization ($readmemh)
-add_files -norecurse -fileset sources_1 ${project_dir}/program.hex
-set_property file_type {Memory File} [get_files program.hex]
+# HEX files for BRAM initialization ($readmemh), Harvard: instruction + data memory.
+# If a file does not exist yet, an empty placeholder is created so the project
+# can be set up now. Generate the real files later at the same path; Vivado
+# picks up the new contents on the next synthesis run.
+foreach hex {imem.hex dmem.hex} {
+    set hex_path ${project_dir}/${hex}
+    if {![file exists ${hex_path}]} {
+        puts "WARNING: ${hex_path} not found – creating empty placeholder (memory will be zero)."
+        close [open ${hex_path} w]
+    }
+    add_files -norecurse -fileset sources_1 ${hex_path}
+    set_property file_type {Memory File} [get_files ${hex}]
+}
 
 # Constraints
 add_files -norecurse -fileset constrs_1 ${project_dir}/Zybo-Z7-Master.xdc
@@ -96,6 +110,16 @@ update_compile_order -fileset sources_1
 # =============================================================================
 set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY rebuilt [get_runs synth_1]
 set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED          true    [get_runs impl_1]
+
+# "setup" mode: only create the project, skip synthesis/implementation
+if {[lsearch -exact ${argv} setup] >= 0} {
+    puts "============================================"
+    puts " PROJECT CREATED (setup only, no build)"
+    puts " GUI: ${proj_dir}/${proj_name}.xpr"
+    puts "============================================"
+    close_project
+    return
+}
 
 # =============================================================================
 # Synthesis
