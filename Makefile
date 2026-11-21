@@ -1,7 +1,20 @@
-TOOLCHAIN := riscv64-unknown-elf
 TESTS_DIR := third_party/riscv-tests/isa
 BUILD     := build
-LZ4_PREFIX := $(shell brew --prefix lz4)
+# Platform-specific settings: macOS (Homebrew) vs. Linux/WSL
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    TOOLCHAIN   := riscv64-unknown-elf
+    LZ4_PREFIX  := $(shell brew --prefix lz4)
+    LZ4_CFLAGS  := -I$(LZ4_PREFIX)/include
+    LZ4_LDFLAGS := -L$(LZ4_PREFIX)/lib -llz4
+    OD          := god
+else
+    # xPack RISC-V GCC (includes newlib + rv32 multilibs)
+    TOOLCHAIN   := riscv-none-elf
+    LZ4_CFLAGS  :=
+    LZ4_LDFLAGS := -llz4
+    OD          := od
+endif
 RTL_PKG_FILES   := $(shell find rtl -name "*_pkg.sv")
 RTL_OTHER_FILES := $(shell find rtl -name "*.sv" ! -name "*_pkg.sv" ! -name "sc_cpu.sv")
 RTL_FILES       := $(RTL_PKG_FILES) $(RTL_OTHER_FILES)
@@ -33,8 +46,8 @@ verilate:
 	    -Wno-TIMESCALEMOD \
 	    -Mdir obj_dir \
 	    $(RTL_FILES) $(TB_FILES) \
-	    -CFLAGS "-I$(LZ4_PREFIX)/include" \
-	    -LDFLAGS "-L$(LZ4_PREFIX)/lib -llz4"
+	    -CFLAGS "$(LZ4_CFLAGS)" \
+	    -LDFLAGS "$(LZ4_LDFLAGS)"
 
 $(BUILD)/$(TEST).hex: $(BUILD)/$(TEST).bin | $(BUILD)
 	python3 -c "import sys; d=open('$<','rb').read(); d+=b'\x00'*((-len(d))%4); \
@@ -152,7 +165,7 @@ clean:
 # Build mem and elf files for freertos boot
 ################
 
-CROSS := riscv64-unknown-elf-
+CROSS := $(TOOLCHAIN)-
 CC := $(CROSS)gcc
 OBJCOPY := $(CROSS)objcopy
 OBJDUMP := $(CROSS)objdump
@@ -224,7 +237,7 @@ $(BUILD_OS)/dmem.bin: $(BUILD_OS)/$(TARGET).elf
 
 # % matches imem and dmem, so one rule for both
 $(BUILD_OS)/%.mem: $(BUILD_OS)/%.bin
-	god -An -v -tx4 -w4 $< | tr -d ' ' > $@
+	$(OD) -An -v -tx4 -w4 $< | tr -d ' ' > $@
 
 $(BUILD_OS)/$(TARGET).dis: $(BUILD_OS)/$(TARGET).elf
 	$(OBJDUMP) -d $< > $@
@@ -243,7 +256,7 @@ clean_os:
 # Build mem and elf file for offline lockstep with spike
 ############################
 
-CROSS_COSIM 	:= riscv64-unknown-elf-
+CROSS_COSIM 	:= $(TOOLCHAIN)-
 CC_COSIM 	:= $(CROSS)gcc
 OBJCOPY_COSIM 	:= $(CROSS)objcopy
 OBJDUMP_COSIM	:= $(CROSS)objdump
@@ -294,7 +307,7 @@ $(BUILD_COSIM)/dmem.bin: $(BUILD_COSIM)/$(TARGET_COSIM).elf
 	$(OBJCOPY_COSIM) -O binary -j .rodata -j .data $< $@
 
 $(BUILD_COSIM)/%.mem: $(BUILD_COSIM)/%.bin
-	god -An -v -tx4 -w4 $< | tr -d ' ' > $@
+	$(OD) -An -v -tx4 -w4 $< | tr -d ' ' > $@
 
 $(BUILD_COSIM)/$(TARGET_COSIM).dis: $(BUILD_COSIM)/$(TARGET_COSIM).elf
 	$(OBJDUMP_COSIM) -d $< > $@
@@ -353,7 +366,6 @@ TEST_LOCKSTEP := cosim_test
 FILES_LOCKSTEP := verify/uvm/hvl/tests/cosim/files_cosim.f
 COV ?= 0
 WAVE ?= 1
-LZ4_PREFIX := $(shell brew --prefix lz4)
 
 # Verilator build lives outside of COSIM_RES, so clean_cosim only deletes results, not the compiled model
 VERILATOR_BUILD := build_verilator
@@ -397,8 +409,8 @@ endif
 
 ifeq ($(WAVE),1)
 	VFLAGS_LOCKSTEP += --trace-fst --trace-structs \
-	                   -CFLAGS "-I$(LZ4_PREFIX)/include" \
-	                   -LDFLAGS "-L$(LZ4_PREFIX)/lib -llz4"
+	                   -CFLAGS "$(LZ4_CFLAGS)" \
+	                   -LDFLAGS "$(LZ4_LDFLAGS)"
 endif
 
 # Step 1: build the model (slow, only when RTL/TB changed)
