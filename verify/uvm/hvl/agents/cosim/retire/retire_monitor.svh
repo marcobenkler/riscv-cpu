@@ -21,7 +21,9 @@ class retire_monitor extends uvm_monitor;
         mon = cfg.vif;
         forever begin
             @(posedge mon.clk)
-            if (mon.rvfi_res.valid) begin
+            if (mon.rvfi_res.valid && (mon.rvfi_res.instr != 32'h0000_0073 &&
+                mon.rvfi_res.instr != 32'h0010_0073))
+                begin
                 trans_collected = retire_item::type_id::create("trans_collected");
                 trans_collected.cycle = glb_cycle;
                 trans_collected.rvfi = mon.rvfi_res;

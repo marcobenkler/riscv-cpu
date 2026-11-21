@@ -6,5 +6,5 @@
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char * pcTaskName );
 void vApplicationMallocFailedHook( void );
-
+void vPortSetupTimerInterrupt( void );
 #endif

@@ -47,9 +47,13 @@
 /* RISCV Uniques **************************************************************/
 /******************************************************************************/
 
+/* Disable timer interrupts, they are not debuggable without online lockstep which takes too much time for me
+Maybe turn it on, once fpga setup is ready with uart output
 #define configMTIME_BASE_ADDRESS        ( 0x0200BFF8UL )
 #define configMTIMECMP_BASE_ADDRESS     ( 0x02004000UL )
-
+*/
+#define configMTIME_BASE_ADDRESS     ( 0 )
+#define configMTIMECMP_BASE_ADDRESS  ( 0 )
 /******************************************************************************/
 /* Hardware description related definitions. **********************************/
 /******************************************************************************/
