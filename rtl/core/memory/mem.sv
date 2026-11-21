@@ -63,6 +63,12 @@ import axi_pkg::*;
         end
     `endif
 
+    `ifdef SYNTHESIS
+        initial begin
+            $readmemh("dmem.mem", mem);
+        end
+    `endif
+
     // Write
     always_ff@(posedge clk) begin
         if (axi_req_mem.awvalid && axi_req_mem.wvalid)

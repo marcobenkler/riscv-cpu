@@ -4,17 +4,20 @@ module pl_cpu
     import lsu_pkg::*;
 (
     input logic clk,
-    // ---- SIMULATION (1/2) ----
+    `ifdef VERILATOR
     input logic reset_n
-    // ---- SYNTHESIS (1/2) ----
-    //input logic reset_n_external,
-    //input logic uart_rx_bit,
-    //output logic uart_tx_bit
+    `endif
+    `ifdef SYNTHESIS
+    input logic reset_n_external,
+    input logic uart_rx_bit,
+    output logic uart_tx_bit
+    `endif
 );
 
-    // ---- SYNTHESIS (2/2) ----
-    //logic reset_n;
-    //assign reset_n = ~reset_n_external;
+    `ifdef SYNTHESIS
+    logic reset_n;
+    assign reset_n = ~reset_n_external;
+    `endif
 
     if1_if2_t if1_if2_in;
     if1_if2_t if1_if2_out;
@@ -95,9 +98,10 @@ module pl_cpu
     //RVFI only for lockstep with spike
     rvfi_t       rvfi_res;
 
-    // ---- SIMULATION (2/2) ----
+    `ifdef VERILATOR
     logic uart_rx_bit;
     logic uart_tx_bit;
+    `endif
 
     // IF Stage
     update_pc update_pc(

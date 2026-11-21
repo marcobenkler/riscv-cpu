@@ -21,6 +21,12 @@ module instruction_memory #(
     end
     `endif
 
+    `ifdef SYNTHESIS
+        initial begin
+            $readmemh("imem.mem", memo);
+        end
+    `endif
+
     always_ff @(posedge clk) begin
         if (!stall) instruction <= memo[pc[$clog2(MEM_DEPTH)+1:2]];
     end

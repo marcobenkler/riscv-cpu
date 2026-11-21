@@ -44,6 +44,7 @@ set sources [list \
     ${rtl}/common/pipeline_pkg.sv \
     ${rtl}/common/uart_pkg.sv \
     ${rtl}/common/axi_pkg.sv \
+    ${rtl}/common/lsu_pkg.sv \
     ${rtl}/core/fetch/next_pc.sv \
     ${rtl}/core/fetch/update_pc.sv \
     ${rtl}/core/fetch/instruction_memory.sv \
