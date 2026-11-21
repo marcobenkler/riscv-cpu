@@ -170,7 +170,7 @@ PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
 
 SRCS += $(wildcard $(FREERTOS)/*.c)
 SRCS += $(BSP)/start.S
-SRCS += $(FREERTOS)/portable/MemMang/heap_1.c
+SRCS += $(FREERTOS)/portable/MemMang/heap_4.c
 SRCS += $(PORT)/port.c
 SRCS += $(PORT)/portASM.S
 SRCS += $(wildcard freertos/app/*.c)
@@ -332,7 +332,7 @@ else
 endif
 
 SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
-SPIKE_CMD := --log-commits --isa=rv32im_zicsr --priv=m $(SPIKE_SRG) --instructions=50000
+SPIKE_CMD := --log-commits --isa=rv32im_zicsr --priv=m $(SPIKE_SRG) --instructions=500000
 
 $(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 	@mkdir -p $(COSIM_RES)
