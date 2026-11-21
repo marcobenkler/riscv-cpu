@@ -2,17 +2,20 @@
 # RISC-V CPU — Vivado Project Build (Synth + Impl + Bitstream)
 # Target: Zybo Z7-10 (xc7z010clg400-1)
 #
-# Usage:  vivado -mode batch -source build.tcl
-# Then:   open vivado/riscv_cpu.xpr in the Vivado GUI
+# Location: <repo>/synth/build.tcl
+# Usage:  vivado -mode batch -source synth/synth.tcl
+# Then:   open synth/vivado/riscv_cpu.xpr in the Vivado GUI
 #
 # The project in vivado/ is recreated on every run (-force).
 # Permanent changes (new files, settings) belong in this script.
 # =============================================================================
 
-# Project root = directory containing this script (works on Windows and Linux)
-set project_dir [file normalize [file dirname [info script]]]
+# This script lives in <repo>/synth/, so the repo root is one level up
+# (works on Windows and Linux, independent of the current working directory)
+set script_dir  [file normalize [file dirname [info script]]]
+set project_dir [file dirname ${script_dir}]
 set proj_name   riscv_cpu
-set proj_dir    ${project_dir}/vivado
+set proj_dir    ${script_dir}/vivado
 set output_dir  ${project_dir}/output
 set top_module  pl_cpu
 set part        xc7z010clg400-1
