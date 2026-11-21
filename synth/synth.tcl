@@ -1,67 +1,98 @@
 # =============================================================================
-# RISC-V CPU — Vivado Full Build (Synth + Impl + Bitstream)
-# Target: Zynq-7010 (xc7z010clg400-1)
-# Usage:  vivado -mode batch -source synth.tcl -log output/synth.log -journal output/synth.jou
+# RISC-V CPU — Vivado Project Build (Synth + Impl + Bitstream)
+# Target: Zybo Z7-10 (xc7z010clg400-1)
+#
+# Usage:  vivado -mode batch -source build.tcl
+# Then:   open vivado/riscv_cpu.xpr in the Vivado GUI
+#
+# The project in vivado/ is recreated on every run (-force).
+# Permanent changes (new files, settings) belong in this script.
 # =============================================================================
 
-set project_dir /opt/projects/riscv-cpu
+# Project root = directory containing this script (works on Windows and Linux)
+set project_dir [file normalize [file dirname [info script]]]
+set proj_name   riscv_cpu
+set proj_dir    ${project_dir}/vivado
+set output_dir  ${project_dir}/output
 set top_module  pl_cpu
 set part        xc7z010clg400-1
-set output_dir  ${project_dir}/output
+set jobs        8
 
 file mkdir ${output_dir}
 
 # =============================================================================
-# Read Sources
+# Create Project
 # =============================================================================
-read_verilog -sv [list \
-    ${project_dir}/rtl/common/alu_pkg.sv \
-    ${project_dir}/rtl/common/clint_pkg.sv \
-    ${project_dir}/rtl/common/pipeline_pkg.sv \
-    ${project_dir}/rtl/common/uart_pkg.sv \
-    ${project_dir}/rtl/core/fetch/next_pc.sv \
-    ${project_dir}/rtl/core/fetch/update_pc.sv \
-    ${project_dir}/rtl/core/memory/csr_regfile.sv \
-    ${project_dir}/rtl/core/decode/decoder.sv \
-    ${project_dir}/rtl/core/decode/imm_gen.sv \
-    ${project_dir}/rtl/core/decode/register_file.sv \
-    ${project_dir}/rtl/core/execute/alu/alu_addsub.sv \
-    ${project_dir}/rtl/core/execute/alu/alu_compare.sv \
-    ${project_dir}/rtl/core/execute/alu/alu_logic.sv \
-    ${project_dir}/rtl/core/execute/alu/alu_shift.sv \
-    ${project_dir}/rtl/core/execute/alu/alu_top.sv \
-    ${project_dir}/rtl/core/execute/branch_unit.sv \
-    ${project_dir}/rtl/core/execute/misaligned_detection.sv \
-    ${project_dir}/rtl/core/execute/muldiv/multiply.sv \
-    ${project_dir}/rtl/core/execute/muldiv/srt2/DigitSelector.sv \
-    ${project_dir}/rtl/core/execute/muldiv/srt2/LZD.sv \
-    ${project_dir}/rtl/core/execute/muldiv/srt2/RemainderUpdate.sv \
-    ${project_dir}/rtl/core/execute/muldiv/srt2/normalize.sv \
-    ${project_dir}/rtl/core/execute/muldiv/srt2/srt_top.sv \
-    ${project_dir}/rtl/core/execute/operand_select.sv \
-    ${project_dir}/rtl/core/fetch/instruction_memory.sv \
-    ${project_dir}/rtl/core/memory/bus_interconnect.sv \
-    ${project_dir}/rtl/core/memory/data_memory.sv \
-    ${project_dir}/rtl/core/writeback/result_select.sv \
-    ${project_dir}/rtl/external/clint.sv \
-    ${project_dir}/rtl/external/uart/uart_baud.sv \
-    ${project_dir}/rtl/external/uart/uart_rx.sv \
-    ${project_dir}/rtl/external/uart/uart_top.sv \
-    ${project_dir}/rtl/external/uart/uart_tx.sv \
-    ${project_dir}/rtl/pipeline/forwarding_unit.sv \
-    ${project_dir}/rtl/pipeline/hazard_unit.sv \
-    ${project_dir}/rtl/pipeline/pipeline_reg.sv \
-    ${project_dir}/rtl/pl_cpu.sv \
+create_project ${proj_name} ${proj_dir} -part ${part} -force
+
+# =============================================================================
+# Sources (referenced, not copied)
+# =============================================================================
+set rtl ${project_dir}/rtl
+
+set sources [list \
+    ${rtl}/common/alu_pkg.sv \
+    ${rtl}/common/clint_pkg.sv \
+    ${rtl}/common/pipeline_pkg.sv \
+    ${rtl}/common/uart_pkg.sv \
+    ${rtl}/core/fetch/next_pc.sv \
+    ${rtl}/core/fetch/update_pc.sv \
+    ${rtl}/core/fetch/instruction_memory.sv \
+    ${rtl}/core/decode/decoder.sv \
+    ${rtl}/core/decode/imm_gen.sv \
+    ${rtl}/core/decode/register_file.sv \
+    ${rtl}/core/execute/alu/alu_addsub.sv \
+    ${rtl}/core/execute/alu/alu_compare.sv \
+    ${rtl}/core/execute/alu/alu_logic.sv \
+    ${rtl}/core/execute/alu/alu_shift.sv \
+    ${rtl}/core/execute/alu/alu_top.sv \
+    ${rtl}/core/execute/branch_unit.sv \
+    ${rtl}/core/execute/misaligned_detection.sv \
+    ${rtl}/core/execute/operand_select.sv \
+    ${rtl}/core/execute/muldiv/multiply.sv \
+    ${rtl}/core/execute/muldiv/srt2/DigitSelector.sv \
+    ${rtl}/core/execute/muldiv/srt2/LZD.sv \
+    ${rtl}/core/execute/muldiv/srt2/RemainderUpdate.sv \
+    ${rtl}/core/execute/muldiv/srt2/normalize.sv \
+    ${rtl}/core/execute/muldiv/srt2/srt_top.sv \
+    ${rtl}/core/memory/csr_regfile.sv \
+    ${rtl}/core/memory/axi_interconnect.sv \
+    ${rtl}/core/memory/lsu.sv \
+    ${rtl}/core/memory/mem.sv \
+    ${rtl}/core/writeback/result_select.sv \
+    ${rtl}/external/clint.sv \
+    ${rtl}/external/uart/uart_baud.sv \
+    ${rtl}/external/uart/uart_rx.sv \
+    ${rtl}/external/uart/uart_top.sv \
+    ${rtl}/external/uart/uart_tx.sv \
+    ${rtl}/pipeline/forwarding_unit.sv \
+    ${rtl}/pipeline/hazard_unit.sv \
+    ${rtl}/pipeline/pipeline_reg.sv \
+    ${rtl}/pl_cpu.sv \
 ]
 
-# =============================================================================
-# Read Constraints
-# =============================================================================
-read_xdc ${project_dir}/Zybo-Z7-Master.xdc
+# No longer used (add to the list above if needed):
+#   ${rtl}/core/memory/bus_interconnect.sv
+#   ${rtl}/core/memory/data_memory.sv
 
-# HEX file für BRAM Initialisierung
-add_files ${project_dir}/program.hex
+add_files -norecurse -fileset sources_1 ${sources}
+
+# HEX file for BRAM initialization ($readmemh)
+add_files -norecurse -fileset sources_1 ${project_dir}/program.hex
 set_property file_type {Memory File} [get_files program.hex]
+
+# Constraints
+add_files -norecurse -fileset constrs_1 ${project_dir}/Zybo-Z7-Master.xdc
+
+set_property top          ${top_module}        [get_filesets sources_1]
+set_property include_dirs [list ${project_dir}] [get_filesets sources_1]
+update_compile_order -fileset sources_1
+
+# =============================================================================
+# Run Settings (match the previous non-project script)
+# =============================================================================
+set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY rebuilt [get_runs synth_1]
+set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED          true    [get_runs impl_1]
 
 # =============================================================================
 # Synthesis
@@ -70,46 +101,43 @@ puts "============================================"
 puts " Starting Synthesis..."
 puts "============================================"
 
-synth_design \
-    -top ${top_module} \
-    -part ${part} \
-    -flatten_hierarchy rebuilt \
-    -include_dirs ${project_dir}
-
-write_checkpoint -force ${output_dir}/post_synth.dcp
-report_utilization -file ${output_dir}/utilization_synth.rpt
+launch_runs synth_1 -jobs ${jobs}
+wait_on_run synth_1
+if {[get_property PROGRESS [get_runs synth_1]] ne "100%"} {
+    error "Synthesis failed – see ${proj_dir}/${proj_name}.runs/synth_1/runme.log"
+}
 
 # =============================================================================
-# Implementation
+# Implementation + Bitstream
 # =============================================================================
 puts "============================================"
-puts " Starting Implementation..."
+puts " Starting Implementation + Bitstream..."
 puts "============================================"
 
-opt_design
-place_design
+launch_runs impl_1 -to_step write_bitstream -jobs ${jobs}
+wait_on_run impl_1
+if {[get_property PROGRESS [get_runs impl_1]] ne "100%"} {
+    error "Implementation failed – see ${proj_dir}/${proj_name}.runs/impl_1/runme.log"
+}
+
+# =============================================================================
+# Reports + copy bitstream to output/
+# =============================================================================
+open_run impl_1
+report_timing_summary            -file ${output_dir}/timing.rpt
+report_utilization               -file ${output_dir}/utilization.rpt
 report_utilization -hierarchical -file ${output_dir}/utilization_hier.rpt
-phys_opt_design
-route_design
+report_power                     -file ${output_dir}/power.rpt
 
-write_checkpoint -force ${output_dir}/post_route.dcp
+set impl_dir [get_property DIRECTORY [get_runs impl_1]]
+file copy -force ${impl_dir}/${top_module}.bit ${output_dir}/pl_cpu.bit
 
-# =============================================================================
-# Reports
-# =============================================================================
-report_timing_summary  -file ${output_dir}/timing.rpt
-report_utilization     -file ${output_dir}/utilization.rpt
-report_power           -file ${output_dir}/power.rpt
-
-# =============================================================================
-# Bitstream
-# =============================================================================
-puts "============================================"
-puts " Generating Bitstream..."
-puts "============================================"
-
-write_bitstream -force ${output_dir}/pl_cpu.bit
-
+set wns [get_property STATS.WNS [get_runs impl_1]]
 puts "============================================"
 puts " BUILD DONE: ${output_dir}/pl_cpu.bit"
+puts " WNS: ${wns} ns"
+if {${wns} < 0} {
+    puts " WARNING: Timing not met (negative WNS)!"
+}
+puts " GUI: ${proj_dir}/${proj_name}.xpr"
 puts "============================================"
