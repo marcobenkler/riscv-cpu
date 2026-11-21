@@ -117,10 +117,41 @@ Note that although this CPU implements Havard memory architecture, the address-s
 
 ---
 
-## Timing
+## Synthesis Numbers
+
+### Timing
 
 Clock: 90 MHz (11.1 ns period)  
 WNS: +0.361 ns, 0 timing violations  
+
+### Utilization
+
+#### LUT
+|        Site Type        | Used | Fixed | Prohibited | Available | Util% |
+|-------------------------|------|-------|------------|-----------|-------|
+| Slice LUTs*             | 4104 |     0 |          0 |     17600 | 23.32 |
+|   LUT as Logic          | 4104 |     0 |          0 |     17600 | 23.32 |
+|   LUT as Memory         |    0 |     0 |          0 |      6000 |  0.00 |
+| Slice Registers         | 2481 |     0 |          0 |     35200 |  7.05 |
+|   Register as Flip Flop | 2481 |     0 |          0 |     35200 |  7.05 |
+|   Register as Latch     |    0 |     0 |          0 |     35200 |  0.00 |
+| F7 Muxes                |  256 |     0 |          0 |      8800 |  2.91 |
+| F8 Muxes                |  128 |     0 |          0 |      4400 |  2.91 |
+| Unique Control Sets     |   67 |       |          0 |      4400 |  1.52 |
+
+#### Memory
+|     Site Type     | Used | Fixed | Prohibited | Available | Util% |
+|-------------------|------|-------|------------|-----------|-------|
+| Block RAM Tile    |   36 |     0 |          0 |        60 | 60.00 |
+|   RAMB36/FIFO*    |   36 |     0 |          0 |        60 | 60.00 |
+|     RAMB36E1 only |   36 |       |            |           |       |
+|   RAMB18          |    0 |     0 |          0 |       120 |  0.00 |
+
+#### DSP
+|    Site Type   | Used | Fixed | Prohibited | Available | Util% |
+|----------------|------|-------|------------|-----------|-------|
+| DSPs           |   15 |     0 |          0 |        80 | 18.75 |
+|   DSP48E1 only |   15 |       |            |           |       |
 
 ## Third Party Usage
 
