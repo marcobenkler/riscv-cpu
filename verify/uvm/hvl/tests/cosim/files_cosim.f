@@ -1,5 +1,5 @@
 // UVM
-/Users/marcobenkler/Dev/UVM/uvm-core-2020/src/uvm_pkg.sv
+third_party/uvm-core/src/uvm_pkg.sv
 
 // Verilator
 verilator.vlt

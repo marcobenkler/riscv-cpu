@@ -345,7 +345,7 @@ else
 endif
 
 SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
-SPIKE_CMD := --log-commits --isa=rv32im_zicsr --priv=m $(SPIKE_SRG) --instructions=500000
+SPIKE_CMD := --log-commits --isa=rv32im_zicsr --priv=m $(SPIKE_SRG) --instructions=50000
 
 $(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 	@mkdir -p $(COSIM_RES)
@@ -355,7 +355,7 @@ $(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 # add python script as requirement, so it checks spike.jsonl against logtojsonl.py, if .py is newer, jsonl should be created again
 # tldr: make recognises changes in source
 $(COSIM_RES)/spike.jsonl: $(COSIM_RES)/spike_commits.log $(COSIM_SRC)/scripts/spike_logtojsonl.py
-	python $(COSIM_SRC)/scripts/spike_logtojsonl.py
+	python3 $(COSIM_SRC)/scripts/spike_logtojsonl.py
 
 
 
@@ -409,8 +409,10 @@ endif
 
 ifeq ($(WAVE),1)
 	VFLAGS_LOCKSTEP += --trace-fst --trace-structs \
-	                   -CFLAGS "$(LZ4_CFLAGS)" \
 	                   -LDFLAGS "$(LZ4_LDFLAGS)"
+ifneq ($(strip $(LZ4_CFLAGS)),)
+	VFLAGS_LOCKSTEP += -CFLAGS "$(LZ4_CFLAGS)"
+endif
 endif
 
 # Step 1: build the model (slow, only when RTL/TB changed)
@@ -431,7 +433,7 @@ ifeq ($(COV),1)
 endif
 
 $(COSIM_RES)/report.log: $(COSIM_SRC)/scripts/comp.py $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(COSIM_DIS)
-	python $(COSIM_SRC)/scripts/comp.py $(COSIM_DIS)
+	python3 $(COSIM_SRC)/scripts/comp.py $(COSIM_DIS)
 
 cosim: $(COSIM_RES)/spike.jsonl $(COSIM_RES)/rtl.jsonl $(COSIM_RES)/report.log
 
