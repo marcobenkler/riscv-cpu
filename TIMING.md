@@ -27,3 +27,13 @@
 
 ## Fix
 - Latch all inputs, just 1 tick delay
+
+# 5 EX_MEM_OUT -> PC_UPDATE
+## Details
+- ex_mem_out -> forwarding -> alu -> branch -> pc_update
+                                            |
+                                            -> flush
+
+## Fix
+- latch the branch data. No stall used, instead flush one reg deeper in the pipeline, if branch was taken
+- Add minor additions like div handling etc, because of the additional flush

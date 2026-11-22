@@ -28,7 +28,12 @@ module hazard_unit(
     logic load_use_hazard;
     logic mem_read;
 
+    logic branch_taken;
+
     assign div_stall = is_div && !srt_done;
+
+    // pc_src is the latched branch decision (branch is in MEM stage)
+    assign branch_taken = pc_src != 2'b00 && !lsu_stall;
 
     assign mem_read = res_src == 3'b001;
     assign load_use_hazard = mem_read && (id_ex_rd == if_id_rs1 || id_ex_rd == if_id_rs2);
@@ -45,16 +50,17 @@ module hazard_unit(
         //Following common convention stall all what's left of your stall source and flush only the right neighbr reg
         //Flushes flush all whats left (before) their stage like trap and mret are located in mem stage
 
-        if_id_flush  = (pc_src != 2'b00 && !lsu_stall) || trap_taken || mret_taken; //pc_src != 0 means branch taken
+        if_id_flush  = branch_taken || trap_taken || mret_taken;
 
         // load_use_hazard && !div_stall: l_u_h is pulled by LSU, but div can compute further
-        id_ex_flush  = ((pc_src != 2'b00 && !lsu_stall) || trap_taken || mret_taken ||
+        id_ex_flush  = (branch_taken || trap_taken || mret_taken ||
                        (load_use_hazard && !div_stall && !lsu_stall && !mul_stall)); //&&
                        //(!lsu_stall && !trap_taken && !mret_taken); // keep in mind, could be wrong in edge cas
 
         //div_stall: Without bubble the older instr before div is handed several times
         //from ex/mem to mem/wb and retired several times
-        ex_mem_flush = trap_taken || mret_taken || ((div_stall || mul_stall) && !lsu_stall);
+        //branch_taken: instr in EX is on the wrong path (branch already in MEM)
+        ex_mem_flush = branch_taken || trap_taken || mret_taken || ((div_stall || mul_stall) && !lsu_stall);
 
         mem_wb_flush = lsu_stall;
 
@@ -62,7 +68,7 @@ module hazard_unit(
         if (id_ex_flush) id_ex_stall = 1'b0;
         if (ex_mem_flush) ex_mem_stall = 1'b0;
         // if (mem_wb_flush) mem_wb_stall = 1'b0;
-        if (trap_taken || mret_taken) pc_stall = 1'b0;
+        if (trap_taken || mret_taken || branch_taken) pc_stall = 1'b0;
     end
 
 

@@ -94,7 +94,12 @@ module pl_cpu
     axi_req_t    axi_req_clint;
     axi_rsp_t    axi_rsp_clint;
 
-    logic        if_id_flush_delayed;
+    // Timing issue 5 signals
+    logic [1:0]  pc_src_ex_latched;
+    logic        branch_taken_mem;
+    logic [31:0] branch_target_mem;
+
+    // logic        if_id_flush_delayed;
 
     //RVFI only for lockstep with spike
     rvfi_t       rvfi_res;
@@ -110,16 +115,16 @@ module pl_cpu
         .reset_n(reset_n),
         .pc_next(pc_next),
         .pc_stall(pc_stall),
-        .pc_src(pc_src_ex),
+        .pc_src(pc_src_ex_latched),
         .pc_current(if1_if2_in.pc_current) //output
     );
 
     next_pc next_pc(
-        .alu_res(alu_res),
+        .alu_res(ex_mem_out.ex_res), // JALR target, resolved in MEM
         .imm_res(imm_res),
         .csr_pc(csr_pc),
         .pc_current(if1_if2_in.pc_current),
-        .pc_src(pc_src_ex),
+        .pc_src(pc_src_ex_latched),
         .trap_taken(trap_taken),
         .mret_taken(mret_taken),
         .pc_next(pc_next), //output
@@ -235,7 +240,6 @@ module pl_cpu
     );
 
 
-    assign imm_res = id_ex_out.pc_current + id_ex_out.imm;
 
     // buffer mem_wb for forwarding, even after deleting mem_wb_reg through lsu_stall
     // Does not work with multycycle units, if they do not buffer the data itself
@@ -307,10 +311,11 @@ module pl_cpu
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) div_activate <= '0;
         else if (srt_done) div_activate <= '0;
-        else if (is_div) div_activate <= '1;
+        else if (is_div && !branch_taken_mem) div_activate <= '1;
     end
 
-    assign srt_en = is_div && !div_activate; // might be error, additional !srt_done required
+    // !branch_taken_mem: div in EX is on the wrong path while a taken branch is in MEM
+    assign srt_en = is_div && !div_activate && !branch_taken_mem; // might be error, additional !srt_done required
 
     srt2 srt2(
         .clk(clk),
@@ -397,6 +402,21 @@ module pl_cpu
         .out(ex_mem_out)
     );
 
+    // Timing issue 5: branch decision travels with the instruction into MEM,
+    // redirect happens one cycle later. Same stall/flush as ex_mem_reg.
+    pipeline_reg #(.T(logic [1:0])) branch_reg (
+        .clk(clk),
+        .reset_n(reset_n),
+        .flush(ex_mem_flush),
+        .stall(ex_mem_stall),
+        .in(pc_src_ex),
+        .out(pc_src_ex_latched)
+    );
+
+    assign imm_res           = ex_mem_out.pc_current + ex_mem_out.imm;
+    assign branch_taken_mem  = pc_src_ex_latched != 2'b00;
+    assign branch_target_mem = (pc_src_ex_latched == 2'b10) ? ex_mem_out.ex_res : imm_res;
+
     //MUX for solving forwarding problem, where only alu_res could be forwarded
     always_comb begin
         case (ex_mem_out.res_src)
@@ -470,7 +490,7 @@ module pl_cpu
         .reset_n(reset_n),
         .instruction(ex_mem_out.instruction),
         .pc_current(ex_mem_out.pc_current), //Exception-mpec
-        .pc_if(if1_if2_in.pc_current), //Interrutp-mpec
+        .pc_if(branch_taken_mem ? branch_target_mem : if1_if2_in.pc_current), //Interrutp-mpec
         .rs1_data(ex_mem_out.rs1_data),
         .csr_op(ex_mem_out.csr_op),
         .csr_write(ex_mem_out.csr_write),
@@ -580,7 +600,7 @@ module pl_cpu
         .if_id_rs2(if_id_out.rs2),
         .id_ex_rd(id_ex_out.instruction[11:7]),
         .res_src(id_ex_out.res_src),
-        .pc_src(pc_src_ex),
+        .pc_src(pc_src_ex_latched),
         .is_div(is_div),
         .srt_done(srt_done),
         .reg_write(id_ex_out.reg_write),
