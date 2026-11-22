@@ -181,13 +181,16 @@ BUILD_OS := build_os
 FREERTOS := freertos/kernel
 BSP := freertos/bsp
 PORT 	 = $(FREERTOS)/portable/GCC/RISC-V
+APP_EXCLUDE := main.c uart.c
+MAIN ?= main
 
 SRCS += $(wildcard $(FREERTOS)/*.c)
 SRCS += $(BSP)/start.S
 SRCS += $(FREERTOS)/portable/MemMang/heap_4.c
 SRCS += $(PORT)/port.c
 SRCS += $(PORT)/portASM.S
-SRCS += $(wildcard freertos/app/*.c)
+SRCS += $(filter-out $(addprefix freertos/app/,$(APP_EXCLUDE)), $(wildcard freertos/app/*.c))
+SRCS += freertos/app/$(MAIN).c
 
 # Declare what files are needed. basenam: remove ending, addsuffix: add ending, addprefix ...
 OBJS := $(addprefix $(BUILD_OS)/, $(addsuffix .o, $(basename $(SRCS))))
