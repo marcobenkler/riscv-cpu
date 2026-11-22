@@ -14,7 +14,7 @@ module uart_baud #(
 
     always_ff @(posedge clk or negedge reset_n) begin
         if  (!reset_n) counter <= '0;
-        else if (sync) counter <= '0;
+        else if (sync || baud_tick) counter <= '0;
         else           counter <= counter + 1;
     end
 
