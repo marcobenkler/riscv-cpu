@@ -14,6 +14,8 @@ package alu_pkg;
 
     typedef enum logic [2:0] {
         IDLE,
+        PREPARE_ABS,
+        LATCH_DATA,
         RUNNING,
         COMP_QMAG,
         CHECK_QMAG,

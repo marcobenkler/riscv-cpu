@@ -45,10 +45,10 @@ module srt2
     logic        sign_div_reg, sign_rem_reg;
     logic [32:0] abs_n, abs_d;
 
-    assign sign_n = (div_op == DIV || div_op == REM) ? rs1_data[31] : 1'b0;
-    assign sign_d = (div_op == DIV || div_op == REM) ? rs2_data[31] : 1'b0;
-    assign abs_n  = sign_n ? (~{rs1_data[31], rs1_data} + 1) : {1'b0, rs1_data};
-    assign abs_d  = sign_d ? (~{rs2_data[31], rs2_data} + 1) : {1'b0, rs2_data};
+    // assign sign_n = (div_op == DIV || div_op == REM) ? rs1_data[31] : 1'b0;
+    // assign sign_d = (div_op == DIV || div_op == REM) ? rs2_data[31] : 1'b0;
+    // assign abs_n  = sign_n ? (~{rs1_data[31], rs1_data} + 1) : {1'b0, rs1_data};
+    // assign abs_d  = sign_d ? (~{rs2_data[31], rs2_data} + 1) : {1'b0, rs2_data};
 
     Norm norm(
         .D(abs_d[31:0]),
@@ -125,12 +125,24 @@ module srt2
             state        <= IDLE;
         end else begin
             if (state == IDLE && srt_en) begin
+                rs1_latch <= rs1_data;
+                rs2_latch <= rs2_data;
+                op_latch     <= div_op;
                 if (rs2_data == '0) begin
                     state <= RUNNING;
-                    rs1_latch <= rs1_data;
-                    rs2_latch <= rs2_data;
                 end
                 else begin
+                    sign_n <= (div_op == DIV || div_op == REM) ? rs1_data[31] : 1'b0;
+                    sign_d <= (div_op == DIV || div_op == REM) ? rs2_data[31] : 1'b0;
+                    state <= PREPARE_ABS;
+                end
+            end
+            else if (state == PREPARE_ABS) begin
+                abs_n  <= sign_n ? (~{rs1_latch[31], rs1_latch} + 1) : {1'b0, rs1_latch};
+                abs_d  <= sign_d ? (~{rs2_latch[31], rs2_latch} + 1) : {1'b0, rs2_latch};
+                state <= LATCH_DATA;
+            end
+            else if (state == LATCH_DATA) begin
                     // If NN >= ND: Q_norm >= 1.0, SRT2 runs on the fractional remainder
                     q_norm_ge_1  <= ({1'b0, NN} >= {1'b0, ND});
                     rest         <= ({1'b0, NN} >= {1'b0, ND}) ? {1'b0, NN - ND} : {1'b0, NN};
@@ -140,15 +152,14 @@ module srt2
                     cycle_count  <= '0;
                     sign_div_reg <= sign_n ^ sign_d;
                     sign_rem_reg <= sign_n;
-                    rs1_latch    <= rs1_data;
-                    rs2_latch    <= rs2_data;
-                    op_latch     <= div_op;
+                    // rs1_latch    <= rs1_data;
+                    // rs2_latch    <= rs2_data;
+                    // op_latch     <= div_op;
                     state        <= RUNNING;
-                end
             end
             else if (state == RUNNING) begin
                 if (rs2_latch == '0) begin
-                    case (div_op)
+                    case (op_latch)
                         DIV: div_res <= 32'hFFFFFFFF;
                         DIVU: div_res <= 32'hFFFFFFFF;
                         //Store rs1_data in rest to save latch and have it stable
@@ -158,9 +169,9 @@ module srt2
                     endcase
                     state <= DONE;
                 end else if (rs1_latch == 32'h8000_0000 && rs2_latch == 32'hFFFF_FFFF
-                    && (div_op == DIV || div_op == REM)) begin
+                    && (op_latch == DIV || op_latch == REM)) begin
                     // signed overflow
-                    div_res <= (div_op == DIV) ? 32'h8000_0000 : 32'd0;
+                    div_res <= (op_latch == DIV) ? 32'h8000_0000 : 32'd0;
                     state <= DONE;
                 end else begin
                     cycle_count <= cycle_count + 1;
