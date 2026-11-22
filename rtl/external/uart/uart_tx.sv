@@ -60,36 +60,37 @@ module uart_tx
         else $error("No state in uart found");
     end
 
+    `ifndef SYNTHESIS
+        // Assertions
+        property tx_low_on_start;
+            @(posedge clk) disable iff (!reset_n)
+            (state == START) |-> (tx == 1'b0);
+        endproperty
 
-    // Assertions
-    property tx_low_on_start;
-        @(posedge clk) disable iff (!reset_n)
-        (state == START) |-> (tx == 1'b0);
-    endproperty
+        property tx_high_on_idle;
+            @(posedge clk) disable iff (!reset_n)
+            (state == IDLE) |-> (tx == 1'b1);
+        endproperty
 
-    property tx_high_on_idle;
-        @(posedge clk) disable iff (!reset_n)
-        (state == IDLE) |-> (tx == 1'b1);
-    endproperty
+        property tx_ready_on_low;
+            @(posedge clk) disable iff (!reset_n)
+            (state != IDLE) |-> (tx_ready == 1'b0);
+        endproperty
 
-    property tx_ready_on_low;
-        @(posedge clk) disable iff (!reset_n)
-        (state != IDLE) |-> (tx_ready == 1'b0);
-    endproperty
+        property tx_ready_on_high;
+            @(posedge clk) disable iff (!reset_n)
+            (state == IDLE) |-> (tx_ready == 1'b1);
+        endproperty
 
-    property tx_ready_on_high;
-        @(posedge clk) disable iff (!reset_n)
-        (state == IDLE) |-> (tx_ready == 1'b1);
-    endproperty
+        assert property (tx_low_on_start) else $error("TX is NOT low on start");
+        assert property (tx_high_on_idle) else $error("TX is not high in idle");
+        assert property (tx_ready_on_low) else $error("TX_READY is NOT low when transmitting");
+        assert property (tx_ready_on_high) else $error("TX_READY is NOT high after transmitting");
 
-    assert property (tx_low_on_start) else $error("TX is NOT low on start");
-    assert property (tx_high_on_idle) else $error("TX is not high in idle");
-    assert property (tx_ready_on_low) else $error("TX_READY is NOT low when transmitting");
-    assert property (tx_ready_on_high) else $error("TX_READY is NOT high after transmitting");
-
-    cover property (tx_low_on_start);
-    cover property (tx_high_on_idle);
-    cover property (tx_ready_on_low);
-    cover property (tx_ready_on_high);
+        cover property (tx_low_on_start);
+        cover property (tx_high_on_idle);
+        cover property (tx_ready_on_low);
+        cover property (tx_ready_on_high);
+    `endif
 
 endmodule

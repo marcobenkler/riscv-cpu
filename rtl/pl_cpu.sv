@@ -525,7 +525,8 @@ module pl_cpu
         .misaligned_fetch(ex_mem_out.misaligned_fetch),
         .fault_address(ex_mem_out.ex_res),
         .time_itr(mtip),
-        .uart_itr(uart_rx_valid),
+        // .uart_itr(uart_rx_valid),
+        .uart_itr(1'b0), //tmp disable uart interrupts
         .lsu_except(lsu_except),
         .trap_taken(trap_taken), //output
         .mret_taken(mret_taken), //output

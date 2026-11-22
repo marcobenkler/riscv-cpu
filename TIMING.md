@@ -30,9 +30,7 @@
 
 # 5 EX_MEM_OUT -> PC_UPDATE
 ## Details
-- ex_mem_out -> forwarding -> alu -> branch -> pc_update
-                                            |
-                                            -> flush
+- ex_mem_out -> forwarding -> alu -> branch -> pc_update and flush 
 
 ## Fix
 - latch the branch data. No stall used, instead flush one reg deeper in the pipeline, if branch was taken

@@ -28,6 +28,9 @@ module uart_top
     logic [31:0] uart_tx_reg;
     logic [31:0] uart_rx_reg;
 
+    logic        rx_done;
+    logic        rx_read;
+
     // AXI overhead
     logic tx_start;
     assign tx_start = axi_req_uart.awvalid && axi_req_uart.wvalid &&
@@ -50,12 +53,14 @@ module uart_top
     uart_baud #(.baud_rate(baud_rate)) uart_baut_tx(
         .clk(clk),
         .reset_n(reset_n),
+        .sync(tx_start),
         .baud_tick(baud_tick_tx) //output
     );
 
     uart_baud #(.baud_rate(16 * baud_rate)) uart_baud_rx(
         .clk(clk),
         .reset_n(reset_n),
+        .sync(1'b0),
         .baud_tick(baud_tick_rx) //output
     );
 
@@ -75,16 +80,26 @@ module uart_top
         .baud_tick_fast(baud_tick_rx),
         .rx(rx),
         .wdata(wdata_r), //output
-        .rx_valid(rx_valid) //output
+        .rx_valid(rx_done) //output
     );
+
+    // Changed: Uart signals valid bit, unitl it was read which resets it. IMPORTANT: No buffer
+    // if inputs are too fast, bytes are lost. So for myself only bytes nothing bigger
+    assign rx_read = axi_req_uart.rready && axi_rsp_uart.rvalid &&
+                     (axi_req_uart.araddr = UART_BASE + UART_RX);
 
     always_ff @(posedge clk) begin
         if(!reset_n) begin
             uart_rx_reg <= '0;
+            rx_valid    <= 1'b0;
         end
         else begin
             //if(tx_start) uart_tx_reg <= uart_write_data; caused one clock delay
-            if(rx_valid) uart_rx_reg <= {24'b0, wdata_r};
+            if(rx_done) begin
+                uart_rx_reg <= {24'b0, wdata_r};
+                rx_valid    <= 1'b1;
+            end
+            else if (rx_read) rx_valid <= 1'b0;
         end
     end
 
