@@ -355,7 +355,7 @@ SPIKE_CMD := --log-commits --isa=rv32im_zicsr --priv=m $(SPIKE_SRG) --instructio
 
 $(COSIM_RES)/spike_commits.log: $(COSIM_ELF)
 	@mkdir -p $(COSIM_RES)
-	spike $(SPIKE_CMD) $< 2> $@
+	spike $(SPIKE_CMD) $< 2> $@ || (tail -1 $@; exit 1)
 
 
 # add python script as requirement, so it checks spike.jsonl against logtojsonl.py, if .py is newer, jsonl should be created again

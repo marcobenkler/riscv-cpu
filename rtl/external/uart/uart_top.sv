@@ -86,7 +86,7 @@ module uart_top
     // Changed: Uart signals valid bit, unitl it was read which resets it. IMPORTANT: No buffer
     // if inputs are too fast, bytes are lost. So for myself only bytes nothing bigger
     assign rx_read = axi_req_uart.rready && axi_rsp_uart.rvalid &&
-                     (axi_req_uart.araddr = UART_BASE + UART_RX);
+                     (axi_req_uart.araddr == UART_BASE + UART_RX);
 
     always_ff @(posedge clk) begin
         if(!reset_n) begin

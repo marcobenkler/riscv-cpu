@@ -20,7 +20,7 @@ module uart_rx
     (* ASYNC_REG = "TRUE" *) logic rx_meta;
     (* ASYNC_REG = "TRUE" *) logic rx_s;
 
-    always_ff@(posedge ckj or negedge reset_n) begin
+    always_ff@(posedge clk or negedge reset_n) begin
         if (!reset_n) {rx_s, rx_meta} <= 2'b11;
         else          {rx_s, rx_meta} <= {rx_meta, rx};
     end
