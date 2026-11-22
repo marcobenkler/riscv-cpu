@@ -14,9 +14,31 @@ module pl_cpu
     `endif
 );
 
+    logic cpu_clk;
+
     `ifdef SYNTHESIS
+    logic locked;
     logic reset_n;
-    assign reset_n = ~reset_n_external;
+    logic reset_async_n;
+    (* ASYNC_REG = "TRUE", SHREG_EXTRACT = "NO" *) logic [1:0] reset_sync;
+
+    clk_wiz_0 clock_wizard (
+        .clk_in1(clk),
+        .clk_out1(cpu_clk),
+        .locked(locked)
+    );
+
+    assign reset_async_n = locked & ~reset_n_external;
+
+    // Copied from AMD VIVADO design reference to prevent metastability
+    always_ff @(posedge cpu_clk or negedge reset_async_n) begin
+        if (!reset_async_n) reset_sync <= 2'b00;
+        else reset_sync <= {reset_sync[0], 1'b1};
+    end
+
+    assign reset_n = reset_sync[1];
+    `else
+    assign cpu_clk = clk;
     `endif
 
     if1_if2_t if1_if2_in;
@@ -111,7 +133,7 @@ module pl_cpu
 
     // IF Stage
     update_pc update_pc(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .pc_next(pc_next),
         .pc_stall(pc_stall),
@@ -137,7 +159,7 @@ module pl_cpu
     assign if1_if2_in.rvfi.pc    = if1_if2_in.pc_current;
 
     pipeline_reg #(.T(if1_if2_t)) if1_if2_reg (
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .flush(if_id_flush),
         .stall(if_id_stall),
@@ -148,7 +170,7 @@ module pl_cpu
     logic [31:0] imem_instr;
 
     instruction_memory instruction_memory(
-        .clk(clk),
+        .clk(cpu_clk),
         .stall(if_id_stall),
         .pc(if1_if2_in.pc_current),
         .instruction(imem_instr)
@@ -168,7 +190,7 @@ module pl_cpu
 
 
     pipeline_reg #(.T(if_id_t)) if_id_reg (
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .flush(if_id_flush),
         .stall(if_id_stall),
@@ -178,7 +200,7 @@ module pl_cpu
 
     // ID Stage
     register_file register_file(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .rs1(if_id_out.rs1),
         .rs2(if_id_out.rs2),
@@ -231,7 +253,7 @@ module pl_cpu
     end
 
     pipeline_reg #(.T(id_ex_t)) id_ex_reg (
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .flush(id_ex_flush),
         .stall(id_ex_stall),
@@ -247,7 +269,7 @@ module pl_cpu
     logic [4:0]  wb_fwd_rd;
     logic        wb_fwd_we;
     logic        res_seen;
-    always_ff@(posedge clk) begin
+    always_ff@(posedge cpu_clk) begin
         if (!reset_n) begin
             wb_fwd_buf <= '0;
             res_seen <= 1'b0;
@@ -296,7 +318,7 @@ module pl_cpu
         );
 
     multiply multiply(
-        .clk(clk),
+        .clk(cpu_clk),
         .rst_n(reset_n),
         .mul_en(id_ex_out.mul_en),
         .rs1_data(a),
@@ -308,7 +330,7 @@ module pl_cpu
 
     // Div handling
     assign is_div = id_ex_out.ex_src == 2'b10;
-    always_ff @(posedge clk or negedge reset_n) begin
+    always_ff @(posedge cpu_clk or negedge reset_n) begin
         if (!reset_n) div_activate <= '0;
         else if (srt_done) div_activate <= '0;
         else if (is_div && !branch_taken_mem) div_activate <= '1;
@@ -318,7 +340,7 @@ module pl_cpu
     assign srt_en = is_div && !div_activate && !branch_taken_mem; // might be error, additional !srt_done required
 
     srt2 srt2(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .rs1_data(a),
         .rs2_data(b),
@@ -394,7 +416,7 @@ module pl_cpu
     end
 
     pipeline_reg #(.T(ex_mem_t)) ex_mem_reg (
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .flush(ex_mem_flush),
         .stall(ex_mem_stall),
@@ -405,7 +427,7 @@ module pl_cpu
     // Timing issue 5: branch decision travels with the instruction into MEM,
     // redirect happens one cycle later. Same stall/flush as ex_mem_reg.
     pipeline_reg #(.T(logic [1:0])) branch_reg (
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .flush(ex_mem_flush),
         .stall(ex_mem_stall),
@@ -431,7 +453,7 @@ module pl_cpu
     /*
     // MEM Stage
     data_memory data_memory(
-        .clk(clk),
+        .clk(cpu_clk),
 
 
         // !!!POTENTIAL BUG SOURCE FOR LOCKSTEP
@@ -449,7 +471,7 @@ module pl_cpu
     );
     */
     lsu lsu_u(
-        .clk(clk),
+        .clk(cpu_clk),
         .rst_n(reset_n),
         .address(ex_mem_out.ex_res),
         .input_data(ex_mem_out.rs2_data),
@@ -465,7 +487,7 @@ module pl_cpu
     );
 
     axi_interconnect axi_interconnect_u(
-        .clk(clk),
+        .clk(cpu_clk),
         .rst_n(reset_n),
         .axi_req_lsu(axi_req_lsu),
         .axi_rsp_lsu(axi_rsp_lsu), //output
@@ -478,7 +500,7 @@ module pl_cpu
     );
 
     mem mem_u(
-        .clk(clk),
+        .clk(cpu_clk),
         .rst_n(reset_n),
         .axi_req_mem(axi_req_mem),
         .axi_rsp_mem(axi_rsp_mem) //output
@@ -486,7 +508,7 @@ module pl_cpu
 
     //csr
     csr_regfile csr_regfile(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .instruction(ex_mem_out.instruction),
         .pc_current(ex_mem_out.pc_current), //Exception-mpec
@@ -555,7 +577,7 @@ module pl_cpu
     end
 
     pipeline_reg #(.T(mem_wb_t)) mem_wb_reg (
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .flush(mem_wb_flush),
         .stall(1'b0),
@@ -620,7 +642,7 @@ module pl_cpu
 
     // Peripherie
     clint clint(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .axi_req_clint(axi_req_clint),
         .axi_rsp_clint(axi_rsp_clint), //output
@@ -628,7 +650,7 @@ module pl_cpu
     );
 
     uart_top uart_top(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .axi_req_uart(axi_req_uart),
         .axi_rsp_uart(axi_rsp_uart), //output
@@ -639,7 +661,7 @@ module pl_cpu
 
     /*
     uart_top uart_top(
-        .clk(clk),
+        .clk(cpu_clk),
         .reset_n(reset_n),
         .address(ex_mem_out.ex_res),
         .rx(uart_rx_bit), //peripherie

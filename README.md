@@ -91,7 +91,7 @@ make test-all
 
 <!--[BOTH JSONL FILES](/images/jsonls.png)-->
 
-Note that although this CPU implements Havard memory architecture, the address-spaces are still separated, to enable gcc and
+Note that although this CPU implements havard memory architecture, the address-spaces are still separated, to enable gcc compiler
 
 ---
 
@@ -113,7 +113,7 @@ Note that although this CPU implements Havard memory architecture, the address-s
 | RISC-V ISA test suite (rv32ui / rv32um / rv32mi)   | ✅ |
 | Bare-Metal on FPGA with UART                       | ✅ |
 | FreeRTOS in simulation                             | ✅ |
-| FreeRTOS on FPGA                                   | -- |
+| FreeRTOS on FPGA                                   | ✅ |
 
 ---
 
@@ -161,5 +161,5 @@ The official library to create instruction bit vectors. Used to create all instr
 ### ricsv-tests
 The official library to test the core functions of the cpu. For example add/sub/div/...
 
-## uvm-core
+### uvm-core
 The official uvm environment from Accellera. Used to build scalable verifying
