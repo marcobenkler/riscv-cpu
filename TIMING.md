@@ -5,3 +5,11 @@
 
 ## Fix
 - Add register to mip computation, reduces path by ~10ns
+
+# 2 DIV -> EX_RES
+## Details
+- Path from computed calulation to q_maq -> adjusting -> div_res computing
+- Each alone takes long du to sub & shifts, mult etc
+
+## Fix
+- Move them in a seperate state. Each compute intense step gets it's own stage, q_maq, adjusting ...

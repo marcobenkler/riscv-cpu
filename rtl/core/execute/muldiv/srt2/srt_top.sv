@@ -33,6 +33,7 @@ module srt2
 
     logic [31:0] rs1_latch;
     logic [31:0] rs2_latch;
+    logic [1:0]  op_latch;
 
     logic signed [31:0] ND;
     logic signed [31:0] NN;
@@ -73,35 +74,36 @@ module srt2
 
     always_comb begin
         // When Q_norm >= 1.0, add the integer part 2^(LZD-LZN) to the SRT2
-        q_mag = 'x;
-        restu_shifted = 'x;
-        if (rs2_latch == '0) begin
-            case (div_op)
-                DIV: div_res = 32'hFFFFFFFF;
-                DIVU: div_res = 32'hFFFFFFFF;
-                //Store rs1_data in rest to save latch and have it stable
-                REM: div_res = rs1_latch;
-                REMU: div_res = rs1_latch;
-                default: div_res = 32'hABBA_D00F;
-            endcase
-        end else if (rs1_latch == 32'h8000_0000 && rs2_latch == 32'hFFFF_FFFF
-             && (div_op == DIV || div_op == REM)) begin
-            // signed overflow
-            div_res = (div_op == DIV) ? 32'h8000_0000 : 32'd0;
-        end
-        else begin
-            q_mag         = (quotient_pos - quotient_neg) >> (32 - lzd_reg + lzn_reg);
-            if (q_norm_ge_1 && lzd_reg >= lzn_reg)
-                q_mag = q_mag + (32'b1 << (lzd_reg - lzn_reg));
-            restu_shifted = $unsigned(rest) >> lzd_reg;
-            case (div_op)
-                DIV:  div_res = sign_div_reg ? (~q_mag + 1)               : q_mag;
-                DIVU: div_res = q_mag;
-                REM:  div_res = sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
-                REMU: div_res = rs1_latch - q_mag * rs2_latch;
-                default: div_res = 32'hABBA_ABBA;
-            endcase
-        end
+        // q_mag = 'x;
+        // restu_shifted = 'x;
+        // if (rs2_latch == '0) begin
+        //     case (div_op)
+        //         DIV: div_res = 32'hFFFFFFFF;
+        //         DIVU: div_res = 32'hFFFFFFFF;
+        //         //Store rs1_data in rest to save latch and have it stable
+        //         REM: div_res = rs1_latch;
+        //         REMU: div_res = rs1_latch;
+        //         default: div_res = 32'hABBA_D00F;
+        //     endcase
+        // end else if (rs1_latch == 32'h8000_0000 && rs2_latch == 32'hFFFF_FFFF
+        //      && (div_op == DIV || div_op == REM)) begin
+        //     // signed overflow
+        //     div_res = (div_op == DIV) ? 32'h8000_0000 : 32'd0;
+        // end
+        // else begin
+            // Add two states for qmag and if qnorm calculation and div_res selevtion to break longest path
+            // q_mag         = (quotient_pos - quotient_neg) >> (32 - lzd_reg + lzn_reg);
+            // if (q_norm_ge_1 && lzd_reg >= lzn_reg)
+            //     q_mag = q_mag + (32'b1 << (lzd_reg - lzn_reg));
+            // restu_shifted = $unsigned(rest) >> lzd_reg;
+            // case (div_op)
+            //     DIV:  div_res = sign_div_reg ? (~q_mag + 1)               : q_mag;
+            //     DIVU: div_res = q_mag;
+            //     REM:  div_res = sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
+            //     REMU: div_res = rs1_latch - q_mag * rs2_latch;
+            //     default: div_res = 32'hABBA_ABBA;
+            // endcase
+        // end
         srt_done = (state == DONE);
     end
 
@@ -117,11 +119,14 @@ module srt2
             sign_div_reg <= '0;
             sign_rem_reg <= '0;
             q_norm_ge_1  <= '0;
+            rs1_latch    <= '0;
+            rs2_latch    <= '0;
+            op_latch     <= DIV;
             state        <= IDLE;
         end else begin
             if (state == IDLE && srt_en) begin
                 if (rs2_data == '0) begin
-                    state <= DONE;
+                    state <= RUNNING;
                     rs1_latch <= rs1_data;
                     rs2_latch <= rs2_data;
                 end
@@ -137,28 +142,65 @@ module srt2
                     sign_rem_reg <= sign_n;
                     rs1_latch    <= rs1_data;
                     rs2_latch    <= rs2_data;
+                    op_latch     <= div_op;
                     state        <= RUNNING;
                 end
             end
             else if (state == RUNNING) begin
-                cycle_count <= cycle_count + 1;
-                case (q)
-                    2'sd1:  begin
-                        quotient_pos[31 - cycle_count] <= 1'b1;
-                        quotient_neg[31 - cycle_count] <= 1'b0;
-                    end
-                    2'sd0:  begin
-                        quotient_pos[31 - cycle_count] <= 1'b0;
-                        quotient_neg[31 - cycle_count] <= 1'b0;
-                    end
-                    -2'sd1: begin
-                        quotient_pos[31 - cycle_count] <= 1'b0;
-                        quotient_neg[31 - cycle_count] <= 1'b1;
-                    end
-                    default: ;
+                if (rs2_latch == '0) begin
+                    case (div_op)
+                        DIV: div_res <= 32'hFFFFFFFF;
+                        DIVU: div_res <= 32'hFFFFFFFF;
+                        //Store rs1_data in rest to save latch and have it stable
+                        REM: div_res <= rs1_latch;
+                        REMU: div_res <= rs1_latch;
+                        default: div_res <= 32'hABBA_D00F;
+                    endcase
+                    state <= DONE;
+                end else if (rs1_latch == 32'h8000_0000 && rs2_latch == 32'hFFFF_FFFF
+                    && (div_op == DIV || div_op == REM)) begin
+                    // signed overflow
+                    div_res <= (div_op == DIV) ? 32'h8000_0000 : 32'd0;
+                    state <= DONE;
+                end else begin
+                    cycle_count <= cycle_count + 1;
+                    case (q)
+                        2'sd1:  begin
+                            quotient_pos[31 - cycle_count] <= 1'b1;
+                            quotient_neg[31 - cycle_count] <= 1'b0;
+                        end
+                        2'sd0:  begin
+                            quotient_pos[31 - cycle_count] <= 1'b0;
+                            quotient_neg[31 - cycle_count] <= 1'b0;
+                        end
+                        -2'sd1: begin
+                            quotient_pos[31 - cycle_count] <= 1'b0;
+                            quotient_neg[31 - cycle_count] <= 1'b1;
+                        end
+                        default: ;
+                    endcase
+                    rest <= temp_rest;
+                    if (cycle_count + 1'b1 == '0) state <= COMP_QMAG;
+                end
+            end
+            else if (state == COMP_QMAG) begin
+                q_mag <= (quotient_pos - quotient_neg) >> (32 - lzd_reg + lzn_reg);
+                state <= CHECK_QMAG;
+            end
+            else if (state == CHECK_QMAG) begin
+                if (q_norm_ge_1 && lzd_reg >= lzn_reg) q_mag <= q_mag + (32'h0000_0001 << (lzd_reg - lzn_reg));
+                restu_shifted <= $unsigned(rest) >> lzd_reg;
+                state <= COMP_RES;
+            end
+            else if (state == COMP_RES) begin
+                case (op_latch)
+                    DIV:  div_res <= sign_div_reg ? (~q_mag + 1)               : q_mag;
+                    DIVU: div_res <= q_mag;
+                    REM:  div_res <= sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
+                    REMU: div_res <= rs1_latch - q_mag * rs2_latch;
+                    default: div_res <= 32'hABBA_ABBA;
                 endcase
-                rest <= temp_rest;
-                if (cycle_count + 1'b1 == '0) state <= DONE;
+                state <= DONE;
             end
             else if (state == DONE) begin
                 state        <= IDLE;
