@@ -20,12 +20,13 @@ module register_file(
         rs2_data = (reg_write && rd != 5'b0 && rd == rs2) ? result : regi[rs2];
     end
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if(!reset_n) begin
-            for (int i = 0; i < 32; i++) begin
-                regi[i] <= 0;
-            end
-        end else if(reg_write && rd != '0) begin
+    always_ff @(posedge clk) begin
+        // if(!reset_n) begin
+        //     for (int i = 0; i < 32; i++) begin
+        //         regi[i] <= 0;
+        //     end
+        // end else
+        if(reg_write && rd != '0) begin
             regi[rd] <= result;
         end
     end

@@ -14,7 +14,7 @@
 ## Fix
 - Move them in a seperate state. Each compute intense step gets it's own stage, q_maq, adjusting ...
 
-# EX_MEM_OUT -> DIV
+# 3 EX_MEM_OUT -> DIV
 ## Details
 - ex_mem_out -> forwarding -> div -> norm -> LZN
 
