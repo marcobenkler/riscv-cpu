@@ -14,6 +14,7 @@ module hazard_unit(
     input  logic trap_taken,
     input  logic mret_taken,
     input  logic lsu_stall,
+    input  logic mul_stall,
     output logic pc_stall,
     output logic if_id_stall,
     output logic if_id_flush,
@@ -33,9 +34,9 @@ module hazard_unit(
     assign load_use_hazard = mem_read && (id_ex_rd == if_id_rs1 || id_ex_rd == if_id_rs2);
 
     always_comb begin
-        pc_stall     = div_stall || load_use_hazard || lsu_stall;
-        if_id_stall  = div_stall || load_use_hazard || lsu_stall;
-        id_ex_stall  = div_stall || lsu_stall;
+        pc_stall     = mul_stall || div_stall || load_use_hazard || lsu_stall;
+        if_id_stall  = mul_stall || div_stall || load_use_hazard || lsu_stall;
+        id_ex_stall  = mul_stall || div_stall || lsu_stall;
         ex_mem_stall = lsu_stall;
         // ex_mem_stall = div_stall; legacy
 
@@ -48,12 +49,12 @@ module hazard_unit(
 
         // load_use_hazard && !div_stall: l_u_h is pulled by LSU, but div can compute further
         id_ex_flush  = ((pc_src != 2'b00 && !lsu_stall) || trap_taken || mret_taken ||
-                       (load_use_hazard && !div_stall && !lsu_stall)); //&&
+                       (load_use_hazard && !div_stall && !lsu_stall && !mul_stall)); //&&
                        //(!lsu_stall && !trap_taken && !mret_taken); // keep in mind, could be wrong in edge cas
 
         //div_stall: Without bubble the older instr before div is handed several times
         //from ex/mem to mem/wb and retired several times
-        ex_mem_flush = trap_taken || mret_taken || (div_stall && !lsu_stall);
+        ex_mem_flush = trap_taken || mret_taken || ((div_stall || mul_stall) && !lsu_stall);
 
         mem_wb_flush = lsu_stall;
 

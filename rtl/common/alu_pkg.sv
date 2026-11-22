@@ -30,6 +30,11 @@ package alu_pkg;
         REMU
     } div_op_e;
 
+    typedef enum logic {
+        MUL_IDLE,
+        MUL_RUN
+    } mul_state_e;
+
     typedef enum logic [1:0] {
         MUL,
         MULH,

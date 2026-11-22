@@ -51,6 +51,7 @@ module pl_cpu
     logic        lt;
     logic [1:0]  pc_src_ex;
     logic        is_div;
+    logic        mul_stall;
     logic        srt_en;
     logic        srt_done;
     logic        mtip;
@@ -197,6 +198,7 @@ module pl_cpu
         .pc_src(id_ex_in.pc_src), //output
         .res_src(id_ex_in.res_src), //output
         .alu_op(id_ex_in.alu_op), //output
+        .mul_en(id_ex_in.mul_en),
         .mul_op(id_ex_in.mul_op), //output
         .div_op(id_ex_in.div_op), //output
         .mem_op_type(id_ex_in.mem_op_type), //output
@@ -290,10 +292,14 @@ module pl_cpu
         );
 
     multiply multiply(
+        .clk(clk),
+        .rst_n(reset_n),
+        .mul_en(id_ex_out.mul_en),
         .rs1_data(a),
         .rs2_data(b),
         .mul_op(id_ex_out.mul_op),
-        .mul_res(mul_res) //output
+        .mul_res(mul_res), //output
+        .mul_stall(mul_stall) //output
         );
 
     // Div handling
@@ -581,6 +587,7 @@ module pl_cpu
         .trap_taken(trap_taken),
         .mret_taken(mret_taken),
         .lsu_stall(lsu_stall),
+        .mul_stall(mul_stall),
         .pc_stall(pc_stall), //output
         .if_id_stall(if_id_stall), //output
         .if_id_flush(if_id_flush), //output

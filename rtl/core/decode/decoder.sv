@@ -19,6 +19,7 @@ module decoder
     output logic [1:0]   div_op, ///< div controller
     output mem_op_type_e mem_op_type, ///< tell data_memory which op is used
     output logic         mem_req,
+    output logic         mul_en,
     output logic [1:0]   ex_src, ///< alu, mul or div result
     //CSR
     output logic [2:0]   csr_op, ///< op code for csr module
@@ -51,6 +52,7 @@ module decoder
         mem_op_type = LB;
         mem_req = 1'b0;
         mul_op = 'x;
+        mul_en = 1'b0;
         div_op = 'x;
         ex_src = 2'b00;
         //CSR
@@ -71,6 +73,7 @@ module decoder
                         7'b0000001: begin
                             mul_op = MUL;
                             ex_src = 2'b01;
+                            mul_en = 1'b1;
                         end
                         default: ;
                     endcase
@@ -79,6 +82,7 @@ module decoder
                         7'b0000001: begin
                             mul_op = MULH;
                             ex_src = 2'b01;
+                            mul_en = 1'b1;
                         end
                         default: ;
                     endcase
@@ -87,6 +91,7 @@ module decoder
                         7'b0000001: begin
                             mul_op = MULHSU;
                             ex_src = 2'b01;
+                            mul_en = 1'b1;
                         end
                         default: ;
                     endcase
@@ -95,6 +100,7 @@ module decoder
                         7'b0000001: begin
                             mul_op = MULHU;
                             ex_src = 2'b01;
+                            mul_en = 1'b1;
                         end
                         default: ;
                     endcase

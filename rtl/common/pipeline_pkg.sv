@@ -45,6 +45,7 @@ package pipeline_pkg;
         logic [1:0]  mul_op;
         logic [1:0]  div_op;
         logic [1:0]  ex_src;
+        logic        mul_en;
 
         // PC
         logic [1:0]  pc_src;

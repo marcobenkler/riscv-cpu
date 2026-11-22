@@ -20,3 +20,10 @@
 
 ## Fix
 - Latch all div inputs, add 2 extra fsm stages
+
+# 4 EX_MEM_OUT -> MUL
+## Details
+- ex_mem_out -> forwarding -> mul -> mul_res -> ex_mem_in
+
+## Fix
+- Latch all inputs, just 1 tick delay
