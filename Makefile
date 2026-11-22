@@ -56,8 +56,9 @@ $(BUILD)/$(TEST).hex: $(BUILD)/$(TEST).bin | $(BUILD)
 $(TESTS_DIR)/$(TEST):
 	$(MAKE) -C $(TESTS_DIR) XLEN=32 RISCV_PREFIX=$(TOOLCHAIN)- $(TEST)
 
-$(BUILD)/$(TEST).bin: $(TESTS_DIR)/$(TEST) | $(BUILD)
+$(BUILD)/$(TEST).bin: $(TESTS_DIR)/$(TEST)| $(BUILD)
 	$(TOOLCHAIN)-objcopy -O binary $< $@
+	$(TOOLCHAIN)-objdump -d -M no-aliases $< > $(BUILD)/$(TEST).dis
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -338,10 +339,12 @@ ifeq ($(SW),os)
 	COSIM_ELF := $(BUILD_OS)/$(TARGET).elf
 	COSIM_DIS := $(BUILD_OS)/$(TARGET).dis
 	COSIM_MEM := $(BUILD_OS)/imem.mem $(BUILD_OS)/dmem.mem
+	BUILD_DIR := build_os
 else
 	COSIM_ELF := $(BUILD_COSIM)/$(TARGET_COSIM).elf
 	COSIM_DIS := $(BUILD_COSIM)/$(TARGET_COSIM).dis
 	COSIM_MEM := $(BUILD_COSIM)/imem.mem $(BUILD_COSIM)/dmem.mem
+	BUILD_DIR := build_cosim
 endif
 
 SPIKE_SRG := -m0x10000:0x4000,0x80000000:0x8000 #imem from 0x10000 4000 big, dmem from 800... 8000 big
@@ -426,7 +429,7 @@ $(COSIM_RES)/rtl.jsonl: $(BIN_LOCKSTEP) $(COSIM_MEM) $(COSIM_DIS)
 #+IMEM= .. testbench can read files via $value$plusargs and put the path in $readmem => Sim and Synth both valid
 #currently mem are read directly in the mem module and plusargs are not used for first testing
 	$(BIN_LOCKSTEP) +UVM_TESTNAME=$(TEST_LOCKSTEP) +UVM_NO_RELNOTES \
-	+TRACE=$@ +IMEM=build_os/imem.mem +DMEM=build_os/dmem.mem +WAVE=$(WAVE)
+	+TRACE=$@ +IMEM=$(BUILD_DIR)/imem.mem +DMEM=$(BUILD_DIR)/dmem.mem +WAVE=$(WAVE)
 # coverage.dat only exists if the model was built with coverage
 ifeq ($(COV),1)
 	verilator_coverage --annotate annotated --annotate-all --annotate-points --annotate-min 1 coverage.dat

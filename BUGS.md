@@ -106,4 +106,14 @@
 - Remove prefix in spike log, remove the first bits in the rtl log
 
 ## Commit
+- 996e87b
+
+# 12 - DIV error
+## Details
+- Div did not work, if dividend was 0. Caused by missing rs2_latch assignment
+
+## Fix
+- Latch rs2, if rs2_data == 0
+
+## Commit
 - 

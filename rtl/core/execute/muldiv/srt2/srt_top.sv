@@ -75,14 +75,19 @@ module srt2
         // When Q_norm >= 1.0, add the integer part 2^(LZD-LZN) to the SRT2
         q_mag = 'x;
         restu_shifted = 'x;
-        if (rs2_data == '0) begin
-            case (div_op) 
+        if (rs2_latch == '0) begin
+            case (div_op)
                 DIV: div_res = 32'hFFFFFFFF;
                 DIVU: div_res = 32'hFFFFFFFF;
                 //Store rs1_data in rest to save latch and have it stable
                 REM: div_res = rs1_latch;
                 REMU: div_res = rs1_latch;
+                default: div_res = 32'hABBA_D00F;
             endcase
+        end else if (rs1_latch == 32'h8000_0000 && rs2_latch == 32'hFFFF_FFFF
+             && (div_op == DIV || div_op == REM)) begin
+            // signed overflow
+            div_res = (div_op == DIV) ? 32'h8000_0000 : 32'd0;
         end
         else begin
             q_mag         = (quotient_pos - quotient_neg) >> (32 - lzd_reg + lzn_reg);
@@ -94,6 +99,7 @@ module srt2
                 DIVU: div_res = q_mag;
                 REM:  div_res = sign_rem_reg ? (~restu_shifted[31:0] + 1) : restu_shifted[31:0];
                 REMU: div_res = rs1_latch - q_mag * rs2_latch;
+                default: div_res = 32'hABBA_ABBA;
             endcase
         end
         srt_done = (state == DONE);
@@ -117,6 +123,7 @@ module srt2
                 if (rs2_data == '0) begin
                     state <= DONE;
                     rs1_latch <= rs1_data;
+                    rs2_latch <= rs2_data;
                 end
                 else begin
                     // If NN >= ND: Q_norm >= 1.0, SRT2 runs on the fractional remainder

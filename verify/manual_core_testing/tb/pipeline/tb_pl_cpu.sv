@@ -37,7 +37,7 @@ module tb_pl_cpu();
     always @(posedge clk) begin
         if (reset_n && mem_write && mem_addr == tohost_addr) begin
             if (mem_wdata == 32'h1) $display("PASS");
-            else                    $display("FAIL (test=%0d)", mem_wdata >> 1);
+            else $display("FAIL (test=%0d)", mem_wdata >> 1);
             $finish;
         end
     end
